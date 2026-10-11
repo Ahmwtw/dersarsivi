@@ -17,6 +17,6 @@ manifest JSON gidiş-dönüş.
 | Kontrol | Durum |
 |---|---|
 | Simülatör için derleme (CI) | Geçti: macos-15 / Xcode 16.4 ve macos-26, 2026-10-11. Yalnız derleme; simülatörde çalıştırılmadı |
-| Gerçek cihazda içeri alma → OCR → düzeltme → export | Yapılmadı (TestFlight bekleniyor) |
+| Gerçek cihazda içeri alma → OCR → export | 2026-10-11, iPad Air M3 / iPadOS 27, Sideloadly ile: 2 slayt ekran görüntüsü okundu, Türkçe karakterler doğru, birleşik .md üretildi. Sorunlar: galeride küçük resimler üst üste bindi; iki sütunlu slaytta sütunlar satır satır karıştı; her satır ayrı paragraf oldu; not uygulamasının araç çubuğu rakamları ("50", "33") metne girdi. İlk ikisi `LayoutAnalyzer` ve galeri düzeltmesiyle ele alındı, cihazda yeniden doğrulanmadı |
 | Vision Türkçe desteği (`tr-TR`) | Yapılmadı; detay ekranındaki dil listesinden okunacak |
 | Uygulama kapanıp açılınca kuyruk ve düzeltme | Çekirdekte test var; cihazda yapılmadı |

@@ -27,7 +27,7 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
     func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> [ExtractedBlock] {
@@ -40,8 +40,7 @@ struct VisionTextExtractor {
                     return
                 }
                 let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
-                let blocks = observations
-                    .sorted(by: Self.readingOrder)
+                let lines = observations
                     .compactMap { observation -> ExtractedBlock? in
                         guard let candidate = observation.topCandidates(1).first else { return nil }
                         // Vision kutusu: sol alt orijin, 0...1. Sözleşme: sol üst orijin.
@@ -50,7 +49,12 @@ struct VisionTextExtractor {
                         return ExtractedBlock(text: candidate.string, bbox: box,
                                               confidence: Double(candidate.confidence))
                     }
-                once.resume(returning: blocks)
+                // Vision kutuları yönü düzeltilmiş görüntüye göredir; 90° dönüşlerde en/boy yer değiştirir.
+                let rotated = ([.left, .leftMirrored, .right, .rightMirrored] as [CGImagePropertyOrientation])
+                    .contains(orientation)
+                let width = Double(rotated ? image.height : image.width)
+                let height = Double(rotated ? image.width : image.height)
+                once.resume(returning: LayoutAnalyzer.paragraphs(from: lines, pageWidth: width, pageHeight: height))
             }
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
@@ -66,16 +70,6 @@ struct VisionTextExtractor {
                 }
             }
         }
-    }
-
-    /// Basit okuma sırası: yukarıdan aşağı, aynı satırda soldan sağa.
-    /// İki sütunlu sayfalar için yetersizdir; düzen analizi sonraki fazda.
-    private static func readingOrder(_ a: VNRecognizedTextObservation, _ b: VNRecognizedTextObservation) -> Bool {
-        let ay = a.boundingBox.midY, by = b.boundingBox.midY
-        if abs(ay - by) > min(a.boundingBox.height, b.boundingBox.height) / 2 {
-            return ay > by
-        }
-        return a.boundingBox.minX < b.boundingBox.minX
     }
 }
 

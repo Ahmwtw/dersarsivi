@@ -89,8 +89,9 @@ struct GalleryView: View {
     private func cell(for source: SourceAsset) -> some View {
         let status = model.archive.pages(of: source.id).first?.status ?? .imported
         let content = VStack(alignment: .leading, spacing: 4) {
-            ThumbnailView(url: model.originalURL(for: source))
+            Color.clear
                 .aspectRatio(3 / 4, contentMode: .fit)
+                .overlay { ThumbnailView(url: model.originalURL(for: source)) }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(alignment: .topLeading) { StatusBadge(status: status).padding(4) }
                 .overlay(alignment: .topTrailing) {

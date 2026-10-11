@@ -17,8 +17,7 @@ struct SourceDetailView: View {
             List {
                 Section {
                     Button { showOriginal = true } label: {
-                        ThumbnailView(url: model.originalURL(for: source), maxPixel: 1200)
-                            .aspectRatio(contentMode: .fit)
+                        ThumbnailView(url: model.originalURL(for: source), maxPixel: 1200, contentMode: .fit)
                             .frame(maxHeight: 320)
                             .frame(maxWidth: .infinity)
                     }
@@ -32,6 +31,9 @@ struct SourceDetailView: View {
                     }
                     if page.status == .failed {
                         Button("Yeniden dene") { model.retry(pageID: page.id) }
+                    } else if [.ready, .needsReview].contains(page.status) {
+                        // Okuma ayarları değiştiyse yeniden okur; düzeltmelerin korunur.
+                        Button("Yeniden oku") { model.retry(pageID: page.id) }
                     }
                 }
 

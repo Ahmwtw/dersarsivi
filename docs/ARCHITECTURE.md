@@ -12,6 +12,7 @@ Core (saf Swift, Foundation dışında bağımlılık yok)
  ├─ JobQueue      kalıcı, idempotent, sınırlı tekrar denemeli kuyruk
  ├─ ArchiveStore  JSON dosyası + originals/ klasörü, atomik yazma
  ├─ PageSelection "3, 7-9" → 0 tabanlı indeksler
+ ├─ LayoutAnalyzer satırları okuma sırasına koyar (XY kesimi, sütunlar) ve paragraflara birleştirir
  └─ MarkdownExporter + ExportManifest
 ```
 
@@ -35,6 +36,8 @@ Her değişiklikten sonra `archive.json` atomik yazılır. Gelecek şema sürüm
 Vision'ın sol alt orijinli kutusu çıkarımda dönüştürülür.
 
 ## Yeniden çıkarım kuralı
+Vision satır satır sonuç verir; `LayoutAnalyzer` önce sütunları ayıran dikey boşluğu, yoksa en büyük yatay boşluğu keserek okuma sırasını bulur, sonra hizası ve aralığı uyan satırları paragraf yapar (madde işareti yeni paragraf başlatır, sayfa numarası gibi yalnız rakam satırları paragrafı bölmez).
+
 Yeni çıkarım okuma sırasına göre eşleştirilir. Kullanıcı düzeltmesi olan blokta yalnız `rawText`
 güncellenir; metin değiştiyse blok `conflict` olur. Yeni çıkarımda karşılığı olmayan düzeltilmiş blok
 silinmez. Okuma sırası değişirse eşleştirme yanlış bloğa düşebilir; bölge (bbox) eşleştirmesi BACKLOG'da.
