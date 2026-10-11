@@ -115,7 +115,7 @@ public struct Page: Codable, Equatable, Identifiable, Sendable {
 
 /// Normalleştirilmiş sınır kutusu. Koordinat sistemi: sol üst köşe orijin, 0...1 aralığı,
 /// döndürme/kırpma uygulanmamış orijinal sayfaya göre.
-public struct BoundingBox: Codable, Equatable, Sendable {
+public struct BoundingBox: Codable, Hashable, Sendable {
     public var x: Double
     public var y: Double
     public var width: Double

@@ -48,6 +48,12 @@ final class ColorAnalysisTests: XCTestCase {
         XCTAssertNil(s.color)
     }
 
+    func testWhiteTextOnTableHeaderIsNotAHighlight() {
+        let s = ColorAnalysis.style(rgba: box(background: (68, 114, 196), ink: (255, 255, 255)), pageBackground: white)
+        XCTAssertNil(s.highlight)
+        XCTAssertNil(s.color)
+    }
+
     func testEmptyBoxHasNoInk() {
         let found = ColorAnalysis.backgroundAndInk(rgba: box(background: (255, 255, 255), ink: nil))
         XCTAssertNotNil(found)

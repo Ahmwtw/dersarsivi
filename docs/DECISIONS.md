@@ -16,3 +16,6 @@
 | D12 | 2026-10-11 | Xcode projesi XcodeGen ile üretilir | Mac olmadan `.xcodeproj` elle düzenlenemez; `project.yml` okunabilir ve birleştirme dostu | Kabul |
 | D13 | 2026-10-11 | SHA-256 çekirdekte saf Swift | CryptoKit Linux'ta yok; bağımlılık eklememek için | Kabul |
 | D14 | 2026-10-11 | Bundle ID `com.ahmwtw.dersarsivi` | GitHub kullanıcı adına göre varsayılan; App Store Connect kaydında değiştirilebilir | Varsayım |
+| D15 | 2026-10-11 | Şekil bulma kural tabanlı ve cihaz üstü: zeminden farklı, yazısı silinmiş, yeterince büyük bölge | Model gerektirmez, her cihazda çalışır, belirli bir şablona göre ayarlanmaz. Öneridir; kullanıcı tek dokunuşla kaydeder, ayarlar veya yoksayar | Kabul |
+| D16 | 2026-10-11 | Ekran görüntüsünde sayfa alanı dışındaki yazılar atılır | Not uygulamasının araç çubuğu ("50", "33") metne karışıyordu. Satırların %30'undan fazlası dışarıda kalırsa alan güvenilmez sayılır, hiçbir şey atılmaz | Kabul |
+| D17 | 2026-10-11 | Şekilli export tek ZIP: `.md` + `figures/*.jpg` + `manifest.json` (etiket kutuları şekle göreli) | AI'a ve ileride Anki image occlusion'a tek dosyayla verilebilir; ZIP yazıcı bağımlılıksız (stored) | Kabul |

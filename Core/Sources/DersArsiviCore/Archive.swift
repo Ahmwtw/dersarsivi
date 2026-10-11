@@ -31,6 +31,7 @@ public enum ArchiveError: Error, Equatable {
     case sourceNotFound(UUID)
     case pageNotFound(UUID)
     case blockNotFound(UUID)
+    case figureNotFound(UUID)
 }
 
 /// Arşivin tüm kalıcı durumu. Kaynak, çıkarım, düzeltme katmanları ayrı tutulur.
@@ -43,6 +44,8 @@ public struct Archive: Codable, Equatable, Sendable {
     public private(set) var extractionRuns: [ExtractionRun]
     /// Çıkarım işleri arşivle birlikte saklanır; uygulama kapanınca kaybolmaz.
     public var jobQueue: JobQueue
+    /// Şekil önerileri ve kaydedilen şekil kırpımları.
+    public private(set) var figures: [Figure]
 
     public init() {
         schemaVersion = archiveSchemaVersion
@@ -52,6 +55,24 @@ public struct Archive: Codable, Equatable, Sendable {
         corrections = []
         extractionRuns = []
         jobQueue = JobQueue()
+        figures = []
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion, sources, pages, blocks, corrections, extractionRuns, jobQueue, figures
+    }
+
+    /// Sonradan eklenen alanlar eski arşiv dosyalarında yoktur; boş kabul edilir.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try c.decode(Int.self, forKey: .schemaVersion)
+        sources = try c.decode([SourceAsset].self, forKey: .sources)
+        pages = try c.decode([Page].self, forKey: .pages)
+        blocks = try c.decode([Block].self, forKey: .blocks)
+        corrections = try c.decode([Correction].self, forKey: .corrections)
+        extractionRuns = try c.decode([ExtractionRun].self, forKey: .extractionRuns)
+        jobQueue = try c.decode(JobQueue.self, forKey: .jobQueue)
+        figures = try c.decodeIfPresent([Figure].self, forKey: .figures) ?? []
     }
 
     // MARK: Sorgular
@@ -193,5 +214,80 @@ public struct Archive: Codable, Equatable, Sendable {
         blocks[i].origin = .user
         blocks[i].revision += 1
         blocks[i].reviewStatus = .humanVerified
+    }
+
+    // MARK: Şekiller
+
+    public func figure(_ id: UUID) -> Figure? { figures.first { $0.id == id } }
+
+    /// Sayfanın yoksayılmamış şekilleri, yukarıdan aşağı.
+    public func figures(of pageID: UUID) -> [Figure] {
+        figures.filter { $0.pageID == pageID && $0.status != .dismissed }
+            .sorted { ($0.bbox.y, $0.bbox.x) < ($1.bbox.y, $1.bbox.x) }
+    }
+
+    public func suggestedFigureCount(sourceID: UUID) -> Int {
+        let pageIDs = Set(pages(of: sourceID).map(\.id))
+        return figures.filter { pageIDs.contains($0.pageID) && $0.status == .suggested }.count
+    }
+
+    /// Yeni önerileri uygular. Eski öneriler silinir; kaydedilen veya yoksayılan şekillerle çakışan öneri eklenmez.
+    public mutating func applyFigureSuggestions(_ suggestions: [FigureSuggestion], pageID: UUID, at date: Date) {
+        figures.removeAll { $0.pageID == pageID && $0.status == .suggested }
+        let decided = figures.filter { $0.pageID == pageID }
+        for s in suggestions {
+            let overlaps = decided.contains { d in
+                guard let i = d.bbox.intersection(s.bbox) else { return false }
+                return i.area / min(d.bbox.area, s.bbox.area) > 0.5
+            }
+            guard !overlaps else { continue }
+            figures.append(Figure(pageID: pageID, bbox: s.bbox, status: .suggested, isAutoDetected: true,
+                                  labels: s.labels, createdAt: date))
+        }
+    }
+
+    /// Öneriyi (gerekirse yeni kutusuyla) kaydeder veya kaydedilmiş şeklin kutusunu değiştirir.
+    /// Önceki kırpım dosyası varsa yolunu döndürür; çağıran siler.
+    @discardableResult
+    public mutating func acceptFigure(_ id: UUID, bbox: BoundingBox, imageRef: String) throws -> String? {
+        guard let i = figures.firstIndex(where: { $0.id == id }) else { throw ArchiveError.figureNotFound(id) }
+        let previous = figures[i].imageRef
+        if figures[i].bbox != bbox {
+            // Kutu değiştiyse dışarıda kalan etiketler atılır.
+            figures[i].labels = figures[i].labels.filter { $0.bbox.fractionInside(bbox) >= 0.6 }
+            figures[i].bbox = bbox
+        }
+        figures[i].status = .accepted
+        figures[i].imageRef = imageRef
+        return previous == imageRef ? nil : previous
+    }
+
+    /// Kullanıcının elle çizdiği şekil. Etiket olarak içindeki OCR blokları alınır.
+    @discardableResult
+    public mutating func addFigure(pageID: UUID, bbox: BoundingBox, imageRef: String, at date: Date) -> Figure {
+        let labels = blocks(of: pageID).compactMap { b -> FigureLabel? in
+            guard let box = b.bbox, box.fractionInside(bbox) >= 0.6 else { return nil }
+            return FigureLabel(text: b.acceptedText, bbox: box)
+        }
+        let figure = Figure(pageID: pageID, bbox: bbox, status: .accepted, isAutoDetected: false,
+                            imageRef: imageRef, labels: labels, createdAt: date)
+        figures.append(figure)
+        return figure
+    }
+
+    public mutating func dismissFigure(_ id: UUID) {
+        guard let i = figures.firstIndex(where: { $0.id == id }) else { return }
+        figures[i].status = .dismissed
+    }
+
+    /// Kaydedilen şekli siler; aynı yer tekrar önerilmesin diye yoksayılmış olarak kalır.
+    /// Kırpım dosyasının yolunu döndürür; çağıran siler.
+    @discardableResult
+    public mutating func removeFigure(_ id: UUID) -> String? {
+        guard let i = figures.firstIndex(where: { $0.id == id }) else { return nil }
+        let ref = figures[i].imageRef
+        figures[i].status = .dismissed
+        figures[i].imageRef = nil
+        return ref
     }
 }

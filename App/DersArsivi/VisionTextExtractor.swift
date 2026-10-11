@@ -3,6 +3,12 @@ import Foundation
 import UIKit
 import Vision
 
+/// Bir sayfanın çıkarım sonucu: okuma sırasındaki paragraflar ve şekil önerileri.
+struct ExtractionOutput {
+    var blocks: [ExtractedBlock]
+    var figures: [FigureSuggestion]
+}
+
 /// Cihaz üstü OCR: Apple Vision. Ağa veri göndermez.
 struct VisionTextExtractor {
     static let engineName = "apple-vision"
@@ -27,10 +33,10 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v2|fig-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
-    func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> [ExtractedBlock] {
+    func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> ExtractionOutput {
         let languages = Self.usableLanguages()
         return try await withCheckedThrowingContinuation { continuation in
             // Vision eşzamanlı çalışır; arayüzü kilitlememek için arka plan kuyruğunda.
@@ -62,7 +68,13 @@ struct VisionTextExtractor {
                         .contains(orientation)
                     let width = Double(rotated ? image.height : image.width)
                     let height = Double(rotated ? image.width : image.height)
-                    once.resume(returning: LayoutAnalyzer.paragraphs(from: lines, pageWidth: width, pageHeight: height))
+                    // Not uygulamasının araç çubuğu gibi sayfa dışı yazılar atılır.
+                    let scan = Self.pageScan(image: image, orientation: orientation)
+                    let pageLines = FigureDetector.keepingContentLines(lines, scan: scan)
+                    let blocks = LayoutAnalyzer.paragraphs(from: pageLines, pageWidth: width, pageHeight: height)
+                    let boxed = pageLines.compactMap { line in line.bbox.map { (text: line.text, bbox: $0) } }
+                    let figures = scan.map { FigureDetector.suggestions(scan: $0, lines: boxed) } ?? []
+                    once.resume(returning: ExtractionOutput(blocks: blocks, figures: figures))
                 }
                 request.recognitionLevel = .accurate
                 request.usesLanguageCorrection = true
@@ -78,6 +90,23 @@ struct VisionTextExtractor {
         }
     }
 
+    /// Sayfa alanı ve şekil önerileri için görüntünün yönü düzeltilmiş küçük kopyası yeter.
+    private static func pageScan(image: CGImage, orientation: CGImagePropertyOrientation) -> FigureDetector.PageScan? {
+        let maxSide: CGFloat = 480
+        let ui = UIImage(cgImage: image, scale: 1, orientation: UIImage.Orientation(orientation))
+        let scale = min(1, maxSide / max(ui.size.width, ui.size.height, 1))
+        let size = CGSize(width: max(1, (ui.size.width * scale).rounded(.down)),
+                          height: max(1, (ui.size.height * scale).rounded(.down)))
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let small = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            ui.draw(in: CGRect(origin: .zero, size: size))
+        }
+        guard let cg = small.cgImage, let pixels = PixelBuffer(image: cg, maxSide: Int(maxSide)) else { return nil }
+        return FigureDetector.scan(rgba: pixels.bytes, width: pixels.width, height: pixels.height)
+    }
+
     /// Satırı kelimelere böler, her kelimenin kutusundaki piksellerden vurgu ve yazı rengini bulur.
     /// Biçimli kelime yoksa nil.
     private static func styledRuns(_ candidate: VNRecognizedText, pixels: PixelBuffer,
@@ -91,7 +120,8 @@ struct VisionTextExtractor {
             var end = index
             while end < text.endIndex, text[end].isWhitespace == isSpace { end = text.index(after: end) }
             let piece = String(text[index..<end])
-            if isSpace {
+            if isSpace || !piece.contains(where: { $0.isLetter || $0.isNumber }) {
+                // Madde imi gibi işaretlerin rengi anlamsız ve kenar pikselleri yüzünden yanıltıcı.
                 runs.append(TextRun(text: piece))
             } else if let observation = try? candidate.boundingBox(for: index..<end) {
                 let r = observation.boundingBox
@@ -117,13 +147,13 @@ struct VisionTextExtractor {
 
 private final class ResumeOnce: @unchecked Sendable {
     private let lock = NSLock()
-    private var continuation: CheckedContinuation<[ExtractedBlock], Error>?
+    private var continuation: CheckedContinuation<ExtractionOutput, Error>?
 
-    init(_ continuation: CheckedContinuation<[ExtractedBlock], Error>) {
+    init(_ continuation: CheckedContinuation<ExtractionOutput, Error>) {
         self.continuation = continuation
     }
 
-    private func take() -> CheckedContinuation<[ExtractedBlock], Error>? {
+    private func take() -> CheckedContinuation<ExtractionOutput, Error>? {
         lock.lock()
         defer { lock.unlock() }
         let c = continuation
@@ -131,12 +161,28 @@ private final class ResumeOnce: @unchecked Sendable {
         return c
     }
 
-    func resume(returning value: [ExtractedBlock]) { take()?.resume(returning: value) }
+    func resume(returning value: ExtractionOutput) { take()?.resume(returning: value) }
     func resume(throwing error: Error) { take()?.resume(throwing: error) }
 }
 
 extension CGImagePropertyOrientation {
     init(_ orientation: UIImage.Orientation) {
+        switch orientation {
+        case .up: self = .up
+        case .upMirrored: self = .upMirrored
+        case .down: self = .down
+        case .downMirrored: self = .downMirrored
+        case .left: self = .left
+        case .leftMirrored: self = .leftMirrored
+        case .right: self = .right
+        case .rightMirrored: self = .rightMirrored
+        @unknown default: self = .up
+        }
+    }
+}
+
+extension UIImage.Orientation {
+    init(_ orientation: CGImagePropertyOrientation) {
         switch orientation {
         case .up: self = .up
         case .upMirrored: self = .upMirrored

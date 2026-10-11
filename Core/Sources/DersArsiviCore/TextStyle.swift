@@ -69,6 +69,9 @@ public enum ColorAnalysis {
             return (dr * dr + dg * dg + db * db).squareRoot()
         }
 
+        /// Algılanan parlaklık (0...255).
+        var luminance: Double { 0.299 * r + 0.587 * g + 0.114 * b }
+
         /// (ton 0..<360, doygunluk 0...1, parlaklık 0...1)
         var hsv: (h: Double, s: Double, v: Double) {
             let rr = r / 255, gg = g / 255, bb = b / 255
@@ -140,7 +143,10 @@ public enum ColorAnalysis {
         guard let found = backgroundAndInk(rgba: rgba) else { return (nil, nil) }
         let bg = found.background, ink = found.ink
         var highlight: NamedColor?
-        if bg.distance(to: pageBackground) > 40, bg.hsv.v > 0.55, let n = name(bg) {
+        // Fosforlu kalem açık renkli zemin üstünde koyu yazıdır. Renkli zemin üstünde açık yazı
+        // (tablo başlığı, renkli kutu) vurgu değil, şablon biçimidir.
+        let inkIsDarker = ink.map { $0.luminance < bg.luminance } ?? true
+        if bg.distance(to: pageBackground) > 40, bg.hsv.v > 0.55, inkIsDarker, let n = name(bg) {
             highlight = n
         }
         let color = ink.flatMap(name)

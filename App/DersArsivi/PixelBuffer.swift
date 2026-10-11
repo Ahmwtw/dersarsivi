@@ -7,7 +7,8 @@ import ImageIO
 struct PixelBuffer {
     let width: Int
     let height: Int
-    private let bytes: [UInt8]
+    /// RGBA8, satır satır.
+    let bytes: [UInt8]
 
     init?(image: CGImage, maxSide: Int = 2000) {
         let scale = min(1, Double(maxSide) / Double(max(image.width, image.height)))

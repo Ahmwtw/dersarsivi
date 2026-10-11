@@ -41,6 +41,23 @@ public struct ExportManifest: Codable, Equatable, Sendable {
         public var file: String
     }
 
+    /// Exporttaki bir şekil. Etiket kutuları şekle göreli (0...1, sol üst orijin); Anki image occlusion için.
+    public struct FigureEntry: Codable, Equatable, Sendable {
+        public struct Label: Codable, Equatable, Sendable {
+            public var text: String
+            public var bbox: BoundingBox
+        }
+
+        public var number: Int
+        public var sourceID: UUID
+        public var pageIndex: Int
+        /// ZIP içindeki görsel yolu; görselsiz exportta nil.
+        public var file: String?
+        /// Sayfaya göre kutu.
+        public var bbox: BoundingBox
+        public var labels: [Label]
+    }
+
     public var schemaVersion: Int
     public var exportID: UUID
     public var createdAt: Date
@@ -49,6 +66,7 @@ public struct ExportManifest: Codable, Equatable, Sendable {
     public var sources: [SourceEntry]
     public var warnings: [String]
     public var partialExport: Bool
+    public var figures: [FigureEntry]?
 }
 
 public struct ExportFile: Equatable, Sendable {
@@ -56,9 +74,32 @@ public struct ExportFile: Equatable, Sendable {
     public var contents: String
 }
 
+/// ZIP'e konacak şekil görseli: arşivdeki kırpım dosyası ve ZIP içindeki yolu.
+public struct ExportAsset: Equatable, Sendable {
+    public var path: String
+    public var imageRef: String
+}
+
 public struct ExportResult: Equatable, Sendable {
     public var files: [ExportFile]
     public var manifest: ExportManifest
+    public var assets: [ExportAsset]
+
+    /// Markdown dosyaları, şekil görselleri ve manifest tek ZIP'te. `imageData` arşivdeki kırpımı okur.
+    public func zip(imageData: (String) -> Data?, modified: Date = Date()) throws -> Data {
+        var archive = ZipArchive()
+        for file in files { archive.add(path: file.name, contents: Data(file.contents.utf8), modified: modified) }
+        for asset in assets {
+            if let data = imageData(asset.imageRef) {
+                archive.add(path: asset.path, contents: data, modified: modified)
+            }
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        archive.add(path: "manifest.json", contents: try encoder.encode(manifest), modified: modified)
+        return archive.finish()
+    }
 }
 
 /// Seçili kaynakları kaynak referanslı Markdown'a çevirir. İşlenmemiş veya başarısız sayfalar
@@ -66,16 +107,20 @@ public struct ExportResult: Equatable, Sendable {
 public struct MarkdownExporter {
     /// Bu değerin altındaki motor güveni "belirsiz" sayılır. Kalibre edilmiş bir eşik değildir.
     public var lowConfidenceThreshold: Double
+    /// Şekiller `figures/` klasöründeki görsellere bağlanır (ZIP export). Kapalıyken yalnız yer ve etiketler yazılır.
+    public var includeFigureImages: Bool
 
-    public init(lowConfidenceThreshold: Double = 0.5) {
+    public init(lowConfidenceThreshold: Double = 0.5, includeFigureImages: Bool = false) {
         self.lowConfidenceThreshold = lowConfidenceThreshold
+        self.includeFigureImages = includeFigureImages
     }
 
     public func export(_ archive: Archive, selections: [SourceSelection], mode: ExportMode,
                        exportID: UUID = UUID(), createdAt: Date) throws -> ExportResult {
         var sections: [(entry: ExportManifest.SourceEntry, markdown: String)] = []
+        var figures = FigureCollector()
         for selection in selections {
-            sections.append(try section(for: selection, in: archive, mode: mode))
+            sections.append(try section(for: selection, in: archive, mode: mode, figures: &figures))
         }
 
         var warnings: [String] = []
@@ -95,7 +140,7 @@ public struct MarkdownExporter {
         case .combined:
             let name = "dersarsivi-\(Self.shortID(exportID)).md"
             var body = header(exportID: exportID, createdAt: createdAt, sourceCount: sections.count, warnings: warnings,
-                              hasStyles: hasStyles)
+                              hasStyles: hasStyles, figureCount: figures.entries.count)
             for (entry, markdown) in sections {
                 body += "\n" + markdown
                 var e = entry
@@ -115,7 +160,7 @@ public struct MarkdownExporter {
                 usedNames.insert(name)
                 let ownWarnings = warnings.filter { $0.hasPrefix(entry.title + ":") }
                 let body = header(exportID: exportID, createdAt: createdAt, sourceCount: 1, warnings: ownWarnings,
-                                  hasStyles: hasStyles)
+                                  hasStyles: hasStyles, figureCount: figures.entries.count)
                     + "\n" + markdown
                 files.append(ExportFile(name: name, contents: body))
                 var e = entry
@@ -126,19 +171,27 @@ public struct MarkdownExporter {
 
         let manifest = ExportManifest(schemaVersion: archiveSchemaVersion, exportID: exportID, createdAt: createdAt,
                                       profile: .faithfulText, mode: mode, sources: entries, warnings: warnings,
-                                      partialExport: partial)
-        return ExportResult(files: files, manifest: manifest)
+                                      partialExport: partial, figures: figures.entries.isEmpty ? nil : figures.entries)
+        return ExportResult(files: files, manifest: manifest, assets: figures.assets)
     }
 
     // MARK: Parçalar
 
     private func header(exportID: UUID, createdAt: Date, sourceCount: Int, warnings: [String],
-                        hasStyles: Bool) -> String {
+                        hasStyles: Bool, figureCount: Int) -> String {
         var s = "# DersArşivi dışa aktarımı\n\n"
         s += "Profil: sadık metin · Kaynak sayısı: \(sourceCount) · Tarih: \(Self.isoDate(createdAt)) · "
         s += "Export: \(exportID.uuidString.lowercased())\n\n"
         s += "Metin kaynak görüntüsünden OCR ile çıkarıldı; ✏️ kullanıcı tarafından düzeltilmiş, "
-        s += "⚠️ belirsiz bölümleri gösterir. Bu dosya görsel içermez.\n"
+        s += "⚠️ belirsiz bölümleri gösterir. "
+        if figureCount == 0 {
+            s += "Bu dosya görsel içermez.\n"
+        } else if includeFigureImages {
+            s += "Şekiller `figures/` klasöründedir; şekil içindeki yazılar şeklin altında etiket olarak listelenir, "
+            s += "etiket konumları `manifest.json` içindedir.\n"
+        } else {
+            s += "Şekillerin yeri ve etiketleri yazılıdır; görselleri bu dosyada yok (ZIP ile dışa aktarınca eklenir).\n"
+        }
         if hasStyles {
             s += "Kaynaktaki biçim: ==metin== fosforlu kalemle vurgulanmış (sarı dışındaysa rengi yanında), "
             s += "⟦renk: metin⟧ renkli yazılmış. Renkler görüntüden otomatik tahmin edildi.\n"
@@ -150,8 +203,8 @@ public struct MarkdownExporter {
         return s
     }
 
-    private func section(for selection: SourceSelection, in archive: Archive,
-                         mode: ExportMode) throws -> (ExportManifest.SourceEntry, String) {
+    private func section(for selection: SourceSelection, in archive: Archive, mode: ExportMode,
+                         figures collector: inout FigureCollector) throws -> (ExportManifest.SourceEntry, String) {
         guard let source = archive.source(selection.sourceID) else {
             throw ArchiveError.sourceNotFound(selection.sourceID)
         }
@@ -193,7 +246,19 @@ public struct MarkdownExporter {
                 continue
             }
             included.append(page.pageIndex)
+            let accepted = archive.figures(of: page.id).filter { $0.status == .accepted }
+            var pending = accepted
             for block in blocks {
+                // Şeklin içindeki yazılar (etiketler) şeklin altında listelenir; metinde tekrarlanmaz.
+                if let box = block.bbox, accepted.contains(where: { box.fractionInside($0.bbox) >= 0.8 }) {
+                    continue
+                }
+                if let box = block.bbox {
+                    while let next = pending.first, next.bbox.y <= box.y {
+                        md += figureMarkdown(next, source: source, page: page, collector: &collector)
+                        pending.removeFirst()
+                    }
+                }
                 if let runs = block.runs, !block.isUserCorrected {
                     md += "\n" + Self.render(runs)
                 } else {
@@ -206,6 +271,9 @@ public struct MarkdownExporter {
                     md += "> ⚠️ Belirsiz: \(note)\n"
                 }
             }
+            for figure in pending {
+                md += figureMarkdown(figure, source: source, page: page, collector: &collector)
+            }
         }
 
         let entry = ExportManifest.SourceEntry(
@@ -213,6 +281,32 @@ public struct MarkdownExporter {
             selectedPageIndices: selected.map(\.pageIndex), includedPageIndices: included,
             missingPages: missing, uncertainBlockCount: uncertain, file: "")
         return (entry, md)
+    }
+
+    private func figureMarkdown(_ figure: Figure, source: SourceAsset, page: Page,
+                                collector: inout FigureCollector) -> String {
+        let number = collector.entries.count + 1
+        var file: String?
+        if includeFigureImages, let ref = figure.imageRef {
+            let path = "figures/\(Self.slug(source.sourceTitle))-\(Self.shortID(source.id))-sekil-\(number).jpg"
+            collector.assets.append(ExportAsset(path: path, imageRef: ref))
+            file = path
+        }
+        collector.entries.append(.init(
+            number: number, sourceID: source.id, pageIndex: page.pageIndex, file: file, bbox: figure.bbox,
+            labels: figure.labels.map { .init(text: $0.text, bbox: $0.bbox.relative(to: figure.bbox)) }))
+
+        var md = "\n"
+        if let file {
+            md += "![Şekil \(number)](\(file))\n"
+        } else {
+            md += "> 🖼️ Şekil \(number) (görsel bu dosyada yok)\n"
+        }
+        if !figure.labels.isEmpty {
+            let names = figure.labels.map { Self.inline($0.text) }.joined(separator: " · ")
+            md += "\n_Şekil \(number) etiketleri: \(names)_\n"
+        }
+        return md
     }
 
     private func uncertaintyNote(_ block: Block) -> String? {
@@ -304,4 +398,9 @@ public struct MarkdownExporter {
         f.formatOptions = [.withInternetDateTime]
         return f.string(from: date)
     }
+}
+
+struct FigureCollector {
+    var entries: [ExportManifest.FigureEntry] = []
+    var assets: [ExportAsset] = []
 }

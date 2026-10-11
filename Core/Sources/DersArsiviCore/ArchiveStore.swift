@@ -15,6 +15,7 @@ public enum ArchiveStoreError: Error, Equatable {
 ///   archive.json         metadata, bloklar, düzeltmeler
 ///   originals/<uuid>.<ext>  orijinal dosyalar (değiştirilmez)
 ///   thumbnails/<uuid>-<sayfa>.jpg
+///   figures/<uuid>.jpg   kullanıcının kaydettiği şekil kırpımları
 public struct FileArchiveStore: ArchiveStore {
     public let rootURL: URL
 
@@ -25,6 +26,7 @@ public struct FileArchiveStore: ArchiveStore {
     public var archiveURL: URL { rootURL.appendingPathComponent("archive.json") }
     public var originalsURL: URL { rootURL.appendingPathComponent("originals", isDirectory: true) }
     public var thumbnailsURL: URL { rootURL.appendingPathComponent("thumbnails", isDirectory: true) }
+    public var figuresURL: URL { rootURL.appendingPathComponent("figures", isDirectory: true) }
 
     public func load() throws -> Archive {
         guard FileManager.default.fileExists(atPath: archiveURL.path) else { return Archive() }
@@ -50,6 +52,20 @@ public struct FileArchiveStore: ArchiveStore {
         let name = ext.isEmpty ? id.uuidString.lowercased() : "\(id.uuidString.lowercased()).\(ext)"
         try data.write(to: originalsURL.appendingPathComponent(name), options: .atomic)
         return ("originals/\(name)", SHA256Hasher.hexDigest(data))
+    }
+
+    /// Şekil kırpımını yazar. Her kayıtta yeni ad: eski kırpım silinene kadar geçerli kalır.
+    public func storeFigureImage(_ data: Data) throws -> String {
+        try FileManager.default.createDirectory(at: figuresURL, withIntermediateDirectories: true)
+        let name = "\(UUID().uuidString.lowercased()).jpg"
+        try data.write(to: figuresURL.appendingPathComponent(name), options: .atomic)
+        return "figures/\(name)"
+    }
+
+    /// Yalnız arşivin türetilmiş dosyalarını siler; orijinaller bu yolla silinemez.
+    public func removeDerived(ref: String) {
+        guard ref.hasPrefix("figures/"), !ref.contains("..") else { return }
+        try? FileManager.default.removeItem(at: url(forRef: ref))
     }
 
     public func url(forRef ref: String) -> URL {

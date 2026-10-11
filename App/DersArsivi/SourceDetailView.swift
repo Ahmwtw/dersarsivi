@@ -37,6 +37,8 @@ struct SourceDetailView: View {
                     }
                 }
 
+                FiguresSection(source: source, page: page)
+
                 Section {
                     if blocks.isEmpty {
                         Text(page.status == .ready ? "Bu görselde metin bulunamadı." : "Metin henüz okunmadı.")

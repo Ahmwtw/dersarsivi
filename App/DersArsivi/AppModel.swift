@@ -108,9 +108,10 @@ final class AppModel: ObservableObject {
             guard let image = loadImage(ref: source.localAssetRef) else {
                 throw ExtractionFailure.originalMissing
             }
-            let blocks = try await extractor.extract(from: image.cgImage, orientation: image.orientation)
+            let output = try await extractor.extract(from: image.cgImage, orientation: image.orientation)
             runRecord.finishedAt = Date()
-            try archive.applyExtraction(blocks, run: runRecord)
+            try archive.applyExtraction(output.blocks, run: runRecord)
+            archive.applyFigureSuggestions(output.figures, pageID: page.id, at: Date())
             archive.jobQueue.complete(jobID: job.id, at: Date())
         } catch {
             let message = (error as? ExtractionFailure)?.message ?? error.localizedDescription
@@ -161,16 +162,84 @@ final class AppModel: ObservableObject {
         store.url(forRef: source.localAssetRef)
     }
 
+    // MARK: Şekiller
+
+    func figureImageURL(_ figure: Figure) -> URL? {
+        figure.imageRef.map { store.url(forRef: $0) }
+    }
+
+    /// Öneriyi verilen kutuyla kaydeder (veya kaydedilmiş şeklin kutusunu değiştirir): orijinalden kırpar.
+    func saveFigure(_ figureID: UUID, bbox: BoundingBox) async {
+        guard let figure = archive.figure(figureID), let source = source(ofPage: figure.pageID) else { return }
+        guard let ref = await cropAndStore(source: source, bbox: bbox) else { return }
+        do {
+            if let old = try archive.acceptFigure(figureID, bbox: bbox, imageRef: ref) {
+                store.removeDerived(ref: old)
+            }
+            persist()
+        } catch {
+            store.removeDerived(ref: ref)
+            lastError = "Şekil kaydedilemedi: \(error.localizedDescription)"
+        }
+    }
+
+    /// Kullanıcının kendi çizdiği şekil.
+    func addFigure(pageID: UUID, bbox: BoundingBox) async {
+        guard let source = source(ofPage: pageID),
+              let ref = await cropAndStore(source: source, bbox: bbox) else { return }
+        archive.addFigure(pageID: pageID, bbox: bbox, imageRef: ref, at: Date())
+        persist()
+    }
+
+    func dismissFigure(_ id: UUID) {
+        archive.dismissFigure(id)
+        persist()
+    }
+
+    func removeFigure(_ id: UUID) {
+        if let ref = archive.removeFigure(id) { store.removeDerived(ref: ref) }
+        persist()
+    }
+
+    private func source(ofPage pageID: UUID) -> SourceAsset? {
+        archive.pages.first { $0.id == pageID }.flatMap { archive.source($0.sourceID) }
+    }
+
+    private func cropAndStore(source: SourceAsset, bbox: BoundingBox) async -> String? {
+        let url = originalURL(for: source)
+        let data = await Task.detached(priority: .userInitiated) {
+            FigureCropper.crop(url: url, bbox: bbox, maxSide: 1400)?.jpegData(compressionQuality: 0.8)
+        }.value
+        guard let data else {
+            lastError = "Şekil kırpılamadı: orijinal görsel açılamadı."
+            return nil
+        }
+        do {
+            return try store.storeFigureImage(data)
+        } catch {
+            lastError = "Şekil kaydedilemedi: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
     // MARK: Export
 
-    /// Seçili kaynakları Markdown olarak geçici klasöre yazar; paylaşım sayfasına verilecek URL'leri döndürür.
-    func exportMarkdown(sourceIDs: [UUID], mode: ExportMode) -> [URL] {
+    /// Seçili kaynakları geçici klasöre yazar; paylaşım sayfasına verilecek URL'leri döndürür.
+    /// `withFigures` açıksa Markdown, şekil görselleri ve manifest tek ZIP olur.
+    func exportFiles(sourceIDs: [UUID], mode: ExportMode, withFigures: Bool) -> [URL] {
         do {
-            let result = try MarkdownExporter().export(
+            let result = try MarkdownExporter(includeFigureImages: withFigures).export(
                 archive, selections: sourceIDs.map { SourceSelection(sourceID: $0) }, mode: mode, createdAt: Date())
             let dir = FileManager.default.temporaryDirectory
                 .appendingPathComponent("export-\(result.manifest.exportID.uuidString)", isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            if withFigures {
+                let zip = try result.zip(imageData: { [store] ref in try? Data(contentsOf: store.url(forRef: ref)) })
+                let short = result.manifest.exportID.uuidString.lowercased().prefix(8)
+                let url = dir.appendingPathComponent("dersarsivi-\(short).zip")
+                try zip.write(to: url, options: .atomic)
+                return [url]
+            }
             return try result.files.map { file in
                 let url = dir.appendingPathComponent(file.name)
                 try Data(file.contents.utf8).write(to: url, options: .atomic)

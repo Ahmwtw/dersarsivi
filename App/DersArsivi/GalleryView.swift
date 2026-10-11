@@ -94,6 +94,18 @@ struct GalleryView: View {
                 .overlay { ThumbnailView(url: model.originalURL(for: source)) }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(alignment: .topLeading) { StatusBadge(status: status).padding(4) }
+                .overlay(alignment: .bottomTrailing) {
+                    let suggested = model.archive.suggestedFigureCount(sourceID: source.id)
+                    if suggested > 0 {
+                        Label("\(suggested)", systemImage: "crop")
+                            .font(.caption2.bold())
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(.thinMaterial, in: Capsule())
+                            .padding(4)
+                            .accessibilityLabel("\(suggested) şekil önerisi")
+                    }
+                }
                 .overlay(alignment: .topTrailing) {
                     if isSelecting {
                         Image(systemName: selection.contains(source.id) ? "checkmark.circle.fill" : "circle")
