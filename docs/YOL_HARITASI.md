@@ -26,27 +26,28 @@ Değişmez ilkeler:
 
 ### Aşama 1: Algılamanın son kontrolü (şimdi)
 
-- [ ] Sıkışık satırlarda okuma sırası (satırlar üst üste binince soldan sağa diziliyordu)
-- [ ] Her slaytta tekrarlanan logo/üniversite yazısını dışa aktarımdan çıkar
-- [ ] Vurgu işaretleri: satırın yanındaki yıldız, ünlem, çarpı, çiçek gibi işaretler "işaretli" olarak dışa aktarılır
-- [ ] El yazısı: renkli kalemle yazılmış, düşük güvenle okunan satırlar el notu sayılır; el notu bölgesi görüntü
+- [x] Sıkışık satırlarda okuma sırası (satırlar üst üste binince soldan sağa diziliyordu)
+- [x] Her slaytta tekrarlanan logo/üniversite yazısını dışa aktarımdan çıkar
+- [x] Vurgu işaretleri: satırın yanındaki yıldız, ünlem, çarpı, çiçek gibi işaretler "işaretli" olarak dışa aktarılır
+- [x] El yazısı: renkli kalemle yazılmış, düşük güvenle okunan satırlar el notu sayılır; el notu bölgesi görüntü
       olarak kendiliğinden kaydedilir
-- [ ] "Sadece görsel" modu: karışık sayfalar (el yazısı ağırlıklı, etiket yığını) kendiliğinden bu moda geçer;
+- [x] "Sadece görsel" modu: karışık sayfalar (el yazısı ağırlıklı, etiket yığını) kendiliğinden bu moda geçer;
       kullanıcı seçtiği görselleri bu moda alabilir. Bu sayfalar dışa aktarımda optimize edilmiş görüntü olarak gider
-- [ ] Galeride "Tümünü seç"
-- [ ] PR #1'in birleştirilmesi (kullanıcı onayıyla)
+- [x] Galeride "Tümünü seç"
+- [ ] PR #1'in birleştirilmesi (kullanıcı onayladı; CI yeşil olunca)
 
 ### Aşama 2: Kullanılabilir uygulama
 
-- [ ] **PDF içe aktarma:** Dosyalar'dan PDF, sayfa küçük resimleri, sayfa aralığı seçimi, metin katmanı varsa doğrudan
+- [x] **PDF içe aktarma:** Dosyalar'dan PDF, sayfa küçük resimleri, sayfa aralığı seçimi, metin katmanı varsa doğrudan
       kullanım, yoksa OCR
-- [ ] **Klasörler:** "Fizyoloji" gibi klasörler; görsel ve PDF aynı klasörde; alt klasör; bir kaynağı taşıma; klasörü
+- [x] **Klasörler:** "Fizyoloji" gibi klasörler; görsel ve PDF aynı klasörde; alt klasör; bir kaynağı taşıma; klasörü
       tek seferde dışa aktarma
-- [ ] **Hazır talimatlı dışa aktarım (prompt kütüphanesi):** aşağıdaki listeden amaç seçilir, talimat dosyanın başına
+- [x] **Hazır talimatlı dışa aktarım (prompt kütüphanesi):** aşağıdaki listeden amaç seçilir, talimat dosyanın başına
       eklenir ve ayrıca kopyalanabilir
-- [ ] **Yeni arayüz:** kenar çubuklu iPad düzeni (Klasörler / Tümü / Son eklenenler / Dışa aktar), büyük önizlemeli
-      galeri, kaynak ve metni yan yana gösteren detay, Liquid Glass araç çubukları (iOS 26), iPhone'da sekmeli düzen
-- [ ] Tam metin arama (tüm kaynaklarda)
+- [x] **Yeni arayüz:** kenar çubuklu iPad düzeni (Tümü / Klasörsüz / İşaretli ve notlu / Okunmayı bekleyen / klasörler),
+      kartlı galeri, alttaki cam eylem çubuğu, Liquid Glass (iOS 26); iPhone'da aynı yapı tek sütun
+- [ ] iPad'de sayfa ile metni yan yana gösteren detay; sayfa üstünde satıra dokununca düzeltme
+- [x] Tam metin arama (tüm kaynaklarda)
 
 ### Aşama 3: Akıllı özellikler
 
