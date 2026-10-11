@@ -13,6 +13,7 @@ struct ExportView: View {
     @AppStorage("exportPromptID") private var promptID = ""
     @State private var debugFiles: [URL] = []
     @State private var copied = false
+    @State private var ankiFile: URL?
 
     private var template: PromptTemplate? { PromptLibrary.template(id: promptID) }
 
@@ -24,6 +25,12 @@ struct ExportView: View {
 
     private var imageOnlyCount: Int {
         sourceIDs.flatMap { model.archive.pages(of: $0) }.filter { model.archive.isImageOnly($0) }.count
+    }
+
+    /// Görsel kapatma kartı çıkacak şekil ve kart sayısı.
+    private var occlusion: (figures: Int, cards: Int) {
+        let figures = ImageOcclusion.figures(in: model.archive, sourceIDs: sourceIDs)
+        return (figures.count, figures.reduce(0) { $0 + ImageOcclusion.targets(of: $1.figure).count })
     }
 
     private var unprocessedCount: Int {
@@ -54,6 +61,7 @@ struct ExportView: View {
                 } footer: {
                     Text(packageNote)
                 }
+                occlusionSection
                 if unprocessedCount > 0 {
                     Section {
                         Label("\(unprocessedCount) sayfa henüz okunmadı. Dosyada eksik olarak belirtilecek.",
@@ -166,6 +174,32 @@ struct ExportView: View {
         } footer: {
             if template?.recommendsImages == true {
                 Text("Bu talimat görüntüleri de kullanır; sayfa görüntüleri açıldı.")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var occlusionSection: some View {
+        let counts = occlusion
+        if counts.figures > 0 {
+            Section {
+                if let ankiFile {
+                    ShareLink(item: ankiFile) {
+                        Label("Desteyi Anki'de aç", systemImage: "square.and.arrow.up")
+                    }
+                } else {
+                    Button {
+                        ankiFile = model.occlusionDeck(sourceIDs: sourceIDs)
+                    } label: {
+                        Label("\(counts.cards) kartlık desteyi hazırla", systemImage: "rectangle.on.rectangle.angled")
+                    }
+                }
+            } header: {
+                Text("Anki görsel kapatma")
+            } footer: {
+                Text("\(counts.figures) şeklin etiketleri kapatılır; her kartta biri sorulur. Paket (.apkg) "
+                     + "\"\(model.deckName(for: sourceIDs))\" destesine eklenir. Tekrar aktarırsan kartlar "
+                     + "güncellenir, çoğalmaz.")
             }
         }
     }
