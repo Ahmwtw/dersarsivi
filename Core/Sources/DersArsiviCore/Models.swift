@@ -296,7 +296,7 @@ public struct ExtractionRun: Codable, Equatable, Identifiable, Sendable {
 }
 
 /// Kaynakları gruplayan klasör ("Fizyoloji"). İç içe olabilir.
-public struct Folder: Codable, Equatable, Identifiable, Sendable {
+public struct Folder: Codable, Hashable, Identifiable, Sendable {
     public var id: UUID
     public var name: String
     public var parentID: UUID?

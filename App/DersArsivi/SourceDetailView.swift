@@ -8,10 +8,12 @@ struct SourceDetailView: View {
     @State private var title = ""
     @State private var showOriginal = false
     @State private var confirmDelete = false
+    @State private var pageIndex = 0
     @Environment(\.dismiss) private var dismiss
 
     private var source: SourceAsset? { model.archive.source(sourceID) }
-    private var page: Page? { model.archive.pages(of: sourceID).first }
+    private var pages: [Page] { model.archive.pages(of: sourceID) }
+    private var page: Page? { pages.first { $0.pageIndex == pageIndex } ?? pages.first }
     private var blocks: [Block] { page.map { model.archive.blocks(of: $0.id) } ?? [] }
 
     var body: some View {
@@ -20,39 +22,27 @@ struct SourceDetailView: View {
                 Section {
                     Button { showOriginal = true } label: {
                         ThumbnailView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source),
-                                      maxPixel: 1200, contentMode: .fit)
-                            .frame(maxHeight: 320)
+                                      maxPixel: 1400, contentMode: .fit)
+                            .frame(maxHeight: 360)
                             .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Orijinal görseli tam ekran aç")
+                    .accessibilityLabel("Sayfayı tam ekran aç")
+                    if pages.count > 1 { pageStrip }
                     TextField("Başlık", text: $title)
+                        .font(.headline)
                         .onSubmit { model.rename(sourceID: sourceID, to: title) }
-                    LabeledContent("Durum") { StatusBadge(status: page.status) }
-                    if page.workingImageRef != nil {
-                        Label("Eğik fotoğraf okumadan önce düzleştirildi", systemImage: "perspective")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    if let reason = page.failureReason {
-                        Text(reason).font(.footnote).foregroundStyle(.secondary)
-                    }
-                    if page.status == .failed {
-                        Button("Yeniden dene") { model.retry(pageID: page.id) }
-                    } else if [.ready, .needsReview].contains(page.status) {
-                        Button("Yeniden oku") { model.retry(pageID: page.id) }
-                    }
-                } footer: {
-                    if [.ready, .needsReview].contains(page.status) {
-                        Text("Yeniden oku görseli baştan okur. Metin düzeltmelerin, kaydettiğin ve yoksaydığın şekiller korunur; yalnız bekleyen şekil önerileri yenilenir.")
-                    }
                 }
+
+                statusSection(page)
+                exportStyleSection(source: source, page: page)
 
                 FiguresSection(source: source, page: page)
 
                 Section {
                     if blocks.isEmpty {
-                        Text(page.status == .ready ? "Bu görselde metin bulunamadı." : "Metin henüz okunmadı.")
+                        Text(page.status == .ready ? "Bu sayfada metin bulunamadı." : "Metin henüz okunmadı.")
                             .foregroundStyle(.secondary)
                     }
                     ForEach(blocks) { block in
@@ -62,16 +52,16 @@ struct SourceDetailView: View {
                 } header: {
                     Text("Çıkarılan metin")
                 } footer: {
-                    Text("Bir satıra dokunarak düzelt. Düzeltmen sonraki okumalarda korunur ve dışa aktarımda kullanılır.")
+                    Text("Bir satıra dokunarak düzelt. Düzeltmen sonraki okumalarda korunur ve dışa aktarımda kullanılır. "
+                         + "⭐ yanına işaret konmuş, ✍️ el yazısı satırdır.")
                 }
 
-                Section("Okuma ayarı") {
-                    LabeledContent("Motor", value: "Apple Vision (cihazda)")
-                    LabeledContent("Kullanılan diller", value: VisionTextExtractor.usableLanguages().joined(separator: ", "))
-                    DisclosureGroup("Cihazın desteklediği diller") {
-                        Text(VisionTextExtractor.supportedLanguages().joined(separator: ", "))
-                            .font(.footnote)
-                            .textSelection(.enabled)
+                Section {
+                    DisclosureGroup("Okuma ayarı") {
+                        LabeledContent("Motor", value: source.mediaType == .pdf
+                                       ? "PDF metin katmanı, yoksa Apple Vision" : "Apple Vision (cihazda)")
+                        LabeledContent("Kullanılan diller",
+                                       value: VisionTextExtractor.usableLanguages().joined(separator: ", "))
                     }
                 }
             }
@@ -79,12 +69,24 @@ struct SourceDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(role: .destructive) { confirmDelete = true } label: {
-                        Label("Sil", systemImage: "trash")
+                    Menu {
+                        Menu {
+                            Button("Klasörsüz") { model.move(sources: [sourceID], toFolder: nil) }
+                            ForEach(model.flatFolders()) { entry in
+                                Button(entry.indentedName) { model.move(sources: [sourceID], toFolder: entry.folder.id) }
+                            }
+                        } label: {
+                            Label("Klasöre taşı", systemImage: "folder")
+                        }
+                        Button(role: .destructive) { confirmDelete = true } label: {
+                            Label("Sil", systemImage: "trash")
+                        }
+                    } label: {
+                        Label("Diğer", systemImage: "ellipsis")
                     }
                 }
             }
-            .confirmationDialog("Bu görsel silinsin mi?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            .confirmationDialog("Bu kaynak silinsin mi?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Sil", role: .destructive) {
                     dismiss()
                     model.deleteSources([sourceID])
@@ -106,6 +108,109 @@ struct SourceDetailView: View {
             ContentUnavailableView("Kaynak bulunamadı", systemImage: "questionmark.folder")
         }
     }
+
+    /// PDF sayfaları arasında geçiş: küçük resim şeridi, okunmamış sayfalar soluk.
+    private var pageStrip: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 8) {
+                    ForEach(pages) { p in
+                        let selected = p.pageIndex == pageIndex
+                        let read = [.ready, .needsReview, .partial].contains(p.status)
+                        Button { pageIndex = p.pageIndex } label: {
+                            VStack(spacing: 4) {
+                                ThumbnailView(url: model.pageImageURL(for: p) ?? model.originalURL(for: source!),
+                                              maxPixel: 200)
+                                    .frame(width: 52, height: 68)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                    .opacity(read ? 1 : 0.45)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .strokeBorder(selected ? Theme.accent : .clear, lineWidth: 2.5)
+                                    }
+                                Text(p.pdfPageLabel ?? "\(p.pageIndex + 1)")
+                                    .font(.caption2.weight(selected ? .bold : .regular))
+                                    .foregroundStyle(selected ? Theme.accent : .secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .id(p.pageIndex)
+                        .accessibilityLabel("Sayfa \(p.pageIndex + 1)\(read ? "" : ", okunmadı")")
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .frame(height: 96)
+            .onChange(of: pageIndex) { _, index in withAnimation { proxy.scrollTo(index, anchor: .center) } }
+        }
+    }
+
+    @ViewBuilder
+    private func statusSection(_ page: Page) -> some View {
+        let unread = pages.filter { [.imported, .cancelled].contains($0.status) }
+        Section {
+            LabeledContent("Durum") { StatusBadge(status: page.status) }
+            if page.workingImageRef != nil && source?.mediaType != .pdf {
+                Label("Eğik fotoğraf okumadan önce düzleştirildi", systemImage: "perspective")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if let reason = page.failureReason {
+                Text(reason).font(.footnote).foregroundStyle(.secondary)
+            }
+            switch page.status {
+            case .failed:
+                Button("Yeniden dene") { model.retry(pageID: page.id) }
+            case .ready, .needsReview, .partial:
+                Button("Yeniden oku") { model.retry(pageID: page.id) }
+            case .imported, .cancelled:
+                Button("Bu sayfayı oku") { model.readPages([page.id]) }
+            default:
+                EmptyView()
+            }
+            if unread.count > 1 {
+                Button("Okunmamış \(unread.count) sayfayı oku") { model.readPages(unread.map(\.id)) }
+            }
+        } footer: {
+            if [.ready, .needsReview].contains(page.status) {
+                Text("Yeniden oku sayfayı baştan okur. Metin düzeltmelerin, kaydettiğin ve yoksaydığın şekiller korunur; yalnız bekleyen şekil önerileri yenilenir.")
+            }
+        }
+    }
+
+    /// Sayfa metin mi görüntü mü aktarılsın: uygulamanın kararı ve kullanıcının seçimi.
+    private func exportStyleSection(source: SourceAsset, page: Page) -> some View {
+        let binding = Binding<Int>(
+            get: { source.imageOnly.map { $0 ? 1 : 2 } ?? 0 },
+            set: { model.setImageOnly($0 == 0 ? nil : $0 == 1, sources: [sourceID]) })
+        return Section {
+            Picker("Dışa aktarım", selection: binding) {
+                Text("Otomatik").tag(0)
+                Text("Görsel").tag(1)
+                Text("Metin").tag(2)
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Text("Dışa aktarım")
+        } footer: {
+            Text(exportStyleNote(source: source, page: page))
+        }
+    }
+
+    private func exportStyleNote(source: SourceAsset, page: Page) -> String {
+        switch source.imageOnly {
+        case true?:
+            return "Sayfa metin yerine görüntü olarak aktarılır; yapay zekâ görüntüyü kendisi okur. Karmaşık slaytlar ve el yazılı sayfalar için."
+        case false?:
+            return "Sayfa her zaman okunan metinle aktarılır."
+        case nil:
+            if page.looksComplex == true {
+                let share = Int(((page.handwritingShare ?? 0) * 100).rounded())
+                return "Sayfa karışık görünüyor (metnin %\(share)'i el yazısı); görüntü olarak aktarılacak."
+            }
+            return "Uygulama karar verir: el yazısı ağırlıklı veya okunması güç sayfalar görüntü olarak, diğerleri metin olarak aktarılır."
+        }
+    }
 }
 
 private struct BlockRow: View {
@@ -113,10 +218,20 @@ private struct BlockRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let runs = block.runs, !block.isUserCorrected {
-                Text(Self.attributed(runs))
-            } else {
-                Text(block.acceptedText)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                if block.marked == true {
+                    Image(systemName: "star.fill").foregroundStyle(Theme.star)
+                        .accessibilityLabel("İşaretli")
+                }
+                if block.kind == .handwriting {
+                    Image(systemName: "pencil.and.scribble").foregroundStyle(Theme.note)
+                        .accessibilityLabel("El yazısı")
+                }
+                if let runs = block.runs, !block.isUserCorrected {
+                    Text(Self.attributed(runs))
+                } else {
+                    Text(block.acceptedText)
+                }
             }
             HStack(spacing: 8) {
                 if block.isUserCorrected {
