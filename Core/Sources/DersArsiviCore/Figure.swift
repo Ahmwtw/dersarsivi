@@ -170,7 +170,7 @@ public enum FigureDetector {
                 let variance = (sq.0 / perCell - mean.0 * mean.0) + (sq.1 / perCell - mean.1 * mean.1)
                     + (sq.2 / perCell - mean.2 * mean.2)
                 if cell > 1, (max(variance, 0) / 3).squareRoot() < flatDeviation {
-                    flatBin[index] = Int(mean.0) >> 5 << 6 | Int(mean.1) >> 5 << 3 | Int(mean.2) >> 5
+                    flatBin[index] = ((Int(mean.0) >> 5) << 6) | ((Int(mean.1) >> 5) << 3) | (Int(mean.2) >> 5)
                 }
             }
         }
