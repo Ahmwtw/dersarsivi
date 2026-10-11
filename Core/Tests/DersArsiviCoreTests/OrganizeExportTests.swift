@@ -146,6 +146,63 @@ final class OrganizeExportTests: XCTestCase {
         XCTAssertTrue(md.contains("İçerik 3"))
     }
 
+    /// Ölçüm paketindeki PDF: her sayfada "Fizyoloji · Temize geçirilmiş sorular N" alt bilgisi ve sayfa numarası.
+    /// Alt bilgi tek bir kaynağın sayfalarında tekrar etse de atılır; sayfa başındaki "Soru N" kalır.
+    func testRepeatedPDFFooterAndPageNumbersAreDroppedButQuestionHeadingsStay() throws {
+        var archive = Archive()
+        let source = SourceAsset(mediaType: .pdf, originalFilename: "sorular.pdf", sourceTitle: "Sorular",
+                                 contentHash: "p", localAssetRef: "originals/p.pdf", importedAt: Date())
+        archive.importSource(source, pageSizes: Array(repeating: (595, 842), count: 6))
+        for (i, page) in archive.pages(of: source.id).enumerated() {
+            let footer = i < 3
+                ? [ExtractedBlock(text: "Fizyoloji · Temize geçirilmiş sorular \(i + 1)", bbox: box(0.3, 0.96, 0.4, 0.015))]
+                : [ExtractedBlock(text: "Fizyoloji · Temize geçirilmiş sorular", bbox: box(0.1, 0.96, 0.18, 0.015)),
+                   ExtractedBlock(text: "\(i + 1)", bbox: box(0.91, 0.96, 0.02, 0.015))]
+            try read(&archive, page, [
+                ExtractedBlock(text: "Soru \(i + 1)", bbox: box(0.1, 0.06, 0.06, 0.02)),
+                ExtractedBlock(text: "Soru metni \(i + 1)", bbox: box(0.1, 0.3)),
+            ] + footer)
+        }
+        let md = try MarkdownExporter()
+            .export(archive, selections: [SourceSelection(sourceID: source.id)], mode: .combined, createdAt: Date())
+            .files[0].contents
+        XCTAssertFalse(md.contains("Temize geçirilmiş"))
+        XCTAssertFalse(md.contains("\n5\n"))
+        for i in 1...6 {
+            XCTAssertTrue(md.contains("Soru \(i)\n"), "Soru \(i) başlığı kalmalı")
+            XCTAssertTrue(md.contains("Soru metni \(i)"))
+        }
+    }
+
+    func testAutomaticTitleComesFromFirstReadLineAndStaysUnique() throws {
+        var archive = Archive()
+        var ids: [UUID] = []
+        for i in 0..<2 {
+            let (source, page) = addSource(&archive, title: "Görsel 12 Eki 00:57", hash: "t\(i)")
+            archive.adoptAutoTitles([source.id])   // henüz okunmadı: başlık değişmez
+            XCTAssertEqual(archive.source(source.id)?.sourceTitle, "Görsel 12 Eki 00:57")
+            try read(&archive, page, [
+                ExtractedBlock(text: "hayan Tamenter", bbox: box(0.04, 0.0, 0.2, 0.03)),       // üst kenarda kesik
+                ExtractedBlock(text: "TINAZTEPE", bbox: box(0.79, 0.01, 0.07, 0.03)),           // köşe logosu
+                ExtractedBlock(kind: .handwriting, text: "soru gelir", bbox: box(0.1, 0.05)),
+                ExtractedBlock(text: "• Hızlı cevap AP'nin dönemleri", bbox: box(0.26, 0.08, 0.5, 0.07)),
+                ExtractedBlock(text: "Faz 0: Depolarizasyon", bbox: box(0.16, 0.2)),
+            ])
+            archive.refreshAutoTitle(source.id)
+            ids.append(source.id)
+        }
+        XCTAssertEqual(archive.source(ids[0])?.sourceTitle, "Hızlı cevap AP'nin dönemleri")
+        XCTAssertEqual(archive.source(ids[1])?.sourceTitle, "Hızlı cevap AP'nin dönemleri (2)")
+
+        // Kullanıcının verdiği ad yeniden okumada korunur; aynı adla "yeniden adlandırma" bayrağı silmez.
+        archive.renameSource(ids[1], to: "Hızlı cevap AP'nin dönemleri (2)")
+        XCTAssertEqual(archive.source(ids[1])?.autoTitle, true)
+        archive.renameSource(ids[1], to: "Kalp AP")
+        XCTAssertNil(archive.source(ids[1])?.autoTitle)
+        archive.refreshAutoTitle(ids[1])
+        XCTAssertEqual(archive.source(ids[1])?.sourceTitle, "Kalp AP")
+    }
+
     func testPromptIsPlacedAtTopOfFile() throws {
         var archive = Archive()
         let (source, page) = addSource(&archive, title: "Glikoliz", hash: "g")

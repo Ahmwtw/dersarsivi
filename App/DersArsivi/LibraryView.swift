@@ -51,10 +51,10 @@ struct LibraryView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, isSelecting ? 96 : 24)
+            .padding(.bottom, isSelecting ? 110 : 24)
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle(model.title(of: scope))
+        .navigationTitle(isSelecting ? (selection.isEmpty ? "Seç" : "\(selection.count) seçili") : model.title(of: scope))
         .searchable(text: $search, prompt: "Başlıkta ve metinde ara")
         .toolbar { toolbar(sources: sources) }
         .overlay(alignment: .bottom) {
@@ -259,34 +259,35 @@ struct LibraryView: View {
         }
     }
 
-    /// Seçim modunda altta yüzen cam eylem çubuğu.
+    /// Seçim modunda altta yüzen cam eylem çubuğu: geniş, etiketli, parmakla rahat basılır.
     private var selectionBar: some View {
         let ids = Array(selection)
-        let empty = ids.isEmpty
         return HStack(spacing: 4) {
-            Text(empty ? "Seç" : "\(ids.count) seçili")
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-                .padding(.horizontal, 10)
-            Divider().frame(height: 24)
-            Button { showExport = true } label: {
-                Label("Dışa aktar", systemImage: "square.and.arrow.up")
-            }
-            Menu { moveMenu(ids) } label: { Label("Taşı", systemImage: "folder") }
-            Menu { exportStyleMenu(ids) } label: { Label("Aktarım", systemImage: "photo.badge.checkmark") }
-            Button(role: .destructive) { confirmDelete = true } label: {
-                Label("Sil", systemImage: "trash")
-            }
+            Button { showExport = true } label: { barLabel("Dışa aktar", "square.and.arrow.up") }
+            Menu { moveMenu(ids) } label: { barLabel("Taşı", "folder") }
+            Menu { exportStyleMenu(ids) } label: { barLabel("Aktarım", "photo.badge.checkmark") }
+            Button(role: .destructive) { confirmDelete = true } label: { barLabel("Sil", "trash") }
+                .foregroundStyle(.red)
         }
-        .labelStyle(.iconOnly)
-        .font(.title3)
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .glassSurface(in: Capsule(), interactive: true)
-        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
-        .disabled(empty)
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.accent)
+        .padding(8)
+        .frame(maxWidth: 620)
+        .glassSurface(in: RoundedRectangle(cornerRadius: 28, style: .continuous), interactive: true)
+        .shadow(color: .black.opacity(0.12), radius: 14, y: 4)
+        .padding(.horizontal, 16)
+        .disabled(ids.isEmpty)
+        .opacity(ids.isEmpty ? 0.6 : 1)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private func barLabel(_ title: String, _ symbol: String) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: symbol).font(.title3)
+            Text(title).font(.caption.weight(.semibold))
+        }
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder

@@ -35,6 +35,9 @@ public struct SourceAsset: Codable, Equatable, Identifiable, Sendable {
     /// Kullanıcının "sadece görsel" kararı: true ise sayfalar dışa aktarımda metin yerine optimize edilmiş
     /// görüntüyle gider, false ise hep metin. nil: uygulama sayfaya bakıp karar verir (bkz. `Page.looksComplex`).
     public var imageOnly: Bool? = nil
+    /// true: başlık uygulamanın verdiği geçici addır ("Görsel 12 Eki 00:57"); okunan ilk sayfanın başlığıyla
+    /// değiştirilir. Kullanıcı yeniden adlandırınca nil olur.
+    public var autoTitle: Bool? = nil
 
     /// Görselin kendisi; PDF'te sayfa görüntüleri ayrı türev olarak saklanır.
     public var imageRef: String? { mediaType == .image ? localAssetRef : nil }

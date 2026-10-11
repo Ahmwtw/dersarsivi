@@ -8,6 +8,8 @@ import UIKit
 final class AppModel: ObservableObject {
     @Published private(set) var archive = Archive()
     @Published var lastError: String?
+    /// Hata olmayan kısa bilgi (ör. "zaten arşivdeydi, klasöre taşındı"); üstte kısa süre gösterilir.
+    @Published var notice: String?
     @Published private(set) var isProcessing = false
 
     let store: FileArchiveStore
@@ -23,6 +25,10 @@ final class AppModel: ObservableObject {
         }
         // Uygulama işlem sırasında kapandıysa yarım kalan işler yeniden sıraya girer.
         archive.jobQueue.recoverInterrupted(at: Date())
+        // Eski sürümün geçici başlıkları ("Görsel 12 Eki 00:57") okunan başlıkla değiştirilir.
+        archive.adoptAutoTitles(archive.sources.filter {
+            $0.autoTitle == nil && $0.mediaType == .image && Self.isGeneratedTitle($0.sourceTitle)
+        }.map(\.id))
         persist()
     }
 
@@ -38,7 +44,7 @@ final class AppModel: ObservableObject {
         do {
             let hash = SHA256Hasher.hexDigest(data)
             if let existing = archive.source(withContentHash: hash) {
-                lastError = "Bu görsel zaten arşivde: \(existing.sourceTitle)"
+                alreadyInArchive(existing, folderID: folderID)
                 return
             }
             let ext = (filename as NSString).pathExtension.isEmpty ? "jpg" : (filename as NSString).pathExtension
@@ -47,6 +53,7 @@ final class AppModel: ObservableObject {
             var source = SourceAsset(id: id, mediaType: .image, originalFilename: filename, sourceTitle: title,
                                      contentHash: stored.hash, localAssetRef: stored.ref, importedAt: Date())
             source.folderID = folderID
+            source.autoTitle = Self.isGeneratedTitle(title) ? true : nil
             archive.importSource(source, pageSizes: [(Double(image.size.width), Double(image.size.height))])
             for page in archive.pages(of: id) {
                 archive.jobQueue.enqueue(pageID: page.id, at: Date())
@@ -69,7 +76,7 @@ final class AppModel: ObservableObject {
         do {
             let hash = SHA256Hasher.hexDigest(data)
             if let existing = archive.source(withContentHash: hash) {
-                lastError = "Bu PDF zaten arşivde: \(existing.sourceTitle)"
+                alreadyInArchive(existing, folderID: folderID)
                 return
             }
             let stored = try store.storeOriginal(data, id: id, fileExtension: "pdf")
@@ -100,15 +107,36 @@ final class AppModel: ObservableObject {
         processQueue()
     }
 
+    /// Dosya adı anlamlıysa o ("Fizyoloji_Sorulari" → "Fizyoloji Sorulari"); fotoğraf/ekran görüntüsü adıysa
+    /// geçici "Görsel <tarih>" (okununca sayfanın başlığıyla değişir).
     private static func defaultTitle(for filename: String) -> String {
         let base = (filename as NSString).deletingPathExtension
-        if base.isEmpty || base.hasPrefix("IMG_") || base.hasPrefix("image") {
+        let generic = ["IMG_", "image", "Screenshot", "Ekran Resmi", "Ekran Görüntüsü", "Photo", "PHOTO"]
+        if base.isEmpty || generic.contains { base.hasPrefix($0) } {
             let f = DateFormatter()
             f.locale = Locale(identifier: "tr_TR")
             f.dateFormat = "d MMM HH:mm"
             return "Görsel \(f.string(from: Date()))"
         }
-        return base
+        return base.replacingOccurrences(of: "_", with: " ").trimmingCharacters(in: .whitespaces)
+    }
+
+    static func isGeneratedTitle(_ title: String) -> Bool {
+        title.range(of: #"^Görsel \d{1,2} \S+ \d{2}:\d{2}$"#, options: .regularExpression) != nil
+    }
+
+    /// Aynı dosya yeniden eklendi. Klasör içinden eklendiyse var olan kaynak oraya taşınır; "Tüm kaynaklar"da
+    /// görünmeye devam eder. Kopya oluşturulmaz: düzeltmeler ve şekiller tek yerde kalır.
+    private func alreadyInArchive(_ existing: SourceAsset, folderID: UUID?) {
+        guard let folderID, existing.folderID != folderID, let folder = archive.folder(folderID) else {
+            notice = "\(existing.sourceTitle) zaten arşivde."
+            return
+        }
+        let from = existing.folderID.flatMap { archive.folder($0)?.name }
+        archive.move(sources: [existing.id], toFolder: folderID)
+        persist()
+        notice = from.map { "\(existing.sourceTitle) zaten \($0) klasöründeydi; \(folder.name) klasörüne taşındı." }
+            ?? "\(existing.sourceTitle) zaten arşivdeydi; \(folder.name) klasörüne taşındı."
     }
 
     // MARK: Kuyruk
@@ -206,6 +234,7 @@ final class AppModel: ObservableObject {
                             forPage: page.id)
         try? store.storeLines(output.lines, pageID: page.id)
         archive.applyFigureSuggestions(output.figures, pageID: page.id, at: Date())
+        if page.pageIndex == 0 { archive.refreshAutoTitle(page.sourceID) }
         // Ayar açıksa öneriler onay beklemeden kaydedilir; kullanıcı yalnız hatalıları düzeltir. El notları
         // her zaman görüntü olarak saklanır: metne dökülmeleri güvenilir değildir.
         let autoSave = UserDefaults.standard.bool(forKey: Self.autoSaveFiguresKey)

@@ -325,9 +325,10 @@ public struct MarkdownExporter {
                 }) {
                     continue
                 }
-                // Her slaytta tekrarlanan logo ve kurum yazısı.
+                // Her slaytta tekrarlanan logo, kurum yazısı, alt bilgi ve sayfa numarası.
                 if !block.isUserCorrected, let box = block.bbox,
-                   collector.boilerplate.contains(Self.boilerplateKey(block.acceptedText, box)) {
+                   Self.isPageNumber(block.acceptedText, box)
+                    || collector.boilerplate.contains(Self.boilerplateKey(block.acceptedText, box)) {
                     continue
                 }
                 if let box = block.bbox {
@@ -465,28 +466,41 @@ public struct MarkdownExporter {
     /// Arşivde çok sayıda kaynakta, sayfanın köşesinde tekrarlanan kısa yazılar (üniversite logosu, kurum adı).
     /// Slayt başlıkları ortada durduğundan sayılmaz.
     static func boilerplate(in archive: Archive) -> Set<String> {
-        var sourceOfPage: [UUID: UUID] = [:]
-        for page in archive.pages { sourceOfPage[page.id] = page.sourceID }
-        var sourcesByKey: [String: Set<UUID>] = [:]
+        var pagesByKey: [String: Set<UUID>] = [:]
         for block in archive.blocks where !block.isUserCorrected {
-            guard let box = block.bbox, let sourceID = sourceOfPage[block.pageID] else { continue }
+            guard let box = block.bbox else { continue }
             let key = boilerplateKey(block.acceptedText, box)
             guard !key.isEmpty else { continue }
-            sourcesByKey[key, default: []].insert(sourceID)
+            pagesByKey[key, default: []].insert(block.pageID)
         }
-        let total = Set(archive.pages.filter { [.ready, .needsReview, .partial].contains($0.status) }.map(\.sourceID)).count
+        // Sayfa sayılır: tek bir PDF'in her sayfasındaki alt bilgi de, her slayttaki logo da tekrar eden yazıdır.
+        let total = archive.pages.filter { [.ready, .needsReview, .partial].contains($0.status) }.count
         let needed = max(3, Int((Double(total) * 0.25).rounded(.up)))
-        return Set(sourcesByKey.filter { $0.value.count >= needed }.keys)
+        return Set(pagesByKey.filter { $0.value.count >= needed }.keys)
     }
 
-    /// Köşedeki kısa yazının karşılaştırma anahtarı; köşede değilse veya uzunsa boş.
+    /// Tekrar eden kenar yazısının karşılaştırma anahtarı; değilse boş. İki tür yer:
+    /// köşedeki kısa yazı (logo, kurum adı) ve sayfanın en üst/en alt şeridindeki alt/üst bilgi. Şeritte rakamlar
+    /// anahtara girmez ("... sorular 7" her sayfada aynı sayılır); köşede girer ki sayfa başındaki "Soru 7"
+    /// gibi numaralı başlıklar tekrar sayılmasın.
     static func boilerplateKey(_ text: String, _ box: BoundingBox) -> String {
         let cx = box.x + box.width / 2, cy = box.y + box.height / 2
-        guard cx < 0.3 || cx > 0.7, cy < 0.15 || cy > 0.85, text.count <= 25 else { return "" }
+        let band = (cy < 0.06 || cy > 0.94) && text.count <= 60
+        let corner = (cx < 0.3 || cx > 0.7) && (cy < 0.15 || cy > 0.85) && text.count <= 25
+        guard band || corner else { return "" }
         let folded = text.replacingOccurrences(of: "ı", with: "i")
             .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: nil)
-        let key = String(folded.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) }.map(Character.init))
-        return key.filter(\.isLetter).count >= 3 ? key : ""
+        let kept: CharacterSet = band ? .letters : .alphanumerics
+        let key = String(folded.unicodeScalars.filter { kept.contains($0) }.map(Character.init))
+        let letters = key.filter(\.isLetter).count
+        return letters >= (band ? 8 : 3) ? (band ? "b:" : "c:") + key : ""
+    }
+
+    /// Sayfanın en üst/en alt şeridinde tek başına duran 1–3 haneli sayı: sayfa veya slayt numarası.
+    static func isPageNumber(_ text: String, _ box: BoundingBox) -> Bool {
+        let cy = box.y + box.height / 2
+        let t = text.trimmingCharacters(in: .whitespaces)
+        return (cy < 0.06 || cy > 0.94) && (1...3).contains(t.count) && t.allSatisfy(\.isNumber)
     }
 
     static func inline(_ text: String) -> String {

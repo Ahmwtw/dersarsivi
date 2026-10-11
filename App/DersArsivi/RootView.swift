@@ -25,6 +25,8 @@ struct RootView: View {
             }
         }
         .tint(Theme.accent)
+        .overlay(alignment: .top) { noticeBanner }
+        .animation(.snappy, value: model.notice)
         .onChange(of: scope) { _, _ in path = NavigationPath() }
         .alert("Yeni klasör", isPresented: Binding(get: { newFolderParent != nil },
                                                    set: { if !$0 { newFolderParent = nil } })) {
@@ -63,6 +65,27 @@ struct RootView: View {
             }
         } message: {
             Text("İçindeki görseller, PDF'ler ve alt klasörler silinmez; bir üst klasöre taşınır.")
+        }
+    }
+
+    /// Hata olmayan kısa bilgi: üstte cam kapsül, birkaç saniye sonra kaybolur; dokununca kapanır.
+    @ViewBuilder
+    private var noticeBanner: some View {
+        if let notice = model.notice {
+            Label(notice, systemImage: "info.circle")
+                .font(.subheadline.weight(.medium))
+                .multilineTextAlignment(.leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .glassSurface(in: Capsule())
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .onTapGesture { model.notice = nil }
+                .task(id: notice) {
+                    try? await Task.sleep(for: .seconds(4))
+                    if model.notice == notice { model.notice = nil }
+                }
         }
     }
 

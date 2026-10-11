@@ -83,7 +83,7 @@ public enum PromptLibrary {
     public static let sharedRules: String = """
         1. Yalnızca ekteki kaynaklardaki bilgileri kullan; kaynakta olmayan bilgi, sayı, doz veya tanım uydurma.
         2. Bir yer belirsiz, okunamıyor ya da eksikse tahmin yürütme; "kaynakta net değil" yaz.
-        3. ⭐ ile başlayan satırlar, vurgulu (==...==) ve renkli (⟦...⟧) yazılar ve ✍️ el notları hocanın veya öğrencinin vurgusudur; bunlara öncelik ver. Yine de "hoca kesin sorar" gibi kesin iddialarda bulunma.
+        3. ⭐ ile başlayan satırlar, vurgulu (==...==) ve renkli (⟦...⟧) yazılar ve ✍️ el notları hocanın veya öğrencinin vurgusudur; bunlara öncelik ver. Yine de "hoca kesin sorar" gibi kesin iddialarda bulunma. Kendi çıktında ⭐ ve ✍️ işaretlerini yalnız kaynakta bu işareti taşıyan bilgiler için kullan.
         4. Yararlı olduğu yerde kaynağı "Kaynak adı, Sayfa N" biçiminde belirt.
         5. Metin eksik ya da bozuksa veya sayfa "Bu sayfa görsel olarak aktarıldı" notuyla verilmişse bilgiyi ilgili şekilden ya da sayfa görüntüsünden oku.
         6. Türkçe yanıt ver; tıbbi terimleri kaynakta geçtiği gibi (Türkçe, Latince veya İngilizce) koru.

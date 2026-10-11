@@ -149,8 +149,59 @@ public struct Archive: Codable, Equatable, Sendable {
     }
 
     public mutating func renameSource(_ id: UUID, to title: String) {
-        guard let i = sources.firstIndex(where: { $0.id == id }) else { return }
+        guard let i = sources.firstIndex(where: { $0.id == id }), sources[i].sourceTitle != title else { return }
         sources[i].sourceTitle = title
+        sources[i].autoTitle = nil
+    }
+
+    /// Kaynakların başlığını geçici sayar ve okunmuş ilk sayfalarından başlık verir (eski arşivlerdeki
+    /// "Görsel 12 Eki 00:57" başlıkları için).
+    public mutating func adoptAutoTitles(_ ids: [UUID]) {
+        for id in ids {
+            guard let i = sources.firstIndex(where: { $0.id == id }) else { continue }
+            sources[i].autoTitle = true
+            refreshAutoTitle(id)
+        }
+    }
+
+    /// Başlığı geçici olan kaynağa ilk sayfasında okunan başlığı verir; aynı adlı kaynak varsa "(2)" eklenir.
+    /// Uygun satır yoksa (henüz okunmadı, yalnız şekil) başlık değişmez.
+    public mutating func refreshAutoTitle(_ sourceID: UUID) {
+        guard let i = sources.firstIndex(where: { $0.id == sourceID }), sources[i].autoTitle == true,
+              let page = pages(of: sourceID).first,
+              let base = Self.titleCandidate(blocks(of: page.id),
+                                             figures: figures(of: page.id).filter { $0.status != .dismissed }.map(\.bbox))
+        else { return }
+        let others = Set(sources.filter { $0.id != sourceID }.map(\.sourceTitle))
+        var title = base
+        var n = 2
+        while others.contains(title) {
+            title = "\(base) (\(n))"
+            n += 1
+        }
+        sources[i].sourceTitle = title
+    }
+
+    /// Sayfanın üst kısmındaki ilk düzgün satır: şekil, el yazısı, kenar şeridi ve köşe yazısı (logo) değil,
+    /// en az 4 harf, en fazla 80 karakter. Baştaki madde işareti atılır, 60 karakterden uzunsa kelimede kesilir.
+    static func titleCandidate(_ blocks: [Block], figures: [BoundingBox]) -> String? {
+        for block in blocks {
+            guard let box = block.bbox, box.y < 0.35, block.kind != .handwriting,
+                  (block.engineConfidence ?? 1) >= 0.5 else { continue }
+            let cx = box.x + box.width / 2, cy = box.y + box.height / 2
+            if cy < 0.03 || cy > 0.97 { continue }
+            var text = block.acceptedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if (cx < 0.25 || cx > 0.75) && cy < 0.12 && text.count <= 25 { continue }
+            if figures.contains(where: { box.fractionInside($0) >= 0.5 }) { continue }
+            text = String(text.drop { "•-–·*▪●○◦ ".contains($0) })
+            guard text.count <= 80, text.filter(\.isLetter).count >= 4 else { continue }
+            if text.count > 60 {
+                let cut = text.prefix(60)
+                text = (cut.lastIndex(of: " ").map { String(cut[..<$0]) } ?? String(cut)) + "…"
+            }
+            return text
+        }
+        return nil
     }
 
     /// Sayfanın okuma görüntüsünü değiştirir; eski türev dosyanın yolunu döndürür (çağıran siler).

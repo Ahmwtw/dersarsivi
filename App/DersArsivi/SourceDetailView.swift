@@ -95,6 +95,8 @@ struct SourceDetailView: View {
                 Text("Okunan metin, düzeltmeler ve kırpılan şekiller de silinir. Geri alınamaz.")
             }
             .onAppear { title = source.sourceTitle }
+            // Okuma bitince geçici başlık sayfanın başlığıyla değişebilir.
+            .onChange(of: source.sourceTitle) { _, newTitle in title = newTitle }
             .onDisappear { model.rename(sourceID: sourceID, to: title) }
             .sheet(item: $editingBlock) { block in
                 CorrectionSheet(block: block) { newText in
