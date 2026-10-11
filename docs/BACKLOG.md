@@ -15,7 +15,7 @@
 - [ ] P0-12 Kaynağı silme / çöp kutusu
 
 ## P0.5 (kullanıcı isteği, 2026-10-11)
-- [ ] Yazı rengi ve fosforlu kalem vurgusu (piksel rengi, cihaz üstü, tüm cihazlar)
+- [x] Yazı rengi ve fosforlu kalem vurgusu (piksel rengi, cihaz üstü, tüm cihazlar; cihazda doğrulanmadı)
 - [ ] Kalın yazı tahmini (yaklaşık)
 - [ ] Tablo ve liste yapısı: Vision `RecognizeDocumentsRequest` (iOS 26+)
 - [ ] Şema/grafik betimleme ve yapılandırılmış ilişkiler: Foundation Models görsel girdisi (Apple Intelligence; iPad Air M3 var, iPhone 13 yok)

@@ -85,7 +85,11 @@ private struct BlockRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(block.acceptedText)
+            if let runs = block.runs, !block.isUserCorrected {
+                Text(Self.attributed(runs))
+            } else {
+                Text(block.acceptedText)
+            }
             HStack(spacing: 8) {
                 if block.isUserCorrected {
                     Label("Düzeltildi", systemImage: "pencil").foregroundStyle(.blue)
@@ -100,6 +104,32 @@ private struct BlockRow: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
+    }
+
+    /// Algılanan vurgu ve renkleri ekranda da gösterir; doğru algılanıp algılanmadığı gözle kontrol edilsin.
+    static func attributed(_ runs: [TextRun]) -> AttributedString {
+        var result = AttributedString()
+        for run in runs {
+            var piece = AttributedString(run.text)
+            if let h = run.highlight { piece.backgroundColor = h.swiftUIColor.opacity(0.35) }
+            if let c = run.color { piece.foregroundColor = c.swiftUIColor }
+            result += piece
+        }
+        return result
+    }
+}
+
+extension NamedColor {
+    var swiftUIColor: Color {
+        switch self {
+        case .kirmizi: .red
+        case .turuncu: .orange
+        case .sari: .yellow
+        case .yesil: .green
+        case .mavi: .blue
+        case .mor: .purple
+        case .pembe: .pink
+        }
     }
 }
 

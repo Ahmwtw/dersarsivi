@@ -33,6 +33,7 @@ Hekzokinaz
 Kurallar:
 - Tek görselde sayfa başlığı yazılmaz; PDF veya çok sayfada `### Sayfa N` (1 tabanlı; PDF etiketi farklıysa ikisi birden).
 - OCR metnindeki `<`, `>`, `&` kaçırılır; satır başındaki `#`, `=`, `---` etkisizleştirilir.
+- Biçim: `==metin==` fosforlu kalem vurgusu (sarı değilse `==metin== (yeşil vurgu)`), `⟦turuncu: metin⟧` renkli yazı. Renkler kelime kutusundaki piksellerden tahmin edilir; paragrafın tamamı aynı renkteyse (ör. mavi şablon başlıkları) renk yazılmaz. Kullanıcı düzelttiği blokta biçim düşer.
 - `✏️` kullanıcı düzeltmesi, `⚠️ Belirsiz` düşük güven (< 0,5, kalibre değil), çatışma veya motor uyarısı.
 
 ## Manifest (JSON, `ExportManifest`)

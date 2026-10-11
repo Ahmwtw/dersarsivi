@@ -12,6 +12,7 @@ Core (saf Swift, Foundation dışında bağımlılık yok)
  ├─ JobQueue      kalıcı, idempotent, sınırlı tekrar denemeli kuyruk
  ├─ ArchiveStore  JSON dosyası + originals/ klasörü, atomik yazma
  ├─ PageSelection "3, 7-9" → 0 tabanlı indeksler
+ ├─ TextStyle      vurgu/yazı rengi (ColorAnalysis), biçimli parçalar (TextRun)
  ├─ LayoutAnalyzer satırları okuma sırasına koyar (XY kesimi, sütunlar) ve paragraflara birleştirir
  └─ MarkdownExporter + ExportManifest
 ```

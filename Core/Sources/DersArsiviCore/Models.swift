@@ -172,6 +172,8 @@ public struct Block: Codable, Equatable, Identifiable, Sendable {
     public var revision: Int
     /// Bu bloğu üreten çıkarımın kimliği.
     public var extractionRunID: UUID?
+    /// Vurgulu/renkli parçalar (yalnız makine metni için; kullanıcı düzeltince silinir).
+    public var runs: [TextRun]?
 
     public init(
         id: UUID = UUID(),

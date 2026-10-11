@@ -83,13 +83,19 @@ public struct MarkdownExporter {
             warnings.append("\(entry.title): \(entry.missingPages.count) sayfa işlenmediği için metni yok")
         }
         let partial = sections.contains { !$0.entry.missingPages.isEmpty }
+        let hasStyles = selections.contains { sel in
+            archive.pages(of: sel.sourceID).contains { page in
+                archive.blocks(of: page.id).contains { $0.runs != nil && !$0.isUserCorrected }
+            }
+        }
 
         var files: [ExportFile] = []
         var entries: [ExportManifest.SourceEntry] = []
         switch mode {
         case .combined:
             let name = "dersarsivi-\(Self.shortID(exportID)).md"
-            var body = header(exportID: exportID, createdAt: createdAt, sourceCount: sections.count, warnings: warnings)
+            var body = header(exportID: exportID, createdAt: createdAt, sourceCount: sections.count, warnings: warnings,
+                              hasStyles: hasStyles)
             for (entry, markdown) in sections {
                 body += "\n" + markdown
                 var e = entry
@@ -108,7 +114,8 @@ public struct MarkdownExporter {
                 }
                 usedNames.insert(name)
                 let ownWarnings = warnings.filter { $0.hasPrefix(entry.title + ":") }
-                let body = header(exportID: exportID, createdAt: createdAt, sourceCount: 1, warnings: ownWarnings)
+                let body = header(exportID: exportID, createdAt: createdAt, sourceCount: 1, warnings: ownWarnings,
+                                  hasStyles: hasStyles)
                     + "\n" + markdown
                 files.append(ExportFile(name: name, contents: body))
                 var e = entry
@@ -125,12 +132,17 @@ public struct MarkdownExporter {
 
     // MARK: Parçalar
 
-    private func header(exportID: UUID, createdAt: Date, sourceCount: Int, warnings: [String]) -> String {
+    private func header(exportID: UUID, createdAt: Date, sourceCount: Int, warnings: [String],
+                        hasStyles: Bool) -> String {
         var s = "# DersArşivi dışa aktarımı\n\n"
         s += "Profil: sadık metin · Kaynak sayısı: \(sourceCount) · Tarih: \(Self.isoDate(createdAt)) · "
         s += "Export: \(exportID.uuidString.lowercased())\n\n"
         s += "Metin kaynak görüntüsünden OCR ile çıkarıldı; ✏️ kullanıcı tarafından düzeltilmiş, "
         s += "⚠️ belirsiz bölümleri gösterir. Bu dosya görsel içermez.\n"
+        if hasStyles {
+            s += "Kaynaktaki biçim: ==metin== fosforlu kalemle vurgulanmış (sarı dışındaysa rengi yanında), "
+            s += "⟦renk: metin⟧ renkli yazılmış. Renkler görüntüden otomatik tahmin edildi.\n"
+        }
         if !warnings.isEmpty {
             s += "\n> **Eksik içerik:**\n"
             for w in warnings { s += "> - \(w)\n" }
@@ -182,7 +194,11 @@ public struct MarkdownExporter {
             }
             included.append(page.pageIndex)
             for block in blocks {
-                md += "\n" + Self.escape(block.acceptedText)
+                if let runs = block.runs, !block.isUserCorrected {
+                    md += "\n" + Self.render(runs)
+                } else {
+                    md += "\n" + Self.escape(block.acceptedText)
+                }
                 if block.isUserCorrected { md += " ✏️" }
                 md += "\n"
                 if let note = uncertaintyNote(block) {
@@ -227,6 +243,33 @@ public struct MarkdownExporter {
                 return String(line)
             }
             .joined(separator: "\n")
+    }
+
+    /// Biçimli parçaları işaretli metne çevirir. İşaretler boşlukları içine almaz: "==metin== ".
+    static func render(_ runs: [TextRun]) -> String {
+        var out = ""
+        for run in runs {
+            let escaped = escape(run.text)
+            guard !run.isPlain else {
+                out += escaped
+                continue
+            }
+            let core = escaped.trimmingCharacters(in: .whitespaces)
+            guard !core.isEmpty else {
+                out += escaped
+                continue
+            }
+            let leading = String(escaped.prefix { $0 == " " })
+            let trailing = String(escaped.reversed().prefix { $0 == " " })
+            var marked = core
+            if let color = run.color { marked = "⟦\(color.rawValue): \(marked)⟧" }
+            if let highlight = run.highlight {
+                marked = "==\(marked)=="
+                if highlight != .sari { marked += " (\(highlight.rawValue) vurgu)" }
+            }
+            out += leading + marked + trailing
+        }
+        return out
     }
 
     static func inline(_ text: String) -> String {

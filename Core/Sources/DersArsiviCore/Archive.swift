@@ -7,19 +7,23 @@ public struct ExtractedBlock: Equatable, Sendable {
     public var bbox: BoundingBox?
     public var confidence: Double?
     public var warnings: [String]
+    /// Vurgulu veya renkli kelimeler varsa biçimli parçalar; düz metinde nil. Birleşimi `text`'e eşittir.
+    public var runs: [TextRun]?
 
     public init(
         kind: BlockKind = .text,
         text: String,
         bbox: BoundingBox? = nil,
         confidence: Double? = nil,
-        warnings: [String] = []
+        warnings: [String] = [],
+        runs: [TextRun]? = nil
     ) {
         self.kind = kind
         self.text = text
         self.bbox = bbox
         self.confidence = confidence
         self.warnings = warnings
+        self.runs = runs
     }
 }
 
@@ -136,6 +140,7 @@ public struct Archive: Codable, Equatable, Sendable {
                     block.origin = .ocr
                     block.reviewStatus = .unreviewed
                     block.kind = item.kind
+                    block.runs = item.runs
                 }
                 block.bbox = item.bbox
                 block.engineConfidence = item.confidence
@@ -143,9 +148,11 @@ public struct Archive: Codable, Equatable, Sendable {
                 block.extractionRunID = run.id
                 kept.append(block)
             } else {
-                kept.append(Block(pageID: run.pageID, kind: item.kind, readingOrder: order, bbox: item.bbox,
+                var block = Block(pageID: run.pageID, kind: item.kind, readingOrder: order, bbox: item.bbox,
                                   rawText: item.text, origin: .ocr, engineConfidence: item.confidence,
-                                  warnings: item.warnings, extractionRunID: run.id))
+                                  warnings: item.warnings, extractionRunID: run.id)
+                block.runs = item.runs
+                kept.append(block)
             }
         }
         // Yeni çıkarımda karşılığı olmayan düzeltilmiş bloklar silinmez, çatışma olarak kalır.
@@ -181,6 +188,8 @@ public struct Archive: Codable, Equatable, Sendable {
                                     previousText: old.acceptedText, newText: newText, createdAt: date)
         corrections.append(correction)
         blocks[i].acceptedText = newText
+        // Biçim parçaları eski metne aitti; düzeltilen metinde konumları bilinmez.
+        blocks[i].runs = nil
         blocks[i].origin = .user
         blocks[i].revision += 1
         blocks[i].reviewStatus = .humanVerified

@@ -152,18 +152,28 @@ public enum LayoutAnalyzer {
 
     private static func combine(_ indices: [Int], lines: [ExtractedBlock], rects: [Rect],
                                 pageWidth: Double, pageHeight: Double) -> ExtractedBlock {
-        if indices.count == 1 { return lines[indices[0]] }
+        if indices.count == 1 {
+            var single = lines[indices[0]]
+            single.runs = single.runs.flatMap(TextRuns.droppingUniformTextColor)
+            return single
+        }
         var text = ""
+        var runs: [TextRun] = []
         for i in indices {
             let piece = lines[i].text.trimmingCharacters(in: .whitespaces)
+            var pieceRuns = lines[i].runs ?? [TextRun(text: lines[i].text)]
+            trimRuns(&pieceRuns)
             if text.isEmpty {
                 text = piece
             } else if text.hasSuffix("-"), let first = piece.first, first.isLowercase {
                 text.removeLast()   // satır sonu tirelemesi
+                if !runs.isEmpty, runs[runs.count - 1].text.hasSuffix("-") { runs[runs.count - 1].text.removeLast() }
                 text += piece
             } else {
                 text += " " + piece
+                runs.append(separator(between: runs.last, and: pieceRuns.first))
             }
+            runs.append(contentsOf: pieceRuns)
         }
         let r = indices.map { rects[$0] }
         let minX = r.map(\.minX).min()!, minY = r.map(\.minY).min()!
@@ -171,9 +181,31 @@ public enum LayoutAnalyzer {
         let confidences = indices.compactMap { lines[$0].confidence }
         var warnings: [String] = []
         for i in indices { for w in lines[i].warnings where !warnings.contains(w) { warnings.append(w) } }
+        let styled = indices.contains { lines[$0].runs != nil } ? TextRuns.droppingUniformTextColor(runs) : nil
         return ExtractedBlock(kind: lines[indices[0]].kind, text: text,
                               bbox: BoundingBox(x: minX / pageWidth, y: minY / pageHeight,
                                                 width: (maxX - minX) / pageWidth, height: (maxY - minY) / pageHeight),
-                              confidence: confidences.min(), warnings: warnings)
+                              confidence: confidences.min(), warnings: warnings, runs: styled)
+    }
+
+    /// Satır başı/sonu boşluklarını parçalardan da kırpar ki birleşim `text` ile aynı kalsın.
+    private static func trimRuns(_ runs: inout [TextRun]) {
+        while let first = runs.first, first.text.hasPrefix(" ") || first.text.isEmpty {
+            runs[0].text = String(first.text.drop { $0 == " " })
+            if runs[0].text.isEmpty { runs.removeFirst() } else { break }
+        }
+        while let last = runs.last, last.text.hasSuffix(" ") || last.text.isEmpty {
+            var t = last.text
+            while t.hasSuffix(" ") { t.removeLast() }
+            runs[runs.count - 1].text = t
+            if t.isEmpty { runs.removeLast() } else { break }
+        }
+    }
+
+    /// Satırlar arası boşluk, iki taraf aynı biçimdeyse o biçimin içinde kalır ("türbülan kan / akımı").
+    private static func separator(between a: TextRun?, and b: TextRun?) -> TextRun {
+        guard let a, let b else { return TextRun(text: " ") }
+        return TextRun(text: " ", highlight: a.highlight == b.highlight ? a.highlight : nil,
+                       color: a.color == b.color ? a.color : nil)
     }
 }

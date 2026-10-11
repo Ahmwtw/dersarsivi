@@ -27,41 +27,47 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
     func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> [ExtractedBlock] {
-        try await withCheckedThrowingContinuation { continuation in
-            // Vision hata durumunda hem tamamlama bloğunu çağırıp hem hata fırlatabilir; tek sefer devam et.
-            let once = ResumeOnce(continuation)
-            let request = VNRecognizeTextRequest { request, error in
-                if let error {
-                    once.resume(throwing: error)
-                    return
-                }
-                let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
-                let lines = observations
-                    .compactMap { observation -> ExtractedBlock? in
+        let languages = Self.usableLanguages()
+        return try await withCheckedThrowingContinuation { continuation in
+            // Vision eşzamanlı çalışır; arayüzü kilitlememek için arka plan kuyruğunda.
+            DispatchQueue.global(qos: .userInitiated).async {
+                // Vision hata durumunda hem tamamlama bloğunu çağırıp hem hata fırlatabilir; tek sefer devam et.
+                let once = ResumeOnce(continuation)
+                let pixels = PixelBuffer(image: image)
+                let pageBackground = pixels?.pageBackground() ?? ColorAnalysis.RGB(r: 255, g: 255, b: 255)
+
+                let request = VNRecognizeTextRequest { request, error in
+                    if let error {
+                        once.resume(throwing: error)
+                        return
+                    }
+                    let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
+                    let lines = observations.compactMap { observation -> ExtractedBlock? in
                         guard let candidate = observation.topCandidates(1).first else { return nil }
                         // Vision kutusu: sol alt orijin, 0...1. Sözleşme: sol üst orijin.
                         let r = observation.boundingBox
                         let box = BoundingBox(x: r.minX, y: 1 - r.maxY, width: r.width, height: r.height)
-                        return ExtractedBlock(text: candidate.string, bbox: box,
-                                              confidence: Double(candidate.confidence))
+                        let runs = pixels.flatMap {
+                            Self.styledRuns(candidate, pixels: $0, orientation: orientation, pageBackground: pageBackground)
+                        }
+                        return ExtractedBlock(text: runs.map(TextRuns.plainText) ?? candidate.string, bbox: box,
+                                              confidence: Double(candidate.confidence), runs: runs)
                     }
-                // Vision kutuları yönü düzeltilmiş görüntüye göredir; 90° dönüşlerde en/boy yer değiştirir.
-                let rotated = ([.left, .leftMirrored, .right, .rightMirrored] as [CGImagePropertyOrientation])
-                    .contains(orientation)
-                let width = Double(rotated ? image.height : image.width)
-                let height = Double(rotated ? image.width : image.height)
-                once.resume(returning: LayoutAnalyzer.paragraphs(from: lines, pageWidth: width, pageHeight: height))
-            }
-            request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
-            request.recognitionLanguages = Self.usableLanguages()
+                    // Vision kutuları yönü düzeltilmiş görüntüye göredir; 90° dönüşlerde en/boy yer değiştirir.
+                    let rotated = ([.left, .leftMirrored, .right, .rightMirrored] as [CGImagePropertyOrientation])
+                        .contains(orientation)
+                    let width = Double(rotated ? image.height : image.width)
+                    let height = Double(rotated ? image.width : image.height)
+                    once.resume(returning: LayoutAnalyzer.paragraphs(from: lines, pageWidth: width, pageHeight: height))
+                }
+                request.recognitionLevel = .accurate
+                request.usesLanguageCorrection = true
+                request.recognitionLanguages = languages
 
-            // Vision eşzamanlı çalışır; arayüzü kilitlememek için arka plan kuyruğunda.
-            DispatchQueue.global(qos: .userInitiated).async {
                 let handler = VNImageRequestHandler(cgImage: image, orientation: orientation)
                 do {
                     try handler.perform([request])
@@ -70,6 +76,42 @@ struct VisionTextExtractor {
                 }
             }
         }
+    }
+
+    /// Satırı kelimelere böler, her kelimenin kutusundaki piksellerden vurgu ve yazı rengini bulur.
+    /// Biçimli kelime yoksa nil.
+    private static func styledRuns(_ candidate: VNRecognizedText, pixels: PixelBuffer,
+                                   orientation: CGImagePropertyOrientation,
+                                   pageBackground: ColorAnalysis.RGB) -> [TextRun]? {
+        let text = candidate.string
+        var runs: [TextRun] = []
+        var index = text.startIndex
+        while index < text.endIndex {
+            let isSpace = text[index].isWhitespace
+            var end = index
+            while end < text.endIndex, text[end].isWhitespace == isSpace { end = text.index(after: end) }
+            let piece = String(text[index..<end])
+            if isSpace {
+                runs.append(TextRun(text: piece))
+            } else if let observation = try? candidate.boundingBox(for: index..<end) {
+                let r = observation.boundingBox
+                let oriented = BoundingBox(x: r.minX, y: 1 - r.maxY, width: r.width, height: r.height)
+                let raw = PixelBuffer.rawRect(oriented, orientation: orientation)
+                let style = ColorAnalysis.style(rgba: pixels.pixels(in: raw), pageBackground: pageBackground)
+                runs.append(TextRun(text: piece, highlight: style.highlight, color: style.color))
+            } else {
+                runs.append(TextRun(text: piece))
+            }
+            index = end
+        }
+        // Kelimeler arası boşluk, iki yanı aynı biçimdeyse o biçime katılır.
+        for i in runs.indices where runs[i].isPlain && runs[i].text.allSatisfy(\.isWhitespace) {
+            guard i > 0, i < runs.count - 1 else { continue }
+            let a = runs[i - 1], b = runs[i + 1]
+            if a.highlight == b.highlight { runs[i].highlight = a.highlight }
+            if a.color == b.color { runs[i].color = a.color }
+        }
+        return TextRuns.normalize(runs)
     }
 }
 
