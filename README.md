@@ -23,6 +23,7 @@ Mac gerekmez; derleme GitHub Actions'ın macOS makinelerinde yapılır.
 
 - Çekirdek testleri: `swift test --package-path Core` (Swift 5.9+ olan herhangi bir makinede).
 - Mac'te uygulama: `brew install xcodegen && xcodegen generate && open DersArsivi.xcodeproj`.
+- Sideloadly ile kurulum (ücretsiz Apple hesabı, 7 günde bir yenilenir): GitHub > Actions > "iOS derlemesi" > son başarılı koşu > Artifacts > `DersArsivi-imzasiz-ipa`.
 - iPhone/iPad'e kurulum: `main`'e her birleştirmede `.github/workflows/testflight.yml` derleyip TestFlight'a yükler. Depo gizli değerleri gerekir: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`.
 
 ## Belgeler

@@ -16,7 +16,7 @@ manifest JSON gidiş-dönüş.
 ## iOS
 | Kontrol | Durum |
 |---|---|
-| Simülatör için derleme (CI) | Geçti, macos-15 / Xcode 16.4, 2026-10-11. Yalnız derleme; simülatörde çalıştırılmadı |
+| Simülatör için derleme (CI) | Geçti: macos-15 / Xcode 16.4 ve macos-26, 2026-10-11. Yalnız derleme; simülatörde çalıştırılmadı |
 | Gerçek cihazda içeri alma → OCR → düzeltme → export | Yapılmadı (TestFlight bekleniyor) |
 | Vision Türkçe desteği (`tr-TR`) | Yapılmadı; detay ekranındaki dil listesinden okunacak |
 | Uygulama kapanıp açılınca kuyruk ve düzeltme | Çekirdekte test var; cihazda yapılmadı |
