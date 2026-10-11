@@ -93,6 +93,7 @@ public enum PromptLibrary {
         - `==metin==`: fosforlu kalemle vurgulanmış (sarı değilse rengi yanında yazar). `⟦renk: metin⟧`: renkli yazılmış.
         - Satır başındaki `⭐`: öğrenci bu satırın yanına işaret koymuş (yıldız, ünlem, çarpı, etiket); önemli.
         - `✍️`: öğrencinin el notu. OCR okuması tahmindir; notun görüntüsü varsa "El notu N" adlı şekil olarak eklenmiştir.
+        - `| ... |` satırları sayfadaki tablonun Markdown hâlidir; ilk satır başlıktır, hücreler OCR ile okunmuştur.
         - `⚠️ Belirsiz`: OCR'ın emin olmadığı yer. `✏️`: kullanıcı tarafından düzeltilmiş, güvenilir.
         - Şekiller `![Şekil N](figures/...)` biçimindedir ve altlarında etiket listesi bulunur; sayfa görüntüleri `![Sayfa N görüntüsü](pages/...)` biçimindedir.
         """

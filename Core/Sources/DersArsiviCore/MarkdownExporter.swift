@@ -337,6 +337,21 @@ public struct MarkdownExporter {
                         pending.removeFirst()
                     }
                 }
+                // Tablo kendi satırlarında durmalı; işaret ve düzeltme notu ayrı satıra yazılır.
+                if block.kind == .table {
+                    md += "\n"
+                    if block.marked == true {
+                        md += "⭐ İşaretli tablo:\n\n"
+                        collector.hasMarks = true
+                    }
+                    md += Self.escape(block.acceptedText) + "\n"
+                    if block.isUserCorrected { md += "\n_(Tablo düzeltildi ✏️)_\n" }
+                    if let note = uncertaintyNote(block) {
+                        uncertain += 1
+                        md += "\n> ⚠️ Belirsiz: \(note)\n"
+                    }
+                    continue
+                }
                 md += "\n"
                 if block.marked == true {
                     md += "⭐ "
