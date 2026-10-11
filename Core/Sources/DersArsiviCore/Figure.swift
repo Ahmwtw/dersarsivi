@@ -144,6 +144,8 @@ public enum FigureDetector {
         let inkSq = inkDistance * inkDistance, bgSq = backgroundDistance * backgroundDistance
         var ink = [Bool](repeating: false, count: cols * rows)
         var isBackground = [Bool](repeating: false, count: cols * rows)
+        var isFlat = [Bool](repeating: false, count: cols * rows)
+        var means = [(Double, Double, Double)](repeating: (0, 0, 0), count: cols * rows)
         // Düz renkli hücrelerin kaba renk kutusu; düz değilse -1.
         var flatBin = [Int](repeating: -1, count: cols * rows)
         let perCell = Double(cell * cell)
@@ -167,9 +169,11 @@ public enum FigureDetector {
                 ink[index] = Double(inkCount) / perCell >= 0.1
                 isBackground[index] = Double(bgCount) / perCell >= 0.5
                 let mean = (sum.0 / perCell, sum.1 / perCell, sum.2 / perCell)
+                means[index] = mean
                 let variance = (sq.0 / perCell - mean.0 * mean.0) + (sq.1 / perCell - mean.1 * mean.1)
                     + (sq.2 / perCell - mean.2 * mean.2)
                 if cell > 1, (max(variance, 0) / 3).squareRoot() < flatDeviation {
+                    isFlat[index] = true
                     flatBin[index] = ((Int(mean.0) >> 5) << 6) | ((Int(mean.1) >> 5) << 3) | (Int(mean.2) >> 5)
                 }
             }
@@ -179,12 +183,39 @@ public enum FigureDetector {
         var binCounts: [Int: Int] = [:]
         for b in flatBin where b >= 0 { binCounts[b, default: 0] += 1 }
         let frequent = Set(binCounts.filter { Double($0.value) >= secondaryBackgroundShare * Double(cols * rows) }.keys)
-        for i in ink.indices where ink[i] && flatBin[i] >= 0 && frequent.contains(flatBin[i]) { ink[i] = false }
+        var isSecondary = [Bool](repeating: false, count: cols * rows)
+        for i in ink.indices where flatBin[i] >= 0 && frequent.contains(flatBin[i]) {
+            isSecondary[i] = true
+            ink[i] = false
+        }
+        ink = removingPanelEdges(ink: ink, isBackground: isBackground, isSecondary: isSecondary,
+                                 flatBin: flatBin, means: means, background: background, cols: cols, rows: rows)
 
         // İçerik alanı: zemin rengini yeterince içeren sütun ve satırlar. Koyu kenarlıklar ve araç çubukları elenir.
-        guard let colSpan = span(count: cols, minFraction: 0.15, fraction: { c in
-            (0..<rows).reduce(0) { $0 + (isBackground[$1 * cols + c] ? 1 : 0) }
-        }, total: rows) else { return nil }
+        // Koyu zeminli slayttaki fotoğraf (histoloji) sütunlarında sayfa zemini az görünür; bu sütunlar
+        // koyu çerçeve değilse, dokulu içerik taşıyorsa ve biraz da sayfa rengi içeriyorsa içerik sayılır.
+        func isDarkFrame(_ i: Int) -> Bool {
+            guard isFlat[i] else { return false }
+            let m = means[i]
+            let hi = max(m.0, m.1, m.2), lo = min(m.0, m.1, m.2)
+            return hi < 90 && hi - lo < 30
+        }
+        let rowCount = Double(rows)
+        let contentColumn: [Bool] = (0..<cols).map { c in
+            var main = 0, frame = 0, textured = 0, page = 0
+            for r in 0..<rows {
+                let i = r * cols + c
+                let dark = isDarkFrame(i)
+                if isBackground[i] { main += 1 }
+                if dark { frame += 1 }
+                if ink[i], !isFlat[i] { textured += 1 }
+                if (isBackground[i] || isSecondary[i]) && !dark { page += 1 }
+            }
+            if Double(main) / rowCount >= 0.15 { return true }
+            return Double(frame) / rowCount < 0.5 && Double(textured) / rowCount >= 0.4 && Double(page) / rowCount >= 0.05
+        }
+        guard let colSpan = span(count: cols, minFraction: 0.5, fraction: { contentColumn[$0] ? 1 : 0 },
+                                 total: 1) else { return nil }
         var (c0, c1) = colSpan
         guard let rowSpan = span(count: rows, minFraction: 0.15, fraction: { r in
             (c0..<c1).reduce(0) { $0 + (isBackground[r * cols + $1] ? 1 : 0) }
@@ -251,6 +282,15 @@ public enum FigureDetector {
         }
         var boxes = components(grown, original: mask, cols: cols, rows: rows)
 
+        // İçerik kenarına yapışık dar parça: ekranın kenarından taşan komşu slaytın veya kenarlığın kesiti.
+        boxes = boxes.filter { b in
+            let x0 = Int((b.x * Double(cols)).rounded()), x1 = Int((b.maxX * Double(cols)).rounded())
+            let y0 = Int((b.y * Double(rows)).rounded()), y1 = Int((b.maxY * Double(rows)).rounded())
+            if x0 <= c0 + 1 || x1 >= c1 - 1, Double(x1 - x0) < 0.15 * Double(c1 - c0) { return false }
+            if y0 <= r0 + 1 || y1 >= r1 - 1, Double(y1 - y0) < 0.15 * Double(r1 - r0) { return false }
+            return true
+        }
+
         // Boyut süzgeci: içerik alanına göre.
         let minW = 0.08 * content.width, minH = 0.08 * content.height
         boxes = boxes.filter { b in
@@ -293,6 +333,46 @@ public enum FigureDetector {
         }
         result = Array(result.sorted { $0.bbox.area > $1.bbox.area }.prefix(maxSuggestions))
         return result.sorted { ($0.bbox.y, $0.bbox.x) < ($1.bbox.y, $1.bbox.x) }
+    }
+
+    /// İki farklı zemin renginin sınırındaki hücreler (beyaz panelin lacivert zemindeki kenarı gibi) karışık
+    /// renklidir ve mürekkep sanılır; panelin çerçevesi şekil diye önerilmesin diye silinir. Aynı zemin
+    /// üstündeki çizgi (grafik eğrisi) iki yanında aynı renk olduğundan korunur.
+    private static func removingPanelEdges(ink: [Bool], isBackground: [Bool], isSecondary: [Bool], flatBin: [Int],
+                                           means: [(Double, Double, Double)], background: ColorAnalysis.RGB,
+                                           cols: Int, rows: Int) -> [Bool] {
+        // Her zemin hücresine renk etiketi: 0 ana zemin, diğerleri ikinci zeminin renk kutusu.
+        var label = [Int](repeating: -1, count: cols * rows)
+        for i in label.indices where !ink[i] {
+            if isBackground[i] {
+                label[i] = 0
+            } else if isSecondary[i] {
+                let m = means[i]
+                let nearMain = abs(m.0 - background.r) < 20 && abs(m.1 - background.g) < 20 && abs(m.2 - background.b) < 20
+                label[i] = nearMain ? 0 : flatBin[i] + 1
+            }
+        }
+        func firstLabel(_ r: Int, _ c: Int, _ dr: Int, _ dc: Int) -> Int {
+            for k in 1...2 {
+                let rr = r + dr * k, cc = c + dc * k
+                guard rr >= 0, rr < rows, cc >= 0, cc < cols else { return -1 }
+                if !ink[rr * cols + cc] { return label[rr * cols + cc] }
+            }
+            return -1
+        }
+        var result = ink
+        for r in 0..<rows {
+            for c in 0..<cols where ink[r * cols + c] {
+                for (dr, dc) in [(0, 1), (1, 0)] {
+                    let a = firstLabel(r, c, -dr, -dc), b = firstLabel(r, c, dr, dc)
+                    if a >= 0, b >= 0, a != b {
+                        result[r * cols + c] = false
+                        break
+                    }
+                }
+            }
+        }
+        return result
     }
 
     /// Oranı `minFraction` üstündeki ilk ve son indeks (son hariç).

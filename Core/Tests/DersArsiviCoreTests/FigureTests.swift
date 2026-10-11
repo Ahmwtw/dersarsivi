@@ -134,6 +134,35 @@ final class FigureDetectorTests: XCTestCase {
                                                   lines: buttons), [])
     }
 
+    /// Beyaz panel sayfanın ana zemini sayılsa da lacivert slayttaki histoloji görseli içerik alanında kalır;
+    /// panelin lacivert zemindeki kenarı şekil sanılmaz.
+    func testPhotoOnDarkSlideWithLittleBackgroundIsFound() {
+        var c = Canvas(width: 300, height: 200, fill: (10, 30, 90))
+        c.rect(10, 10, 150, 196, (255, 255, 255))
+        var lines: [FigureDetector.Line] = []
+        for (i, y) in stride(from: 20, to: 180, by: 16).enumerated() {
+            lines.append(c.textLine("madde \(i)", 20, y, 140, y + 8))
+        }
+        c.texture(160, 20, 300, 196, (150, 80, 170), (200, 150, 210))
+        let found = FigureDetector.suggestions(rgba: c.rgba, width: c.width, height: c.height, lines: lines)
+        XCTAssertEqual(found.count, 1)
+        let b = try! XCTUnwrap(found.first?.bbox)
+        XCTAssertGreaterThan(b.x, 0.5, "beyaz metin paneli şekle katılmamalı")
+        XCTAssertGreaterThan(c.box(160, 20, 300, 196).fractionInside(b), 0.9)
+    }
+
+    /// Ekranın kenarından taşan komşu slaytın dar kesiti önerilmez.
+    func testNarrowSliverAtContentEdgeIsNotSuggested() {
+        var c = Canvas(width: 300, height: 200)
+        c.rect(0, 0, 30, 200, (0, 0, 0))
+        c.rect(270, 0, 300, 200, (0, 0, 0))
+        c.texture(32, 40, 60, 180, (230, 120, 140), (190, 90, 120))
+        c.texture(120, 40, 220, 160, (150, 210, 235), (110, 170, 215))
+        let found = FigureDetector.suggestions(rgba: c.rgba, width: c.width, height: c.height, lines: [])
+        XCTAssertEqual(found.count, 1)
+        XCTAssertGreaterThan(c.box(120, 40, 220, 160).fractionInside(try! XCTUnwrap(found.first?.bbox)), 0.95)
+    }
+
     func testToolbarTextOutsideSlideIsDropped() throws {
         var c = Canvas(width: 300, height: 200)
         c.rect(0, 0, 30, 200, (0, 0, 0))
