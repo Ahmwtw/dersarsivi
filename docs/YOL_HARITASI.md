@@ -52,7 +52,7 @@ Değişmez ilkeler:
 
 ### Aşama 3: Akıllı özellikler
 
-- [ ] Tablo yapısı (Vision RecognizeDocumentsRequest, iOS 26): tablo Markdown tablosu olarak dışa aktarılır
+- [x] Tablo yapısı (Vision RecognizeDocumentsRequest, iOS 26): tablo Markdown tablosu olarak dışa aktarılır (D45)
 - [ ] Cihaz üstü şema betimleme (Apple Intelligence olan cihazlarda)
 - [ ] Şema etiketlerinden görsel kapatmalı (image occlusion) Anki kartı
 - [ ] Paylaş menüsünden doğrudan arşive ekleme, Kestirmeler

@@ -267,7 +267,9 @@ private struct BlockRow: View {
                     Image(systemName: "pencil.and.scribble").foregroundStyle(palette.note)
                         .accessibilityLabel("El yazısı")
                 }
-                if let runs = block.runs, !block.isUserCorrected {
+                if block.kind == .table, let grid = TableLayout.parse(block.acceptedText) {
+                    TableGrid(rows: grid)
+                } else if let runs = block.runs, !block.isUserCorrected {
                     Text(Self.attributed(runs))
                 } else {
                     Text(block.acceptedText)
@@ -316,6 +318,36 @@ extension NamedColor {
     }
 }
 
+/// Okunan tablo: ilk satır başlık, sütunlar hizalı. Geniş tablo yatayda kaydırılır.
+private struct TableGrid: View {
+    @Environment(\.palette) private var palette
+    let rows: [[String]]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            Grid(alignment: .leading, horizontalSpacing: 0, verticalSpacing: 0) {
+                ForEach(rows.indices, id: \.self) { r in
+                    GridRow {
+                        ForEach(rows[r].indices, id: \.self) { c in
+                            Text(rows[r][c].isEmpty ? " " : rows[r][c])
+                                .font(r == 0 ? .subheadline.weight(.semibold) : .subheadline)
+                                .frame(maxWidth: 220, alignment: .leading)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .frame(maxHeight: .infinity, alignment: .topLeading)
+                                .background(r == 0 ? palette.accent.opacity(0.12) : Color.clear)
+                                .overlay { Rectangle().strokeBorder(Color.secondary.opacity(0.25), lineWidth: 0.5) }
+                        }
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Tablo, \(rows.count) satır")
+    }
+}
+
 struct CorrectionSheet: View {
     let block: Block
     let onSave: (String) -> Void
@@ -331,8 +363,16 @@ struct CorrectionSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Metin") {
-                    TextEditor(text: $text).frame(minHeight: 120)
+                Section {
+                    TextEditor(text: $text)
+                        .font(block.kind == .table ? .system(.callout, design: .monospaced) : .body)
+                        .frame(minHeight: block.kind == .table ? 220 : 120)
+                } header: {
+                    Text(block.kind == .table ? "Tablo" : "Metin")
+                } footer: {
+                    if block.kind == .table {
+                        Text("Her satır bir tablo satırı; hücreleri | ile ayır. İkinci satır (| --- |) başlığı ayırır.")
+                    }
                 }
                 if block.rawText != block.acceptedText {
                     Section("Makinenin okuduğu") {

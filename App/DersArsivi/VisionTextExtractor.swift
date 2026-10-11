@@ -42,11 +42,14 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v6|rect-v2|order-v2|hand-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        // Tablo okuma yalnız iOS 26'da var; eski sürümde önceki okumalar geçerli kalır.
+        let tables = Self.readsTables ? "table-v1|" : ""
+        return SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v6|rect-v2|order-v2|hand-v1|\(tables)\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
     func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> ExtractionOutput {
         let languages = Self.usableLanguages()
+        let tables = await Self.tables(in: image, orientation: orientation)
         return try await withCheckedThrowingContinuation { continuation in
             // Vision eşzamanlı çalışır; arayüzü kilitlememek için arka plan kuyruğunda.
             DispatchQueue.global(qos: .userInitiated).async {
@@ -78,8 +81,9 @@ struct VisionTextExtractor {
                     let width = Double(rotated ? image.height : image.width)
                     let height = Double(rotated ? image.width : image.height)
                     let skew = Self.medianSkew(observations, width: width, height: height)
-                    once.resume(returning: Self.finish(lines: lines, image: image, orientation: orientation,
-                                                       width: width, height: height, skew: skew))
+                    once.resume(returning: Self.finish(lines: lines, tables: tables, image: image,
+                                                       orientation: orientation, width: width, height: height,
+                                                       skew: skew))
                 }
                 request.recognitionLevel = .accurate
                 request.usesLanguageCorrection = true
@@ -97,15 +101,46 @@ struct VisionTextExtractor {
 
     /// PDF'in metin katmanından gelen satırlar: OCR yapılmaz, yalnız düzen, şekil ve işaret çözümlemesi.
     func finish(textLayer lines: [ExtractedBlock], image: CGImage) async -> ExtractionOutput {
-        await Task.detached(priority: .userInitiated) {
-            Self.finish(lines: lines, image: image, orientation: .up, width: Double(image.width),
+        let tables = await Self.tables(in: image, orientation: .up)
+        return await Task.detached(priority: .userInitiated) {
+            Self.finish(lines: lines, tables: tables, image: image, orientation: .up, width: Double(image.width),
                         height: Double(image.height), skew: 0)
         }.value
     }
 
+    /// Belge tanıma (iOS 26) sayfadaki tabloları satır ve sütunlarıyla bulur. Eski sürümde ve hata olursa boş;
+    /// sayfa yine satır satır okunur.
+    static var readsTables: Bool {
+        if #available(iOS 26, *) { return true }
+        return false
+    }
+
+    static func tables(in image: CGImage, orientation: CGImagePropertyOrientation) async -> [DetectedTable] {
+        guard #available(iOS 26, *) else { return [] }
+        var request = RecognizeDocumentsRequest()
+        request.textRecognitionOptions.recognitionLanguages = usableLanguages().map { Locale.Language(identifier: $0) }
+        request.textRecognitionOptions.useLanguageCorrection = true
+        guard let observations = try? await request.perform(on: image, orientation: orientation) else { return [] }
+        return observations.flatMap { $0.document.tables }.map { table in
+            DetectedTable(bbox: topLeft(table.boundingRegion.boundingBox), cells: table.rows.flatMap { $0 }.map { cell in
+                DetectedTable.Cell(rows: cell.rowRange, columns: cell.columnRange,
+                                   text: cell.content.text.transcript,
+                                   bbox: topLeft(cell.content.boundingRegion.boundingBox))
+            })
+        }
+    }
+
+    /// Vision'ın kutusu sol alt orijinli; sözleşme sol üst orijin.
+    @available(iOS 26, *)
+    private static func topLeft(_ r: NormalizedRect) -> BoundingBox {
+        BoundingBox(x: Double(r.origin.x), y: Double(1 - r.origin.y - r.height),
+                    width: Double(r.width), height: Double(r.height))
+    }
+
     /// Satırlardan sayfa sonucunu üretir: sayfa alanı, şekil önerileri, el yazısı ve işaretler, paragraflar.
-    private static func finish(lines: [ExtractedBlock], image: CGImage, orientation: CGImagePropertyOrientation,
-                               width: Double, height: Double, skew: Double) -> ExtractionOutput {
+    private static func finish(lines: [ExtractedBlock], tables: [DetectedTable], image: CGImage,
+                               orientation: CGImagePropertyOrientation, width: Double, height: Double,
+                               skew: Double) -> ExtractionOutput {
         // Not uygulamasının araç çubuğu gibi sayfa dışı yazılar atılır.
         let small = smallImage(image: image, orientation: orientation)
         let scan = small.flatMap { FigureDetector.scan(rgba: $0.bytes, width: $0.width, height: $0.height) }
@@ -131,9 +166,17 @@ struct VisionTextExtractor {
             share = analysis.handwritingShare
             complex = analysis.looksComplex
         }
-        let blocks = LayoutAnalyzer.paragraphs(from: pageLines, pageWidth: width, pageHeight: height)
+        // Tablonun içindeki satırlar paragraf yapılmaz; tablo Markdown tablosu olarak kendi yerine konur. Tablo
+        // artık metin olduğundan çizgileri yüzünden önerilen şekil de düşer.
+        let (rest, tableBlocks) = TableLayout.split(lines: pageLines, tables: tables)
+        let paragraphs = LayoutAnalyzer.paragraphs(from: rest, pageWidth: width, pageHeight: height)
+        let blocks = TableLayout.insert(tableBlocks, into: paragraphs)
+        let tableBoxes = tableBlocks.compactMap(\.bbox)
+        let keptFigures = figures.filter { figure in
+            !tableBoxes.contains { figure.bbox.fractionInside($0) >= 0.6 }
+        }
         return ExtractionOutput(
-            blocks: blocks, figures: figures + notes, skewDegrees: skew, content: scan?.content,
+            blocks: blocks, figures: keptFigures + notes, skewDegrees: skew, content: scan?.content,
             lines: boxed.map { FigureLabel(text: $0.text, bbox: $0.bbox) },
             handwritingShare: share, looksComplex: complex)
     }

@@ -186,7 +186,7 @@ public struct Archive: Codable, Equatable, Sendable {
     /// en az 4 harf, en fazla 80 karakter. Baştaki madde işareti atılır, 60 karakterden uzunsa kelimede kesilir.
     static func titleCandidate(_ blocks: [Block], figures: [BoundingBox]) -> String? {
         for block in blocks {
-            guard let box = block.bbox, box.y < 0.35, block.kind != .handwriting,
+            guard let box = block.bbox, box.y < 0.35, block.kind != .handwriting, block.kind != .table,
                   (block.engineConfidence ?? 1) >= 0.5 else { continue }
             let cx = box.x + box.width / 2, cy = box.y + box.height / 2
             if cy < 0.03 || cy > 0.97 { continue }

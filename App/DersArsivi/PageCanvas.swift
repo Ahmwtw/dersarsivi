@@ -82,7 +82,7 @@ struct PageCanvas: View {
             .contentShape(Rectangle())
             .onTapGesture { onTap(block) }
             .accessibilityElement()
-            .accessibilityLabel(block.acceptedText)
+            .accessibilityLabel(block.kind == .table ? "Tablo" : block.acceptedText)
             .accessibilityHint("Düzeltmek için dokun")
             .accessibilityAddTraits(.isButton)
     }
@@ -91,6 +91,7 @@ struct PageCanvas: View {
         if block.isUserCorrected { return .green }
         if block.marked == true { return palette.star }
         if block.kind == .handwriting { return palette.note }
+        if block.kind == .table { return .teal }
         if block.reviewStatus == .conflict { return .orange }
         if let c = block.engineConfidence, c < 0.5 { return .orange }
         return palette.accent
@@ -119,6 +120,7 @@ struct PageCanvas: View {
                 Label("Okunan satır", systemImage: "square").foregroundStyle(palette.accent)
                 Label("İşaretli (⭐)", systemImage: "square.fill").foregroundStyle(palette.star)
                 Label("El notu (✍️)", systemImage: "square.fill").foregroundStyle(palette.note)
+                Label("Tablo", systemImage: "tablecells").foregroundStyle(.teal)
                 Label("Belirsiz okuma", systemImage: "square.fill").foregroundStyle(.orange)
                 Label("Düzeltildi", systemImage: "square.fill").foregroundStyle(.green)
             } label: {
