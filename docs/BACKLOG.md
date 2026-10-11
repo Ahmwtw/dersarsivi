@@ -19,7 +19,9 @@
 - [ ] Kalın yazı tahmini (yaklaşık)
 - [ ] Tablo ve liste yapısı: Vision `RecognizeDocumentsRequest` (iOS 26+)
 - [ ] Şema/grafik betimleme ve yapılandırılmış ilişkiler: Foundation Models görsel girdisi (Apple Intelligence; iPad Air M3 var, iPhone 13 yok)
-- [ ] Figür kırpımını exporta ekleme (görsel gerekli işareti)
+- [ ] Figür kırpımı: öneri (cihaz üstü belirginlik/metin dışı bölge) + elle düzeltme, küçük JPEG olarak saklama, `.md` + görseller ZIP export (kullanıcının önceliği 1)
+- [ ] Şema etiketlerinin OCR konumlarıyla Anki image occlusion kartı (kullanıcının önceliği 2)
+- [ ] Farklı türlerden 10-20 örnekle düzen/paragraf test seti (kullanıcıdan örnek bekleniyor)
 - [ ] Yıldız, daire, el ile işaretler (deneysel)
 
 ## P1
@@ -28,4 +30,4 @@ iki sütun okuma sırası · şema/tablo yorumu · JSON round-trip · figürlü 
 Anki TSV profili · yedek/geri yükleme · koleksiyon ve etiket · SQLite/GRDB geçişi (D10)
 
 ## P2
-Semantic search · iCloud/çok cihaz (iPhone'da çekilen şemayı iPad'in betimlemesi) · APKG/image occlusion · gelişmiş tekrar/benzerlik tespiti
+Uygulama içi Anki (kesin değil) · Semantic search · iCloud/çok cihaz (iPhone'da çekilen şemayı iPad'in betimlemesi) · APKG/image occlusion · gelişmiş tekrar/benzerlik tespiti
