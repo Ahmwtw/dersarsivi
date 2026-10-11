@@ -54,7 +54,7 @@ Değişmez ilkeler:
 
 - [x] Tablo yapısı (Vision RecognizeDocumentsRequest, iOS 26): tablo Markdown tablosu olarak dışa aktarılır (D45)
 - [ ] Cihaz üstü şema betimleme (Apple Intelligence olan cihazlarda)
-- [ ] Şema etiketlerinden görsel kapatmalı (image occlusion) Anki kartı
+- [x] Şema etiketlerinden görsel kapatmalı (image occlusion) Anki kartı: dışa aktarımdan .apkg destesi (D46)
 - [ ] Paylaş menüsünden doğrudan arşive ekleme, Kestirmeler
 - [ ] Yedekleme / geri yükleme, iCloud ile cihazlar arası eşitleme
 - [ ] TestFlight dağıtımı (Apple Developer hesabı onaylanınca)

@@ -537,6 +537,29 @@ final class AppModel: ObservableObject {
         return (["DersArşivi"] + common.map(\.name)).joined(separator: "::")
     }
 
+    /// Kaydedilmiş şekillerin etiketlerinden Anki görsel kapatma destesi (.apkg). Kart yoksa nil.
+    func occlusionDeck(sourceIDs: [UUID]) -> URL? {
+        let (cards, media) = ImageOcclusion.cards(in: archive, sourceIDs: sourceIDs)
+        guard !cards.isEmpty else { return nil }
+        let deck = deckName(for: sourceIDs)
+        let package = AnkiPackage(deckName: deck, cards: cards, media: media, now: Date())
+        do {
+            let data = try AnkiPackageWriter.write(package) { [store] media in
+                try? Data(contentsOf: store.url(forRef: media.imageRef))
+            }
+            let name = deck.split(separator: ":").last.map(String.init) ?? "DersArşivi"
+            let dir = FileManager.default.temporaryDirectory
+                .appendingPathComponent("anki-\(UUID().uuidString.prefix(8))", isDirectory: true)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent("\(name) görsel kapatma.apkg")
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            lastError = "Anki destesi hazırlanamadı: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
     /// Talimatı panoya kopyalar (dosyasız kullanım: talimat sohbete yapıştırılır, dosya ayrıca eklenir).
     func copyPrompt(_ template: PromptTemplate, sourceIDs: [UUID], includesImages: Bool) {
         let context = PromptContext(deckName: deckName(for: sourceIDs), sourceCount: max(1, sourceIDs.count),
