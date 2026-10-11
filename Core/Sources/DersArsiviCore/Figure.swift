@@ -232,8 +232,13 @@ public enum FigureDetector {
         guard let colSpan = span(count: cols, minFraction: 0.5, fraction: { contentColumn[$0] ? 1 : 0 },
                                  total: 1) else { return nil }
         var (c0, c1) = colSpan
+        // Satırlarda ana zeminin yanında açık renkli ikinci zemin de sayılır: ana zemin tablo satırlarının
+        // rengi çıktığında beyaz slaytın başlığı ve alt kısmı alan dışında kalıyordu.
+        func isPageRow(_ i: Int) -> Bool {
+            isBackground[i] || (isSecondary[i] && min(means[i].0, means[i].1, means[i].2) >= 200)
+        }
         guard let rowSpan = span(count: rows, minFraction: 0.15, fraction: { r in
-            (c0..<c1).reduce(0) { $0 + (isBackground[r * cols + $1] ? 1 : 0) }
+            (c0..<c1).reduce(0) { $0 + (isPageRow(r * cols + $1) ? 1 : 0) }
         }, total: c1 - c0) else { return nil }
         var (r0, r1) = rowSpan
         // Kenar hücreleri yarı içerik yarı çerçevedir; mürekkep sanılmasın.
@@ -416,7 +421,7 @@ public enum FigureDetector {
             let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(found)?.area ?? 0) }
             guard textArea / max(found.area, 1e-9) <= 0.45 else { return nil }
             // Slayta kalemle eklenmiş renkli not şekil değildir.
-            guard !looksLikePenNote(box, scan: scan) else { return nil }
+            guard !looksLikePenNote(box, scan: scan), !looksLikeBanner(box, scan: scan) else { return nil }
         }
         let padded = box.insetBy(dx: -0.01 * content.width, dy: -0.01 * content.height).clamped(to: content)
         let figureLabels = labels.map { FigureLabel(text: lines[$0].text, bbox: lines[$0].bbox) }
@@ -511,12 +516,25 @@ public enum FigureDetector {
     /// Kalemle eklenmiş not mu: mürekkep seyrek (ince çizgi) ve neredeyse tamamı tek bir doygun renkte.
     /// Çizim ve fotoğraflar ya daha yoğun ya da çok renklidir.
     static func looksLikePenNote(_ box: BoundingBox, scan: PageScan) -> Bool {
+        guard let colors = inkColors(box, scan: scan) else { return false }
+        return colors.coverage < 0.3 && colors.dominant >= 0.5
+    }
+
+    /// Tek renkli, yatay uzun şerit (tablo başlık satırı, başlık bandı) şekil değildir.
+    static func looksLikeBanner(_ box: BoundingBox, scan: PageScan) -> Bool {
+        let aspect = box.width * Double(scan.cols) / max(box.height * Double(scan.rows), 1e-9)
+        guard aspect >= 5, let colors = inkColors(box, scan: scan) else { return false }
+        return colors.dominant >= 0.5
+    }
+
+    /// Kutudaki mürekkep yoğunluğu ve en baskın tonun (komşu kutularla) mürekkep içindeki payı.
+    private static func inkColors(_ box: BoundingBox, scan: PageScan) -> (coverage: Double, dominant: Double)? {
         let cols = scan.cols, rows = scan.rows
         let x0 = max(0, Int((box.x * Double(cols)).rounded(.down)))
         let x1 = min(cols, Int((box.maxX * Double(cols)).rounded(.up)))
         let y0 = max(0, Int((box.y * Double(rows)).rounded(.down)))
         let y1 = min(rows, Int((box.maxY * Double(rows)).rounded(.up)))
-        guard x1 > x0, y1 > y0 else { return false }
+        guard x1 > x0, y1 > y0 else { return nil }
         var inkTotal = 0
         var histogram = [Int](repeating: 0, count: hueBins)
         for r in y0..<y1 {
@@ -526,7 +544,7 @@ public enum FigureDetector {
                 for b in 0..<hueBins { histogram[b] += Int(scan.hues[i * hueBins + b]) }
             }
         }
-        guard inkTotal > 0 else { return false }
+        guard inkTotal > 0 else { return nil }
         let coverage = Double(inkTotal) / Double((x1 - x0) * (y1 - y0) * scan.pixelsPerCell)
         var dominant = 0
         for b in 0..<hueBins {
@@ -534,7 +552,7 @@ public enum FigureDetector {
             let next: Int = histogram[(b + 1) % hueBins]
             dominant = max(dominant, previous + histogram[b] + next)
         }
-        return coverage < 0.3 && Double(dominant) / Double(inkTotal) >= 0.5
+        return (coverage, Double(dominant) / Double(inkTotal))
     }
 
     static let hueBins = 24

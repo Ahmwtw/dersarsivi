@@ -189,6 +189,27 @@ final class FigureDetectorTests: XCTestCase {
         XCTAssertGreaterThan(c.box(120, 40, 220, 160).fractionInside(try! XCTUnwrap(found.first?.bbox)), 0.95)
     }
 
+    /// Tablo slaytı: en sık renk tablo satırlarının açık rengi olsa da beyaz başlık alanı sayfa alanında kalır;
+    /// tablonun tek renkli başlık şeridi şekil diye önerilmez.
+    func testTableSlideKeepsTitleAndHeaderBandIsNotAFigure() throws {
+        var c = Canvas(width: 320, height: 200)
+        c.rect(0, 0, 40, 200, (0, 0, 0))
+        c.rect(280, 0, 320, 200, (0, 0, 0))
+        var lines = [c.textLine("Başlık", 80, 8, 240, 18)]
+        c.rect(50, 30, 270, 50, (60, 100, 180))     // başlık şeridi
+        lines.append(c.textLine("Sütun 1", 60, 37, 100, 43))
+        lines.append(c.textLine("Sütun 2", 170, 37, 210, 43))
+        c.rect(40, 50, 280, 195, (233, 235, 245))   // tablo satırları
+        for (i, y) in stride(from: 58, to: 190, by: 14).enumerated() {
+            lines.append(c.textLine("hücre \(i)", 60, y, 130, y + 6))
+            lines.append(c.textLine("açıklama \(i)", 160, y, 260, y + 6))
+        }
+        let scan = try XCTUnwrap(FigureDetector.scan(rgba: c.rgba, width: c.width, height: c.height))
+        XCTAssertLessThan(scan.content.y, 0.05, "slayt başlığı sayfa alanı dışında kalmamalı")
+        XCTAssertGreaterThan(scan.content.maxY, 0.95)
+        XCTAssertEqual(FigureDetector.suggestions(rgba: c.rgba, width: c.width, height: c.height, lines: lines), [])
+    }
+
     /// Dokun-kırp: dokunulan şeklin kutusu bulunur; yazının üstüne ya da boş yere dokununca şekil yoktur.
     func testTapFindsFigureUnderFinger() throws {
         var c = Canvas(width: 300, height: 200)
