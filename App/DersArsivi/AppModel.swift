@@ -8,6 +8,8 @@ import UIKit
 final class AppModel: ObservableObject {
     @Published private(set) var archive = Archive()
     @Published var lastError: String?
+    /// Hata olmayan kısa bilgi (ör. "zaten arşivdeydi, klasöre taşındı"); üstte kısa süre gösterilir.
+    @Published var notice: String?
     @Published private(set) var isProcessing = false
 
     let store: FileArchiveStore
@@ -23,13 +25,17 @@ final class AppModel: ObservableObject {
         }
         // Uygulama işlem sırasında kapandıysa yarım kalan işler yeniden sıraya girer.
         archive.jobQueue.recoverInterrupted(at: Date())
+        // Eski sürümün geçici başlıkları ("Görsel 12 Eki 00:57") okunan başlıkla değiştirilir.
+        archive.adoptAutoTitles(archive.sources.filter {
+            $0.autoTitle == nil && $0.mediaType == .image && Self.isGeneratedTitle($0.sourceTitle)
+        }.map(\.id))
         persist()
     }
 
     // MARK: İçeri alma
 
     /// Görseli orijinal baytlarıyla saklar, sayfa olarak ekler ve OCR kuyruğuna koyar.
-    func importImage(data: Data, filename: String) {
+    func importImage(data: Data, filename: String, folderID: UUID? = nil) {
         guard let image = UIImage(data: data) else {
             lastError = "\(filename) bir görsel olarak açılamadı."
             return
@@ -38,14 +44,16 @@ final class AppModel: ObservableObject {
         do {
             let hash = SHA256Hasher.hexDigest(data)
             if let existing = archive.source(withContentHash: hash) {
-                lastError = "Bu görsel zaten arşivde: \(existing.sourceTitle)"
+                alreadyInArchive(existing, folderID: folderID)
                 return
             }
             let ext = (filename as NSString).pathExtension.isEmpty ? "jpg" : (filename as NSString).pathExtension
             let stored = try store.storeOriginal(data, id: id, fileExtension: ext)
             let title = Self.defaultTitle(for: filename)
-            let source = SourceAsset(id: id, mediaType: .image, originalFilename: filename, sourceTitle: title,
+            var source = SourceAsset(id: id, mediaType: .image, originalFilename: filename, sourceTitle: title,
                                      contentHash: stored.hash, localAssetRef: stored.ref, importedAt: Date())
+            source.folderID = folderID
+            source.autoTitle = Self.isGeneratedTitle(title) ? true : nil
             archive.importSource(source, pageSizes: [(Double(image.size.width), Double(image.size.height))])
             for page in archive.pages(of: id) {
                 archive.jobQueue.enqueue(pageID: page.id, at: Date())
@@ -58,15 +66,77 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// PDF'i saklar ve sayfalarını ekler. `pages` verilirse yalnız o sayfalar okunur; diğerleri sonra okunabilir.
+    func importPDF(data: Data, filename: String, pages wanted: [Int]? = nil, folderID: UUID? = nil) {
+        guard let info = PDFSupport.info(data: data) else {
+            lastError = "\(filename) bir PDF olarak açılamadı (şifreli veya bozuk olabilir)."
+            return
+        }
+        let id = UUID()
+        do {
+            let hash = SHA256Hasher.hexDigest(data)
+            if let existing = archive.source(withContentHash: hash) {
+                alreadyInArchive(existing, folderID: folderID)
+                return
+            }
+            let stored = try store.storeOriginal(data, id: id, fileExtension: "pdf")
+            var source = SourceAsset(id: id, mediaType: .pdf, originalFilename: filename,
+                                     sourceTitle: Self.defaultTitle(for: filename), contentHash: stored.hash,
+                                     localAssetRef: stored.ref, importedAt: Date())
+            source.folderID = folderID
+            archive.importSource(source, pageSizes: info.sizes, pdfPageLabels: info.labels)
+            let selected = wanted.map(Set.init)
+            for page in archive.pages(of: id) where selected?.contains(page.pageIndex) ?? true {
+                archive.jobQueue.enqueue(pageID: page.id, at: Date())
+                try archive.setStatus(.queued, forPage: page.id)
+            }
+            persist()
+            processQueue()
+        } catch {
+            lastError = "İçeri alma başarısız: \(error.localizedDescription)"
+        }
+    }
+
+    /// Okunmamış sayfaları (PDF'te seçilmeyenler) sıraya koyar.
+    func readPages(_ pageIDs: [UUID]) {
+        for id in pageIDs {
+            archive.jobQueue.enqueue(pageID: id, at: Date())
+            try? archive.setStatus(.queued, forPage: id)
+        }
+        persist()
+        processQueue()
+    }
+
+    /// Dosya adı anlamlıysa o ("Fizyoloji_Sorulari" → "Fizyoloji Sorulari"); fotoğraf/ekran görüntüsü adıysa
+    /// geçici "Görsel <tarih>" (okununca sayfanın başlığıyla değişir).
     private static func defaultTitle(for filename: String) -> String {
         let base = (filename as NSString).deletingPathExtension
-        if base.isEmpty || base.hasPrefix("IMG_") || base.hasPrefix("image") {
+        let generic = ["IMG_", "image", "Screenshot", "Ekran Resmi", "Ekran Görüntüsü", "Photo", "PHOTO"]
+        if base.isEmpty || generic.contains { base.hasPrefix($0) } {
             let f = DateFormatter()
             f.locale = Locale(identifier: "tr_TR")
             f.dateFormat = "d MMM HH:mm"
             return "Görsel \(f.string(from: Date()))"
         }
-        return base
+        return base.replacingOccurrences(of: "_", with: " ").trimmingCharacters(in: .whitespaces)
+    }
+
+    static func isGeneratedTitle(_ title: String) -> Bool {
+        title.range(of: #"^Görsel \d{1,2} \S+ \d{2}:\d{2}$"#, options: .regularExpression) != nil
+    }
+
+    /// Aynı dosya yeniden eklendi. Klasör içinden eklendiyse var olan kaynak oraya taşınır; "Tüm kaynaklar"da
+    /// görünmeye devam eder. Kopya oluşturulmaz: düzeltmeler ve şekiller tek yerde kalır.
+    private func alreadyInArchive(_ existing: SourceAsset, folderID: UUID?) {
+        guard let folderID, existing.folderID != folderID, let folder = archive.folder(folderID) else {
+            notice = "\(existing.sourceTitle) zaten arşivde."
+            return
+        }
+        let from = existing.folderID.flatMap { archive.folder($0)?.name }
+        archive.move(sources: [existing.id], toFolder: folderID)
+        persist()
+        notice = from.map { "\(existing.sourceTitle) zaten \($0) klasöründeydi; \(folder.name) klasörüne taşındı." }
+            ?? "\(existing.sourceTitle) zaten arşivdeydi; \(folder.name) klasörüne taşındı."
     }
 
     // MARK: Kuyruk
@@ -107,6 +177,10 @@ final class AppModel: ObservableObject {
                 try archive.setStatus(.ready, forPage: page.id)
                 return
             }
+            if source.mediaType == .pdf {
+                try await runPDF(page: page, source: source, job: job, run: &runRecord)
+                return
+            }
             guard let image = loadImage(ref: source.localAssetRef) else {
                 throw ExtractionFailure.originalMissing
             }
@@ -141,23 +215,60 @@ final class AppModel: ObservableObject {
                 return
             }
             try storeWorkingImage(working, pageID: page.id)
-            scanCache[page.id] = nil
-            runRecord.finishedAt = Date()
-            try archive.applyExtraction(output.blocks, run: runRecord)
-            archive.setContentBox(output.content, forPage: page.id)
-            try? store.storeLines(output.lines, pageID: page.id)
-            archive.applyFigureSuggestions(output.figures, pageID: page.id, at: Date())
-            // Ayar açıksa öneriler onay beklemeden kaydedilir; kullanıcı yalnız hatalıları düzeltir.
-            if UserDefaults.standard.bool(forKey: Self.autoSaveFiguresKey) {
-                await saveSuggestions(pageID: page.id)
-            }
-            archive.jobQueue.complete(jobID: job.id, at: Date())
+            try await apply(output, page: page, job: job, run: &runRecord)
         } catch {
             let message = (error as? ExtractionFailure)?.message ?? error.localizedDescription
             archive.jobQueue.fail(jobID: job.id, error: message, at: Date())
             let failed = archive.jobQueue.jobs.first { $0.id == job.id }?.state == .failed
             try? archive.setStatus(failed ? .failed : .queued, forPage: page.id, failureReason: message)
         }
+    }
+
+    /// Okuma sonucunu arşive yazar: metin, sayfa alanı, satırlar, çözümleme ve şekil önerileri.
+    private func apply(_ output: ExtractionOutput, page: Page, job: ExtractionJob, run runRecord: inout ExtractionRun) async throws {
+        scanCache[page.id] = nil
+        runRecord.finishedAt = Date()
+        try archive.applyExtraction(output.blocks, run: runRecord)
+        archive.setContentBox(output.content, forPage: page.id)
+        archive.setAnalysis(handwritingShare: output.handwritingShare, looksComplex: output.looksComplex,
+                            forPage: page.id)
+        try? store.storeLines(output.lines, pageID: page.id)
+        archive.applyFigureSuggestions(output.figures, pageID: page.id, at: Date())
+        if page.pageIndex == 0 { archive.refreshAutoTitle(page.sourceID) }
+        // Ayar açıksa öneriler onay beklemeden kaydedilir; kullanıcı yalnız hatalıları düzeltir. El notları
+        // her zaman görüntü olarak saklanır: metne dökülmeleri güvenilir değildir.
+        let autoSave = UserDefaults.standard.bool(forKey: Self.autoSaveFiguresKey)
+        for figure in archive.figures(of: page.id) where figure.status == .suggested {
+            if autoSave || figure.isHandwriting { await saveFigure(figure.id, bbox: figure.bbox) }
+        }
+        archive.jobQueue.complete(jobID: job.id, at: Date())
+    }
+
+    /// PDF sayfası: önce görüntüsü üretilir (galeri, şekiller, dışa aktarım için). Metin katmanı varsa metin
+    /// oradan alınır; taranmış sayfa OCR ile okunur.
+    private func runPDF(page: Page, source: SourceAsset, job: ExtractionJob, run runRecord: inout ExtractionRun) async throws {
+        let pdfURL = store.url(forRef: source.localAssetRef)
+        guard FileManager.default.fileExists(atPath: pdfURL.path) else { throw ExtractionFailure.originalMissing }
+        let index = page.pageIndex
+        var image: CGImage?
+        if let ref = page.workingImageRef { image = loadImage(ref: ref)?.cgImage }
+        if image == nil {
+            image = await Task.detached(priority: .userInitiated) { PDFSupport.render(url: pdfURL, pageIndex: index) }.value
+            guard let rendered = image else { throw ExtractionFailure.originalMissing }
+            try storeWorkingImage(rendered, pageID: page.id)
+        }
+        guard let image else { throw ExtractionFailure.originalMissing }
+        let textLayer = await Task.detached(priority: .userInitiated) {
+            PDFSupport.textLines(url: pdfURL, pageIndex: index)
+        }.value
+        let output = textLayer.isEmpty
+            ? try await extractor.extract(from: image, orientation: .up)
+            : await extractor.finish(textLayer: textLayer, image: image)
+        guard archive.pages.contains(where: { $0.id == page.id }) else {
+            archive.jobQueue.cancel(jobID: job.id, at: Date())
+            return
+        }
+        try await apply(output, page: page, job: job, run: &runRecord)
     }
 
     /// Düzleştirilmiş görüntüyü saklar (nil ise sayfa orijinali kullanır); eskisini siler.
@@ -221,9 +332,53 @@ final class AppModel: ObservableObject {
     }
 
     /// Sayfanın okunan görüntüsü: düzleştirilmiş türev varsa o, yoksa orijinal. Kutular bu görüntüye göredir.
+    /// Okunmamış PDF sayfasında PDF'in kendisi, sayfa numarası URL parçasında (`#page=N`) döner;
+    /// `ThumbnailLoader` bunu tanır.
     func pageImageURL(for page: Page) -> URL? {
         if let ref = page.workingImageRef { return store.url(forRef: ref) }
-        return archive.source(page.sourceID).map(originalURL(for:))
+        guard let source = archive.source(page.sourceID) else { return nil }
+        let url = originalURL(for: source)
+        return source.mediaType == .pdf ? PDFSupport.pageURL(url, pageIndex: page.pageIndex) : url
+    }
+
+    // MARK: Klasörler ve görsel olarak aktarma
+
+    @discardableResult
+    func createFolder(name: String, parentID: UUID? = nil) -> Folder? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let folder = archive.createFolder(name: trimmed, parentID: parentID, at: Date())
+        persist()
+        return folder
+    }
+
+    func renameFolder(_ id: UUID, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        archive.renameFolder(id, to: trimmed)
+        persist()
+    }
+
+    /// Klasörü siler; içindekiler (alt klasörler ve kaynaklar) bir üst klasöre geçer, hiçbir dosya silinmez.
+    func deleteFolder(_ id: UUID) {
+        archive.deleteFolder(id)
+        persist()
+    }
+
+    func move(sources ids: [UUID], toFolder folderID: UUID?) {
+        archive.move(sources: ids, toFolder: folderID)
+        persist()
+    }
+
+    func moveFolder(_ id: UUID, toParent parentID: UUID?) {
+        archive.moveFolder(id, toParent: parentID)
+        persist()
+    }
+
+    /// true: sayfalar metin yerine görüntü olarak aktarılır; false: her zaman metin; nil: uygulama karar verir.
+    func setImageOnly(_ value: Bool?, sources ids: [UUID]) {
+        archive.setImageOnly(value, sources: ids)
+        persist()
     }
 
     // MARK: Şekiller
@@ -334,16 +489,21 @@ final class AppModel: ObservableObject {
     // MARK: Export
 
     /// Seçili kaynakları geçici klasöre yazar; paylaşım sayfasına verilecek URL'leri döndürür.
-    /// `withFigures` açıksa Markdown, şekil görselleri ve manifest tek ZIP olur.
-    func exportFiles(sourceIDs: [UUID], mode: ExportMode, withFigures: Bool, withPages: Bool) -> [URL] {
+    /// Pakette görsel varsa (şekiller, sayfa görüntüleri, "sadece görsel" sayfalar) Markdown, görseller ve
+    /// manifest tek ZIP olur. `prompt` verilirse dosyanın başına o talimat konur.
+    func exportFiles(sourceIDs: [UUID], mode: ExportMode, withFigures: Bool, withPages: Bool,
+                     prompt: PromptTemplate? = nil) -> [URL] {
         do {
-            let exporter = MarkdownExporter(includeFigureImages: withFigures, includePageImages: withPages)
+            let context = PromptContext(deckName: deckName(for: sourceIDs), sourceCount: sourceIDs.count,
+                                        includesImages: withFigures || withPages)
+            let exporter = MarkdownExporter(includeFigureImages: withFigures, includePageImages: withPages,
+                                            prompt: prompt, promptContext: context)
             let result = try exporter.export(
                 archive, selections: sourceIDs.map { SourceSelection(sourceID: $0) }, mode: mode, createdAt: Date())
             let dir = FileManager.default.temporaryDirectory
                 .appendingPathComponent("export-\(result.manifest.exportID.uuidString)", isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            if exporter.producesZip {
+            if exporter.producesZip || !result.assets.isEmpty {
                 let zip = try result.zip(imageData: { [store] asset in
                     let url = store.url(forRef: asset.imageRef)
                     guard let crop = asset.crop else { return try? Data(contentsOf: url) }
@@ -363,6 +523,25 @@ final class AppModel: ObservableObject {
             lastError = "Dışa aktarma başarısız: \(error.localizedDescription)"
             return []
         }
+    }
+
+    /// Anki deste adı: kaynakların ortak klasör yolu ("DersArşivi::Fizyoloji::Kalp"); ortak klasör yoksa "DersArşivi".
+    func deckName(for sourceIDs: [UUID]) -> String {
+        let paths = sourceIDs.compactMap { archive.source($0) }.map { source -> [Folder] in
+            source.folderID.map { archive.folderPath($0) } ?? []
+        }
+        guard var common = paths.first else { return "DersArşivi" }
+        for path in paths.dropFirst() {
+            common = Swift.zip(common, path).prefix(while: { $0.0.id == $0.1.id }).map(\.0)
+        }
+        return (["DersArşivi"] + common.map(\.name)).joined(separator: "::")
+    }
+
+    /// Talimatı panoya kopyalar (dosyasız kullanım: talimat sohbete yapıştırılır, dosya ayrıca eklenir).
+    func copyPrompt(_ template: PromptTemplate, sourceIDs: [UUID], includesImages: Bool) {
+        let context = PromptContext(deckName: deckName(for: sourceIDs), sourceCount: max(1, sourceIDs.count),
+                                    includesImages: includesImages)
+        UIPasteboard.general.string = template.instructions(context)
     }
 
     /// Hata ayıklama paketi: orijinal ve okunan görüntüler, OCR satırları, şekil önerileri ve kullanıcının

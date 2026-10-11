@@ -7,7 +7,7 @@ struct DersArsiviApp: App {
 
     var body: some Scene {
         WindowGroup {
-            GalleryView()
+            RootView()
                 .environmentObject(model)
                 .alert("Bir sorun oluştu", isPresented: Binding(
                     get: { model.lastError != nil },

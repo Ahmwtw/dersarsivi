@@ -4,7 +4,7 @@ import UIKit
 import Vision
 
 /// Bir sayfanın çıkarım sonucu: okuma sırasındaki paragraflar ve şekil önerileri.
-struct ExtractionOutput {
+struct ExtractionOutput: Sendable {
     var blocks: [ExtractedBlock]
     var figures: [FigureSuggestion]
     /// Satırların ortanca eğimi (derece, saat yönünün tersi pozitif). Eğik fotoğrafı döndürmek için.
@@ -13,6 +13,9 @@ struct ExtractionOutput {
     var content: BoundingBox?
     /// Sayfa alanındaki OCR satırları; hata ayıklama paketi ve dokun-kırp için saklanır.
     var lines: [FigureLabel]
+    /// Yazı alanının el yazısı payı ve sayfanın metne dökülemeyecek kadar karışık olup olmadığı.
+    var handwritingShare: Double = 0
+    var looksComplex = false
 }
 
 /// Cihaz üstü OCR: Apple Vision. Ağa veri göndermez.
@@ -39,7 +42,7 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v6|rect-v2|order-v2|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v6|rect-v2|order-v2|hand-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
     func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> ExtractionOutput {
@@ -74,16 +77,9 @@ struct VisionTextExtractor {
                         .contains(orientation)
                     let width = Double(rotated ? image.height : image.width)
                     let height = Double(rotated ? image.width : image.height)
-                    // Not uygulamasının araç çubuğu gibi sayfa dışı yazılar atılır.
-                    let scan = Self.pageScan(image: image, orientation: orientation)
-                    let pageLines = FigureDetector.keepingContentLines(lines, scan: scan)
-                    let blocks = LayoutAnalyzer.paragraphs(from: pageLines, pageWidth: width, pageHeight: height)
-                    let boxed = pageLines.compactMap { line in line.bbox.map { (text: line.text, bbox: $0) } }
-                    let figures = scan.map { FigureDetector.suggestions(scan: $0, lines: boxed) } ?? []
                     let skew = Self.medianSkew(observations, width: width, height: height)
-                    once.resume(returning: ExtractionOutput(
-                        blocks: blocks, figures: figures, skewDegrees: skew, content: scan?.content,
-                        lines: boxed.map { FigureLabel(text: $0.text, bbox: $0.bbox) }))
+                    once.resume(returning: Self.finish(lines: lines, image: image, orientation: orientation,
+                                                       width: width, height: height, skew: skew))
                 }
                 request.recognitionLevel = .accurate
                 request.usesLanguageCorrection = true
@@ -97,6 +93,49 @@ struct VisionTextExtractor {
                 }
             }
         }
+    }
+
+    /// PDF'in metin katmanından gelen satırlar: OCR yapılmaz, yalnız düzen, şekil ve işaret çözümlemesi.
+    func finish(textLayer lines: [ExtractedBlock], image: CGImage) async -> ExtractionOutput {
+        await Task.detached(priority: .userInitiated) {
+            Self.finish(lines: lines, image: image, orientation: .up, width: Double(image.width),
+                        height: Double(image.height), skew: 0)
+        }.value
+    }
+
+    /// Satırlardan sayfa sonucunu üretir: sayfa alanı, şekil önerileri, el yazısı ve işaretler, paragraflar.
+    private static func finish(lines: [ExtractedBlock], image: CGImage, orientation: CGImagePropertyOrientation,
+                               width: Double, height: Double, skew: Double) -> ExtractionOutput {
+        // Not uygulamasının araç çubuğu gibi sayfa dışı yazılar atılır.
+        let small = smallImage(image: image, orientation: orientation)
+        let scan = small.flatMap { FigureDetector.scan(rgba: $0.bytes, width: $0.width, height: $0.height) }
+        var pageLines = FigureDetector.keepingContentLines(lines, scan: scan)
+        let boxed = pageLines.compactMap { line in line.bbox.map { (text: line.text, bbox: $0) } }
+        let figures = scan.map { FigureDetector.suggestions(scan: $0, lines: boxed) } ?? []
+        // El yazısı satırlar ve yanına işaret konmuş satırlar; el notları görüntü olarak saklanır.
+        var notes: [FigureSuggestion] = []
+        var share = 0.0, complex = false
+        if let small {
+            let zero = BoundingBox(x: 0, y: 0, width: 0, height: 0)
+            let analysisLines = pageLines.map { line in
+                PageAnalysis.Line(text: line.text, bbox: line.bbox ?? zero, confidence: line.confidence)
+            }
+            let analysis = PageAnalysis.analyze(rgba: small.bytes, width: small.width, height: small.height,
+                                                lines: analysisLines, figures: figures.map(\.bbox),
+                                                content: scan?.content)
+            for i in pageLines.indices {
+                if analysis.handwriting.contains(i) { pageLines[i].kind = .handwriting }
+                if analysis.marked.contains(i) { pageLines[i].marked = true }
+            }
+            notes = analysis.notes
+            share = analysis.handwritingShare
+            complex = analysis.looksComplex
+        }
+        let blocks = LayoutAnalyzer.paragraphs(from: pageLines, pageWidth: width, pageHeight: height)
+        return ExtractionOutput(
+            blocks: blocks, figures: figures + notes, skewDegrees: skew, content: scan?.content,
+            lines: boxed.map { FigureLabel(text: $0.text, bbox: $0.bbox) },
+            handwritingShare: share, looksComplex: complex)
     }
 
     /// Uzun satırların taban çizgisi açısının ortancası. Kısa satırlar (etiket, sayı) gürültülü olduğundan sayılmaz.
@@ -117,6 +156,12 @@ struct VisionTextExtractor {
 
     /// Sayfa alanı ve şekil önerileri için görüntünün yönü düzeltilmiş küçük kopyası yeter.
     static func pageScan(image: CGImage, orientation: CGImagePropertyOrientation) -> FigureDetector.PageScan? {
+        guard let small = smallImage(image: image, orientation: orientation) else { return nil }
+        return FigureDetector.scan(rgba: small.bytes, width: small.width, height: small.height)
+    }
+
+    /// Görüntünün yönü düzeltilmiş, en uzun kenarı 480 px kopyası (RGBA).
+    static func smallImage(image: CGImage, orientation: CGImagePropertyOrientation) -> PixelBuffer? {
         let maxSide: CGFloat = 480
         let ui = UIImage(cgImage: image, scale: 1, orientation: UIImage.Orientation(orientation))
         let scale = min(1, maxSide / max(ui.size.width, ui.size.height, 1))
@@ -128,8 +173,8 @@ struct VisionTextExtractor {
         let small = UIGraphicsImageRenderer(size: size, format: format).image { _ in
             ui.draw(in: CGRect(origin: .zero, size: size))
         }
-        guard let cg = small.cgImage, let pixels = PixelBuffer(image: cg, maxSide: Int(maxSide)) else { return nil }
-        return FigureDetector.scan(rgba: pixels.bytes, width: pixels.width, height: pixels.height)
+        guard let cg = small.cgImage else { return nil }
+        return PixelBuffer(image: cg, maxSide: Int(maxSide))
     }
 
     /// Satırı kelimelere böler, her kelimenin kutusundaki piksellerden vurgu ve yazı rengini bulur.

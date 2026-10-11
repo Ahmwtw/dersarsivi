@@ -7,8 +7,14 @@ enum ThumbnailLoader {
     private static let cache = NSCache<NSString, UIImage>()
 
     static func thumbnail(for url: URL, maxPixel: CGFloat) -> UIImage? {
-        let key = "\(url.path)#\(Int(maxPixel))" as NSString
+        let key = "\(url.absoluteString)@\(Int(maxPixel))" as NSString
         if let cached = cache.object(forKey: key) { return cached }
+        if let pageIndex = PDFSupport.pageIndex(of: url) {
+            let file = URL(fileURLWithPath: url.path)
+            guard let image = PDFSupport.thumbnail(url: file, pageIndex: pageIndex, maxSide: maxPixel) else { return nil }
+            cache.setObject(image, forKey: key)
+            return image
+        }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,

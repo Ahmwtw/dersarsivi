@@ -9,6 +9,8 @@ public struct ExtractedBlock: Equatable, Sendable {
     public var warnings: [String]
     /// Vurgulu veya renkli kelimeler varsa biçimli parçalar; düz metinde nil. Birleşimi `text`'e eşittir.
     public var runs: [TextRun]?
+    /// Satırın yanında elle konmuş işaret var.
+    public var marked: Bool
 
     public init(
         kind: BlockKind = .text,
@@ -16,7 +18,8 @@ public struct ExtractedBlock: Equatable, Sendable {
         bbox: BoundingBox? = nil,
         confidence: Double? = nil,
         warnings: [String] = [],
-        runs: [TextRun]? = nil
+        runs: [TextRun]? = nil,
+        marked: Bool = false
     ) {
         self.kind = kind
         self.text = text
@@ -24,6 +27,7 @@ public struct ExtractedBlock: Equatable, Sendable {
         self.confidence = confidence
         self.warnings = warnings
         self.runs = runs
+        self.marked = marked
     }
 }
 
@@ -46,6 +50,7 @@ public struct Archive: Codable, Equatable, Sendable {
     public var jobQueue: JobQueue
     /// Şekil önerileri ve kaydedilen şekil kırpımları.
     public private(set) var figures: [Figure]
+    public private(set) var folders: [Folder]
 
     public init() {
         schemaVersion = archiveSchemaVersion
@@ -56,10 +61,11 @@ public struct Archive: Codable, Equatable, Sendable {
         extractionRuns = []
         jobQueue = JobQueue()
         figures = []
+        folders = []
     }
 
     enum CodingKeys: String, CodingKey {
-        case schemaVersion, sources, pages, blocks, corrections, extractionRuns, jobQueue, figures
+        case schemaVersion, sources, pages, blocks, corrections, extractionRuns, jobQueue, figures, folders
     }
 
     /// Sonradan eklenen alanlar eski arşiv dosyalarında yoktur; boş kabul edilir.
@@ -73,6 +79,7 @@ public struct Archive: Codable, Equatable, Sendable {
         extractionRuns = try c.decode([ExtractionRun].self, forKey: .extractionRuns)
         jobQueue = try c.decode(JobQueue.self, forKey: .jobQueue)
         figures = try c.decodeIfPresent([Figure].self, forKey: .figures) ?? []
+        folders = try c.decodeIfPresent([Folder].self, forKey: .folders) ?? []
     }
 
     // MARK: Sorgular
@@ -142,8 +149,59 @@ public struct Archive: Codable, Equatable, Sendable {
     }
 
     public mutating func renameSource(_ id: UUID, to title: String) {
-        guard let i = sources.firstIndex(where: { $0.id == id }) else { return }
+        guard let i = sources.firstIndex(where: { $0.id == id }), sources[i].sourceTitle != title else { return }
         sources[i].sourceTitle = title
+        sources[i].autoTitle = nil
+    }
+
+    /// Kaynakların başlığını geçici sayar ve okunmuş ilk sayfalarından başlık verir (eski arşivlerdeki
+    /// "Görsel 12 Eki 00:57" başlıkları için).
+    public mutating func adoptAutoTitles(_ ids: [UUID]) {
+        for id in ids {
+            guard let i = sources.firstIndex(where: { $0.id == id }) else { continue }
+            sources[i].autoTitle = true
+            refreshAutoTitle(id)
+        }
+    }
+
+    /// Başlığı geçici olan kaynağa ilk sayfasında okunan başlığı verir; aynı adlı kaynak varsa "(2)" eklenir.
+    /// Uygun satır yoksa (henüz okunmadı, yalnız şekil) başlık değişmez.
+    public mutating func refreshAutoTitle(_ sourceID: UUID) {
+        guard let i = sources.firstIndex(where: { $0.id == sourceID }), sources[i].autoTitle == true,
+              let page = pages(of: sourceID).first,
+              let base = Self.titleCandidate(blocks(of: page.id),
+                                             figures: figures(of: page.id).filter { $0.status != .dismissed }.map(\.bbox))
+        else { return }
+        let others = Set(sources.filter { $0.id != sourceID }.map(\.sourceTitle))
+        var title = base
+        var n = 2
+        while others.contains(title) {
+            title = "\(base) (\(n))"
+            n += 1
+        }
+        sources[i].sourceTitle = title
+    }
+
+    /// Sayfanın üst kısmındaki ilk düzgün satır: şekil, el yazısı, kenar şeridi ve köşe yazısı (logo) değil,
+    /// en az 4 harf, en fazla 80 karakter. Baştaki madde işareti atılır, 60 karakterden uzunsa kelimede kesilir.
+    static func titleCandidate(_ blocks: [Block], figures: [BoundingBox]) -> String? {
+        for block in blocks {
+            guard let box = block.bbox, box.y < 0.35, block.kind != .handwriting,
+                  (block.engineConfidence ?? 1) >= 0.5 else { continue }
+            let cx = box.x + box.width / 2, cy = box.y + box.height / 2
+            if cy < 0.03 || cy > 0.97 { continue }
+            var text = block.acceptedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if (cx < 0.25 || cx > 0.75) && cy < 0.12 && text.count <= 25 { continue }
+            if figures.contains(where: { box.fractionInside($0) >= 0.5 }) { continue }
+            text = String(text.drop { "•-–·*▪●○◦ ".contains($0) })
+            guard text.count <= 80, text.filter(\.isLetter).count >= 4 else { continue }
+            if text.count > 60 {
+                let cut = text.prefix(60)
+                text = (cut.lastIndex(of: " ").map { String(cut[..<$0]) } ?? String(cut)) + "…"
+            }
+            return text
+        }
+        return nil
     }
 
     /// Sayfanın okuma görüntüsünü değiştirir; eski türev dosyanın yolunu döndürür (çağıran siler).
@@ -164,6 +222,98 @@ public struct Archive: Codable, Equatable, Sendable {
         guard let i = pages.firstIndex(where: { $0.id == pageID }) else { throw ArchiveError.pageNotFound(pageID) }
         pages[i].status = status
         pages[i].failureReason = failureReason
+    }
+
+    /// Okuma sonrası sayfa çözümlemesi: el yazısı payı ve karışık sayfa kararı.
+    public mutating func setAnalysis(handwritingShare: Double?, looksComplex: Bool?, forPage pageID: UUID) {
+        guard let i = pages.firstIndex(where: { $0.id == pageID }) else { return }
+        pages[i].handwritingShare = handwritingShare
+        pages[i].looksComplex = looksComplex
+    }
+
+    /// Kaynakların "sadece görsel" kararı; nil uygulamanın sayfa bazlı kararına bırakır.
+    public mutating func setImageOnly(_ value: Bool?, sources ids: [UUID]) {
+        let set = Set(ids)
+        for i in sources.indices where set.contains(sources[i].id) { sources[i].imageOnly = value }
+    }
+
+    /// Sayfa dışa aktarımda metin yerine görüntüyle mi gider: kaynakta kullanıcı kararı, yoksa sayfanın durumu.
+    public func isImageOnly(_ page: Page) -> Bool {
+        source(page.sourceID)?.imageOnly ?? page.looksComplex ?? false
+    }
+
+    // MARK: Klasörler
+
+    public func folder(_ id: UUID) -> Folder? { folders.first { $0.id == id } }
+
+    /// Klasörün (nil: kök) doğrudan alt klasörleri, ada göre.
+    public func subfolders(of parentID: UUID?) -> [Folder] {
+        folders.filter { $0.parentID == parentID }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// Klasördeki (nil: klasörsüz) kaynaklar, en yeni önce.
+    public func sources(inFolder folderID: UUID?) -> [SourceAsset] {
+        sources.filter { $0.folderID == folderID }.sorted { $0.importedAt > $1.importedAt }
+    }
+
+    /// Klasör ve bütün alt klasörlerindeki kaynaklar.
+    public func sources(inFolderTree folderID: UUID) -> [SourceAsset] {
+        var ids: Set<UUID> = [folderID]
+        var frontier = [folderID]
+        while let next = frontier.popLast() {
+            for child in folders where child.parentID == next && !ids.contains(child.id) {
+                ids.insert(child.id)
+                frontier.append(child.id)
+            }
+        }
+        return sources.filter { s in s.folderID.map { ids.contains($0) } ?? false }.sorted { $0.importedAt > $1.importedAt }
+    }
+
+    /// Kökten klasöre giden yol ("Fizyoloji › Kalp").
+    public func folderPath(_ id: UUID) -> [Folder] {
+        var path: [Folder] = []
+        var current = folder(id)
+        while let f = current, !path.contains(where: { $0.id == f.id }) {
+            path.insert(f, at: 0)
+            current = f.parentID.flatMap { folder($0) }
+        }
+        return path
+    }
+
+    @discardableResult
+    public mutating func createFolder(name: String, parentID: UUID? = nil, at date: Date) -> Folder {
+        let folder = Folder(name: name, parentID: parentID.flatMap { self.folder($0)?.id }, createdAt: date)
+        folders.append(folder)
+        return folder
+    }
+
+    public mutating func renameFolder(_ id: UUID, to name: String) {
+        guard let i = folders.firstIndex(where: { $0.id == id }) else { return }
+        folders[i].name = name
+    }
+
+    /// Klasörü siler; içindeki kaynaklar ve alt klasörler bir üst klasöre taşınır, hiçbir kaynak silinmez.
+    public mutating func deleteFolder(_ id: UUID) {
+        guard let removed = folder(id) else { return }
+        for i in sources.indices where sources[i].folderID == id { sources[i].folderID = removed.parentID }
+        for i in folders.indices where folders[i].parentID == id { folders[i].parentID = removed.parentID }
+        folders.removeAll { $0.id == id }
+    }
+
+    /// Kaynakları klasöre (nil: köke) taşır.
+    public mutating func move(sources ids: [UUID], toFolder folderID: UUID?) {
+        let target = folderID.flatMap { folder($0)?.id }
+        let set = Set(ids)
+        for i in sources.indices where set.contains(sources[i].id) { sources[i].folderID = target }
+    }
+
+    /// Klasörü başka bir klasörün altına taşır; kendi altına taşınamaz.
+    public mutating func moveFolder(_ id: UUID, toParent parentID: UUID?) {
+        guard let i = folders.firstIndex(where: { $0.id == id }) else { return }
+        if let parentID, folderPath(parentID).contains(where: { $0.id == id }) { return }
+        let target = parentID.flatMap { folder($0)?.id }
+        folders[i].parentID = target
     }
 
     // MARK: Çıkarım
@@ -199,6 +349,7 @@ public struct Archive: Codable, Equatable, Sendable {
                     block.kind = item.kind
                     block.runs = item.runs
                 }
+                block.marked = item.marked ? true : nil
                 block.bbox = item.bbox
                 block.engineConfidence = item.confidence
                 block.warnings = item.warnings
@@ -209,6 +360,7 @@ public struct Archive: Codable, Equatable, Sendable {
                                   rawText: item.text, origin: .ocr, engineConfidence: item.confidence,
                                   warnings: item.warnings, extractionRunID: run.id)
                 block.runs = item.runs
+                block.marked = item.marked ? true : nil
                 kept.append(block)
             }
         }
@@ -278,7 +430,7 @@ public struct Archive: Codable, Equatable, Sendable {
             }
             guard !overlaps else { continue }
             figures.append(Figure(pageID: pageID, bbox: s.bbox, status: .suggested, isAutoDetected: true,
-                                  labels: s.labels, createdAt: date))
+                                  labels: s.labels, createdAt: date, kind: s.kind))
         }
     }
 
