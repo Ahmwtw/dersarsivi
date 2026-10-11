@@ -106,6 +106,15 @@ public enum ColorAnalysis {
         }
     }
 
+    /// Kâğıt rengi beyaza çekilecek şekilde kanal başına ölçekler (beyaz dengesi). Yalnız kâğıt açık ve
+    /// hafif renkliyse; renkli slayt zemini (ör. mavi şablon) olduğu gibi bırakılır.
+    static func balanced(_ c: RGB, paper: RGB) -> RGB {
+        let (_, s, v) = paper.hsv
+        guard s < 0.25, v > 0.5 else { return c }
+        return RGB(r: min(255, c.r * 255 / max(paper.r, 1)), g: min(255, c.g * 255 / max(paper.g, 1)),
+                   b: min(255, c.b * 255 / max(paper.b, 1)))
+    }
+
     /// RGBA8 piksellerinden baskın renk (arka plan) ve ondan en uzak piksellerin ortalaması (mürekkep).
     public static func backgroundAndInk(rgba: [UInt8]) -> (background: RGB, ink: RGB?)? {
         let count = rgba.count / 4
@@ -141,12 +150,15 @@ public enum ColorAnalysis {
     /// vurgu sanılmasın diye kelimenin arka planı ondan belirgin farklıysa vurgu sayılır.
     public static func style(rgba: [UInt8], pageBackground: RGB) -> (highlight: NamedColor?, color: NamedColor?) {
         guard let found = backgroundAndInk(rgba: rgba) else { return (nil, nil) }
-        let bg = found.background, ink = found.ink
+        // Fotoğrafta kâğıt ışıktan dolayı sarımsı/mavimsi görünür; renkler kâğıda göre dengelenir ki
+        // gri-kahve görünen siyah yazı "turuncu" sayılmasın.
+        let bg = balanced(found.background, paper: pageBackground)
+        let ink = found.ink.map { balanced($0, paper: pageBackground) }
         var highlight: NamedColor?
         // Fosforlu kalem açık renkli zemin üstünde koyu yazıdır. Renkli zemin üstünde açık yazı
         // (tablo başlığı, renkli kutu) vurgu değil, şablon biçimidir.
         let inkIsDarker = ink.map { $0.luminance < bg.luminance } ?? true
-        if bg.distance(to: pageBackground) > 40, bg.hsv.v > 0.55, inkIsDarker, let n = name(bg) {
+        if found.background.distance(to: pageBackground) > 40, bg.hsv.v > 0.55, inkIsDarker, let n = name(bg) {
             highlight = n
         }
         let color = ink.flatMap(name)

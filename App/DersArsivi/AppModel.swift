@@ -108,7 +108,30 @@ final class AppModel: ObservableObject {
             guard let image = loadImage(ref: source.localAssetRef) else {
                 throw ExtractionFailure.originalMissing
             }
-            let output = try await extractor.extract(from: image.cgImage, orientation: image.orientation)
+            var input = image
+            var working: CGImage?
+            // Eğik çekilmiş sayfa fotoğrafı: önce sayfa köşelerinden perspektif düzeltilir.
+            if let flat = await Task.detached(priority: .userInitiated, operation: {
+                PagePreparer.rectify(image.cgImage, orientation: image.orientation)
+            }).value {
+                working = flat
+                input = (flat, .up)
+            }
+            var output = try await extractor.extract(from: input.cgImage, orientation: input.orientation)
+            // Köşeler bulunamadıysa ama satırlar hâlâ eğikse görüntü döndürülüp bir kez daha okunur.
+            let skew = output.skewDegrees
+            if abs(skew) >= PagePreparer.minSkewDegrees {
+                let current = input
+                if let straight = await Task.detached(priority: .userInitiated, operation: {
+                    PagePreparer.rotate(current.cgImage, orientation: current.orientation,
+                                        degrees: -skew)
+                }).value {
+                    working = straight
+                    input = (straight, .up)
+                    output = try await extractor.extract(from: straight, orientation: .up)
+                }
+            }
+            try storeWorkingImage(working, pageID: page.id)
             runRecord.finishedAt = Date()
             try archive.applyExtraction(output.blocks, run: runRecord)
             archive.applyFigureSuggestions(output.figures, pageID: page.id, at: Date())
@@ -119,6 +142,15 @@ final class AppModel: ObservableObject {
             let failed = archive.jobQueue.jobs.first { $0.id == job.id }?.state == .failed
             try? archive.setStatus(failed ? .failed : .queued, forPage: page.id, failureReason: message)
         }
+    }
+
+    /// Düzleştirilmiş görüntüyü saklar (nil ise sayfa orijinali kullanır); eskisini siler.
+    private func storeWorkingImage(_ image: CGImage?, pageID: UUID) throws {
+        var ref: String?
+        if let image, let data = UIImage(cgImage: image).jpegData(compressionQuality: 0.85) {
+            ref = try store.storePageImage(data)
+        }
+        if let old = archive.setWorkingImage(ref, forPage: pageID) { store.removeDerived(ref: old) }
     }
 
     enum ExtractionFailure: Error {
@@ -162,6 +194,12 @@ final class AppModel: ObservableObject {
         store.url(forRef: source.localAssetRef)
     }
 
+    /// Sayfanın okunan görüntüsü: düzleştirilmiş türev varsa o, yoksa orijinal. Kutular bu görüntüye göredir.
+    func pageImageURL(for page: Page) -> URL? {
+        if let ref = page.workingImageRef { return store.url(forRef: ref) }
+        return archive.source(page.sourceID).map(originalURL(for:))
+    }
+
     // MARK: Şekiller
 
     func figureImageURL(_ figure: Figure) -> URL? {
@@ -170,8 +208,8 @@ final class AppModel: ObservableObject {
 
     /// Öneriyi verilen kutuyla kaydeder (veya kaydedilmiş şeklin kutusunu değiştirir): orijinalden kırpar.
     func saveFigure(_ figureID: UUID, bbox: BoundingBox) async {
-        guard let figure = archive.figure(figureID), let source = source(ofPage: figure.pageID) else { return }
-        guard let ref = await cropAndStore(source: source, bbox: bbox) else { return }
+        guard let figure = archive.figure(figureID) else { return }
+        guard let ref = await cropAndStore(pageID: figure.pageID, bbox: bbox) else { return }
         do {
             if let old = try archive.acceptFigure(figureID, bbox: bbox, imageRef: ref) {
                 store.removeDerived(ref: old)
@@ -185,8 +223,7 @@ final class AppModel: ObservableObject {
 
     /// Kullanıcının kendi çizdiği şekil.
     func addFigure(pageID: UUID, bbox: BoundingBox) async {
-        guard let source = source(ofPage: pageID),
-              let ref = await cropAndStore(source: source, bbox: bbox) else { return }
+        guard let ref = await cropAndStore(pageID: pageID, bbox: bbox) else { return }
         archive.addFigure(pageID: pageID, bbox: bbox, imageRef: ref, at: Date())
         persist()
     }
@@ -201,12 +238,10 @@ final class AppModel: ObservableObject {
         persist()
     }
 
-    private func source(ofPage pageID: UUID) -> SourceAsset? {
-        archive.pages.first { $0.id == pageID }.flatMap { archive.source($0.sourceID) }
-    }
-
-    private func cropAndStore(source: SourceAsset, bbox: BoundingBox) async -> String? {
-        let url = originalURL(for: source)
+    private func cropAndStore(pageID: UUID, bbox: BoundingBox) async -> String? {
+        guard let page = archive.pages.first(where: { $0.id == pageID }), let url = pageImageURL(for: page) else {
+            return nil
+        }
         let data = await Task.detached(priority: .userInitiated) {
             FigureCropper.crop(url: url, bbox: bbox, maxSide: 1400)?.jpegData(compressionQuality: 0.8)
         }.value

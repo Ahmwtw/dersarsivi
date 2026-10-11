@@ -54,6 +54,20 @@ final class ColorAnalysisTests: XCTestCase {
         XCTAssertNil(s.color)
     }
 
+    func testWarmPhotoLightingDoesNotMakeBlackTextOrange() {
+        let paper = ColorAnalysis.RGB(r: 225, g: 210, b: 175)
+        let gray = ColorAnalysis.style(rgba: box(background: (225, 210, 175), ink: (85, 75, 60)), pageBackground: paper)
+        XCTAssertNil(gray.color)
+        XCTAssertNil(gray.highlight)
+        let orange = ColorAnalysis.style(rgba: box(background: (225, 210, 175), ink: (237, 125, 49)),
+                                         pageBackground: paper)
+        XCTAssertEqual(orange.color, .turuncu)
+        let marker = ColorAnalysis.style(rgba: box(background: (240, 225, 110), ink: (60, 55, 45)),
+                                         pageBackground: paper)
+        XCTAssertEqual(marker.highlight, .sari)
+        XCTAssertNil(marker.color)
+    }
+
     func testEmptyBoxHasNoInk() {
         let found = ColorAnalysis.backgroundAndInk(rgba: box(background: (255, 255, 255), ink: nil))
         XCTAssertNotNil(found)

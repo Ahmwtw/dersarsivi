@@ -17,7 +17,8 @@ struct SourceDetailView: View {
             List {
                 Section {
                     Button { showOriginal = true } label: {
-                        ThumbnailView(url: model.originalURL(for: source), maxPixel: 1200, contentMode: .fit)
+                        ThumbnailView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source),
+                                      maxPixel: 1200, contentMode: .fit)
                             .frame(maxHeight: 320)
                             .frame(maxWidth: .infinity)
                     }
@@ -26,6 +27,11 @@ struct SourceDetailView: View {
                     TextField("Başlık", text: $title)
                         .onSubmit { model.rename(sourceID: sourceID, to: title) }
                     LabeledContent("Durum") { StatusBadge(status: page.status) }
+                    if page.workingImageRef != nil {
+                        Label("Eğik fotoğraf okumadan önce düzleştirildi", systemImage: "perspective")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                     if let reason = page.failureReason {
                         Text(reason).font(.footnote).foregroundStyle(.secondary)
                     }
@@ -74,7 +80,7 @@ struct SourceDetailView: View {
                 }
             }
             .fullScreenCover(isPresented: $showOriginal) {
-                OriginalImageView(url: model.originalURL(for: source))
+                OriginalImageView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source))
             }
         } else {
             ContentUnavailableView("Kaynak bulunamadı", systemImage: "questionmark.folder")

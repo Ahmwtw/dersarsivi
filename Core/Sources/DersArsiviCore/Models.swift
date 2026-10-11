@@ -81,6 +81,9 @@ public struct Page: Codable, Equatable, Identifiable, Sendable {
     public var height: Double
     public var status: PageStatus
     public var failureReason: String?
+    /// Okuma için düzleştirilmiş/döndürülmüş türev görüntü (eğik çekilmiş fotoğraf). Varsa blok ve şekil
+    /// kutuları bu görüntüye göredir; orijinal dosya değişmez.
+    public var workingImageRef: String? = nil
 
     public init(
         id: UUID = UUID(),
@@ -113,8 +116,8 @@ public struct Page: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// Normalleştirilmiş sınır kutusu. Koordinat sistemi: sol üst köşe orijin, 0...1 aralığı,
-/// döndürme/kırpma uygulanmamış orijinal sayfaya göre.
+/// Normalleştirilmiş sınır kutusu. Koordinat sistemi: sol üst köşe orijin, 0...1 aralığı, yönü düzeltilmiş
+/// sayfaya göre (sayfanın düzleştirilmiş türevi varsa ona göre).
 public struct BoundingBox: Codable, Hashable, Sendable {
     public var x: Double
     public var y: Double

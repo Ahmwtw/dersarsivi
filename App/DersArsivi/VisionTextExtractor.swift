@@ -7,6 +7,8 @@ import Vision
 struct ExtractionOutput {
     var blocks: [ExtractedBlock]
     var figures: [FigureSuggestion]
+    /// Satırların ortanca eğimi (derece, saat yönünün tersi pozitif). Eğik fotoğrafı döndürmek için.
+    var skewDegrees: Double
 }
 
 /// Cihaz üstü OCR: Apple Vision. Ağa veri göndermez.
@@ -33,7 +35,7 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v2|fig-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v1|rect-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
     func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> ExtractionOutput {
@@ -74,7 +76,8 @@ struct VisionTextExtractor {
                     let blocks = LayoutAnalyzer.paragraphs(from: pageLines, pageWidth: width, pageHeight: height)
                     let boxed = pageLines.compactMap { line in line.bbox.map { (text: line.text, bbox: $0) } }
                     let figures = scan.map { FigureDetector.suggestions(scan: $0, lines: boxed) } ?? []
-                    once.resume(returning: ExtractionOutput(blocks: blocks, figures: figures))
+                    let skew = Self.medianSkew(observations, width: width, height: height)
+                    once.resume(returning: ExtractionOutput(blocks: blocks, figures: figures, skewDegrees: skew))
                 }
                 request.recognitionLevel = .accurate
                 request.usesLanguageCorrection = true
@@ -88,6 +91,19 @@ struct VisionTextExtractor {
                 }
             }
         }
+    }
+
+    /// Uzun satırların taban çizgisi açısının ortancası. Kısa satırlar (etiket, sayı) gürültülü olduğundan sayılmaz.
+    private static func medianSkew(_ observations: [VNRecognizedTextObservation], width: Double,
+                                   height: Double) -> Double {
+        let angles = observations.compactMap { o -> Double? in
+            let dx = Double(o.bottomRight.x - o.bottomLeft.x) * width
+            let dy = Double(o.bottomRight.y - o.bottomLeft.y) * height
+            guard dx > width * 0.25 else { return nil }
+            return atan2(dy, dx) * 180 / .pi
+        }.sorted()
+        guard angles.count >= 3 else { return 0 }
+        return angles[angles.count / 2]
     }
 
     /// Sayfa alanı ve şekil önerileri için görüntünün yönü düzeltilmiş küçük kopyası yeter.

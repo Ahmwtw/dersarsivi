@@ -16,11 +16,12 @@ struct FiguresSection: View {
     }
 
     private var figures: [Figure] { model.archive.figures(of: page.id) }
+    private var pageURL: URL { model.pageImageURL(for: page) ?? model.originalURL(for: source) }
 
     var body: some View {
         Section {
             ForEach(figures) { figure in
-                FigureRow(figure: figure, originalURL: model.originalURL(for: source),
+                FigureRow(figure: figure, originalURL: pageURL,
                           savedURL: model.figureImageURL(figure),
                           onSave: { save(figure.id, figure.bbox) },
                           onEdit: { editing = EditTarget(figureID: figure.id, initial: figure.bbox) },
@@ -41,7 +42,7 @@ struct FiguresSection: View {
                  : "Kaydedilen şekiller ZIP dışa aktarımında görseliyle, içindeki yazılar etiket olarak eklenir.")
         }
         .sheet(item: $editing) { target in
-            CropEditorView(url: model.originalURL(for: source), title: "Şekli kırp", initial: target.initial) { box in
+            CropEditorView(url: pageURL, title: "Şekli kırp", initial: target.initial) { box in
                 if let id = target.figureID {
                     save(id, box)
                 } else {

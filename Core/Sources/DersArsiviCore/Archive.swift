@@ -124,6 +124,15 @@ public struct Archive: Codable, Equatable, Sendable {
         sources[i].sourceTitle = title
     }
 
+    /// Sayfanın okuma görüntüsünü değiştirir; eski türev dosyanın yolunu döndürür (çağıran siler).
+    @discardableResult
+    public mutating func setWorkingImage(_ ref: String?, forPage pageID: UUID) -> String? {
+        guard let i = pages.firstIndex(where: { $0.id == pageID }) else { return nil }
+        let old = pages[i].workingImageRef
+        pages[i].workingImageRef = ref
+        return old == ref ? nil : old
+    }
+
     public mutating func setStatus(_ status: PageStatus, forPage pageID: UUID, failureReason: String? = nil) throws {
         guard let i = pages.firstIndex(where: { $0.id == pageID }) else { throw ArchiveError.pageNotFound(pageID) }
         pages[i].status = status

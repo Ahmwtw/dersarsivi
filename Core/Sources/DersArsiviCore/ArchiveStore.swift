@@ -16,6 +16,7 @@ public enum ArchiveStoreError: Error, Equatable {
 ///   originals/<uuid>.<ext>  orijinal dosyalar (değiştirilmez)
 ///   thumbnails/<uuid>-<sayfa>.jpg
 ///   figures/<uuid>.jpg   kullanıcının kaydettiği şekil kırpımları
+///   pages/<uuid>.jpg     eğik fotoğrafların düzleştirilmiş okuma görüntüsü
 public struct FileArchiveStore: ArchiveStore {
     public let rootURL: URL
 
@@ -62,9 +63,18 @@ public struct FileArchiveStore: ArchiveStore {
         return "figures/\(name)"
     }
 
+    /// Sayfanın düzleştirilmiş okuma görüntüsünü yazar.
+    public func storePageImage(_ data: Data) throws -> String {
+        let dir = rootURL.appendingPathComponent("pages", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let name = "\(UUID().uuidString.lowercased()).jpg"
+        try data.write(to: dir.appendingPathComponent(name), options: .atomic)
+        return "pages/\(name)"
+    }
+
     /// Yalnız arşivin türetilmiş dosyalarını siler; orijinaller bu yolla silinemez.
     public func removeDerived(ref: String) {
-        guard ref.hasPrefix("figures/"), !ref.contains("..") else { return }
+        guard ref.hasPrefix("figures/") || ref.hasPrefix("pages/"), !ref.contains("..") else { return }
         try? FileManager.default.removeItem(at: url(forRef: ref))
     }
 
