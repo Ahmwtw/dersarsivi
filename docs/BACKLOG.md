@@ -40,3 +40,4 @@ Anki TSV profili · yedek/geri yükleme · koleksiyon ve etiket · SQLite/GRDB g
 
 ## P2
 Uygulama içi Anki (kesin değil) · Semantic search · iCloud/çok cihaz (iPhone'da çekilen şemayı iPad'in betimlemesi) · APKG/image occlusion · gelişmiş tekrar/benzerlik tespiti
+- El notlu (yoğun el yazısı) bölgeyi kendiliğinden şekil olarak öner; ikinci ölçüm paketinde kullanıcı bu bölgeleri elle kırptı.
