@@ -54,7 +54,7 @@ private func makeArchive(pageCount: Int = 1, mediaType: MediaType = .image,
     return (archive, source)
 }
 
-private func run(for page: Page, hash: String) -> ExtractionRun {
+private func makeRun(for page: Page, hash: String) -> ExtractionRun {
     ExtractionRun(pageID: page.id, sourceContentHash: hash, engine: "test-ocr", engineVersion: "1",
                   configHash: "c1", startedAt: Date(timeIntervalSince1970: 1),
                   finishedAt: Date(timeIntervalSince1970: 2))
@@ -74,7 +74,7 @@ final class ArchiveTests: XCTestCase {
         var (archive, source) = makeArchive()
         let page = archive.pages(of: source.id)[0]
         try archive.applyExtraction([ExtractedBlock(text: "Sistol: ventrikül kasılır", confidence: 0.9)],
-                                    run: run(for: page, hash: source.contentHash))
+                                    run: makeRun(for: page, hash: source.contentHash))
         let block = archive.blocks(of: page.id)[0]
 
         try archive.correct(blockID: block.id, newText: "Sistol: ventriküller kasılır",
@@ -93,12 +93,12 @@ final class ArchiveTests: XCTestCase {
         var (archive, source) = makeArchive()
         let page = archive.pages(of: source.id)[0]
         try archive.applyExtraction([ExtractedBlock(text: "Metoprolol 5O mg"), ExtractedBlock(text: "ikinci")],
-                                    run: run(for: page, hash: source.contentHash))
+                                    run: makeRun(for: page, hash: source.contentHash))
         let first = archive.blocks(of: page.id)[0]
         try archive.correct(blockID: first.id, newText: "Metoprolol 50 mg", at: Date())
 
         try archive.applyExtraction([ExtractedBlock(text: "Metoprolol 5O mq"), ExtractedBlock(text: "ikinci yeni")],
-                                    run: run(for: page, hash: source.contentHash))
+                                    run: makeRun(for: page, hash: source.contentHash))
 
         let blocks = archive.blocks(of: page.id)
         XCTAssertEqual(blocks[0].acceptedText, "Metoprolol 50 mg")
@@ -112,11 +112,11 @@ final class ArchiveTests: XCTestCase {
         var (archive, source) = makeArchive()
         let page = archive.pages(of: source.id)[0]
         try archive.applyExtraction([ExtractedBlock(text: "a"), ExtractedBlock(text: "b")],
-                                    run: run(for: page, hash: source.contentHash))
+                                    run: makeRun(for: page, hash: source.contentHash))
         let second = archive.blocks(of: page.id)[1]
         try archive.correct(blockID: second.id, newText: "B düzeltildi", at: Date())
 
-        try archive.applyExtraction([ExtractedBlock(text: "a")], run: run(for: page, hash: source.contentHash))
+        try archive.applyExtraction([ExtractedBlock(text: "a")], run: makeRun(for: page, hash: source.contentHash))
 
         let blocks = archive.blocks(of: page.id)
         XCTAssertEqual(blocks.map(\.acceptedText), ["a", "B düzeltildi"])
@@ -126,7 +126,7 @@ final class ArchiveTests: XCTestCase {
     func testCachedRunIsFoundBySameKey() throws {
         var (archive, source) = makeArchive()
         let page = archive.pages(of: source.id)[0]
-        let r = run(for: page, hash: source.contentHash)
+        let r = makeRun(for: page, hash: source.contentHash)
         try archive.applyExtraction([ExtractedBlock(text: "x")], run: r)
         XCTAssertEqual(archive.cachedRun(cacheKey: r.cacheKey)?.id, r.id)
         XCTAssertNil(archive.cachedRun(cacheKey: r.cacheKey + "-baska-ayar"))
@@ -149,7 +149,7 @@ final class StoreTests: XCTestCase {
         archive.importSource(source, pageSizes: [(10, 10)])
         let page = archive.pages(of: source.id)[0]
         archive.jobQueue.enqueue(pageID: page.id, at: Date(timeIntervalSince1970: 100))
-        try archive.applyExtraction([ExtractedBlock(text: "ışık ğ ü ş İ ö ç")], run: run(for: page, hash: hash))
+        try archive.applyExtraction([ExtractedBlock(text: "ışık ğ ü ş İ ö ç")], run: makeRun(for: page, hash: hash))
         try archive.correct(blockID: archive.blocks(of: page.id)[0].id, newText: "Işık ĞÜŞİÖÇ",
                             at: Date(timeIntervalSince1970: 200))
         try store.save(archive)
@@ -192,7 +192,7 @@ final class MarkdownExporterTests: XCTestCase {
         let page = archive.pages(of: source.id)[0]
         try archive.applyExtraction([ExtractedBlock(text: "Mitral kapak kapanır", confidence: 0.95),
                                      ExtractedBlock(text: "S1 ses?", confidence: 0.3)],
-                                    run: run(for: page, hash: source.contentHash))
+                                    run: makeRun(for: page, hash: source.contentHash))
         try archive.correct(blockID: archive.blocks(of: page.id)[0].id, newText: "Mitral ve triküspit kapanır",
                             at: Date())
 
@@ -211,7 +211,7 @@ final class MarkdownExporterTests: XCTestCase {
     func testUnprocessedSelectedPagesAreReportedNotDropped() throws {
         var (archive, source) = makeArchive(pageCount: 10, mediaType: .pdf, title: "Biyokimya PDF")
         let pages = archive.pages(of: source.id)
-        try archive.applyExtraction([ExtractedBlock(text: "Glikoliz")], run: run(for: pages[2], hash: source.contentHash))
+        try archive.applyExtraction([ExtractedBlock(text: "Glikoliz")], run: makeRun(for: pages[2], hash: source.contentHash))
         try archive.setStatus(.failed, forPage: pages[7].id, failureReason: "zaman aşımı")
 
         let selection = try PageSelection.parse("3, 7-9", pageCount: 10)

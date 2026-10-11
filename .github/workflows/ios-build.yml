@@ -19,6 +19,8 @@ jobs:
       - name: Çekirdek testleri (macOS)
         run: swift test --package-path Core
       - name: Uygulamayı simülatör için derle (imzasız)
+        # Testler kırmızı olsa da uygulama derlemesinin sonucunu görmek için çalışır.
+        if: success() || failure()
         run: |
           set -o pipefail
           xcodebuild -project DersArsivi.xcodeproj -scheme DersArsivi \
