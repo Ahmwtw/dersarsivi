@@ -150,6 +150,8 @@ public enum LayoutAnalyzer {
 
     private static func continues(previous p: Int, next n: Int, firstOfParagraph f: Int,
                                   lines: [ExtractedBlock], rects: [Rect]) -> Bool {
+        // El yazısı ile basılı metin aynı paragrafa girmez.
+        guard lines[p].kind == lines[n].kind else { return false }
         let a = rects[p], b = rects[n]
         let h = max(a.height, b.height)
         guard h > 0 else { return false }
@@ -200,7 +202,8 @@ public enum LayoutAnalyzer {
         return ExtractedBlock(kind: lines[indices[0]].kind, text: text,
                               bbox: BoundingBox(x: minX / pageWidth, y: minY / pageHeight,
                                                 width: (maxX - minX) / pageWidth, height: (maxY - minY) / pageHeight),
-                              confidence: confidences.min(), warnings: warnings, runs: styled)
+                              confidence: confidences.min(), warnings: warnings, runs: styled,
+                              marked: indices.contains { lines[$0].marked })
     }
 
     /// Satır başı/sonu boşluklarını parçalardan da kırpar ki birleşim `text` ile aynı kalsın.

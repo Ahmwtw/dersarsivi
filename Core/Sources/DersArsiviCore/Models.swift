@@ -30,6 +30,14 @@ public struct SourceAsset: Codable, Equatable, Identifiable, Sendable {
     public var sourceType: SourceType
     public var tags: [String]
     public var collectionIDs: [UUID]
+    /// Bulunduğu klasör; nil ise kök (klasörsüz).
+    public var folderID: UUID? = nil
+    /// Kullanıcının "sadece görsel" kararı: true ise sayfalar dışa aktarımda metin yerine optimize edilmiş
+    /// görüntüyle gider, false ise hep metin. nil: uygulama sayfaya bakıp karar verir (bkz. `Page.looksComplex`).
+    public var imageOnly: Bool? = nil
+
+    /// Görselin kendisi; PDF'te sayfa görüntüleri ayrı türev olarak saklanır.
+    public var imageRef: String? { mediaType == .image ? localAssetRef : nil }
 
     public init(
         id: UUID = UUID(),
@@ -87,6 +95,11 @@ public struct Page: Codable, Equatable, Identifiable, Sendable {
     /// Ekran görüntüsündeki uygulama kenarlıkları ve araç çubukları hariç sayfa alanı (normalleştirilmiş).
     /// "Tüm sayfa" şekli ve dışa aktarılan sayfa görüntüsü bu alana kırpılır.
     public var contentBox: BoundingBox? = nil
+    /// Sayfadaki yazı alanının el yazısı olan payı (0...1); okunmadıysa nil.
+    public var handwritingShare: Double? = nil
+    /// Okuma sonucu sayfa metne dökülemeyecek kadar karışık (el yazısı ağırlıklı, okunamayan): kaynakta aksi
+    /// seçilmedikçe dışa aktarımda görüntü olarak gider.
+    public var looksComplex: Bool? = nil
 
     public init(
         id: UUID = UUID(),
@@ -180,6 +193,8 @@ public struct Block: Codable, Equatable, Identifiable, Sendable {
     public var extractionRunID: UUID?
     /// Vurgulu/renkli parçalar (yalnız makine metni için; kullanıcı düzeltince silinir).
     public var runs: [TextRun]?
+    /// Satırın yanına elle işaret (yıldız, ünlem, çarpı, çıkartma) konmuş.
+    public var marked: Bool? = nil
 
     public init(
         id: UUID = UUID(),
@@ -277,5 +292,20 @@ public struct ExtractionRun: Codable, Equatable, Identifiable, Sendable {
     /// Aynı kaynak, sayfa, motor ve ayarla yapılmış başarılı çıkarım tekrar kullanılabilir.
     public var cacheKey: String {
         "\(sourceContentHash)|\(pageID.uuidString)|\(engine)@\(engineVersion)|\(configHash)"
+    }
+}
+
+/// Kaynakları gruplayan klasör ("Fizyoloji"). İç içe olabilir.
+public struct Folder: Codable, Equatable, Identifiable, Sendable {
+    public var id: UUID
+    public var name: String
+    public var parentID: UUID?
+    public var createdAt: Date
+
+    public init(id: UUID = UUID(), name: String, parentID: UUID? = nil, createdAt: Date) {
+        self.id = id
+        self.name = name
+        self.parentID = parentID
+        self.createdAt = createdAt
     }
 }

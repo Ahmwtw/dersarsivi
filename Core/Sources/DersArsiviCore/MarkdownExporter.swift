@@ -56,6 +56,8 @@ public struct ExportManifest: Codable, Equatable, Sendable {
         /// Sayfaya göre kutu.
         public var bbox: BoundingBox
         public var labels: [Label]
+        /// "handwriting": el notu görüntüsü; nil: şekil.
+        public var kind: String? = nil
     }
 
     public var schemaVersion: Int
@@ -67,6 +69,10 @@ public struct ExportManifest: Codable, Equatable, Sendable {
     public var warnings: [String]
     public var partialExport: Bool
     public var figures: [FigureEntry]?
+    /// Dosyanın başına eklenen hazır talimatın kimliği.
+    public var prompt: String? = nil
+    /// Görüntü olarak aktarılan sayfalar (kaynak kimliği ve sayfa indeksi).
+    public var imageOnlyPages: [String]? = nil
 }
 
 public struct ExportFile: Equatable, Sendable {
@@ -120,21 +126,29 @@ public struct MarkdownExporter {
     /// Her sayfanın (düzleştirilmiş, kenarlıkları atılmış) görüntüsü `pages/` klasörüne eklenir. Karışık sayfalarda
     /// (el yazısı, tablo) yapay zekâ görüntüyü kendisi okuyabilsin diye.
     public var includePageImages: Bool
+    /// Dosyanın başına konacak hazır talimat (özet, Anki destesi...). nil: yalnız kaynak paketi.
+    public var prompt: PromptTemplate?
+    public var promptContext: PromptContext
 
     public init(lowConfidenceThreshold: Double = 0.5, includeFigureImages: Bool = false,
-                includePageImages: Bool = false) {
+                includePageImages: Bool = false, prompt: PromptTemplate? = nil,
+                promptContext: PromptContext = PromptContext()) {
         self.lowConfidenceThreshold = lowConfidenceThreshold
         self.includeFigureImages = includeFigureImages
         self.includePageImages = includePageImages
+        self.prompt = prompt
+        self.promptContext = promptContext
     }
 
-    /// ZIP gerekiyor mu: şekil ya da sayfa görseli eklenecekse.
+    /// Ayarlar gereği ZIP gerekiyor mu. "Sadece görsel" sayfalar varsa sonuç yine görsel taşır;
+    /// kesin karar için `ExportResult.assets` boş mu diye bakılır.
     public var producesZip: Bool { includeFigureImages || includePageImages }
 
     public func export(_ archive: Archive, selections: [SourceSelection], mode: ExportMode,
                        exportID: UUID = UUID(), createdAt: Date) throws -> ExportResult {
         var sections: [(entry: ExportManifest.SourceEntry, markdown: String)] = []
         var figures = FigureCollector()
+        figures.boilerplate = Self.boilerplate(in: archive)
         for selection in selections {
             sections.append(try section(for: selection, in: archive, mode: mode, figures: &figures))
         }
@@ -156,7 +170,7 @@ public struct MarkdownExporter {
         case .combined:
             let name = "dersarsivi-\(Self.shortID(exportID)).md"
             var body = header(exportID: exportID, createdAt: createdAt, sourceCount: sections.count, warnings: warnings,
-                              hasStyles: hasStyles, figureCount: figures.entries.count)
+                              hasStyles: hasStyles, figures: figures)
             for (entry, markdown) in sections {
                 body += "\n" + markdown
                 var e = entry
@@ -176,7 +190,7 @@ public struct MarkdownExporter {
                 usedNames.insert(name)
                 let ownWarnings = warnings.filter { $0.hasPrefix(entry.title + ":") }
                 let body = header(exportID: exportID, createdAt: createdAt, sourceCount: 1, warnings: ownWarnings,
-                                  hasStyles: hasStyles, figureCount: figures.entries.count)
+                                  hasStyles: hasStyles, figures: figures)
                     + "\n" + markdown
                 files.append(ExportFile(name: name, contents: body))
                 var e = entry
@@ -187,15 +201,25 @@ public struct MarkdownExporter {
 
         let manifest = ExportManifest(schemaVersion: archiveSchemaVersion, exportID: exportID, createdAt: createdAt,
                                       profile: .faithfulText, mode: mode, sources: entries, warnings: warnings,
-                                      partialExport: partial, figures: figures.entries.isEmpty ? nil : figures.entries)
+                                      partialExport: partial, figures: figures.entries.isEmpty ? nil : figures.entries,
+                                      prompt: prompt?.id,
+                                      imageOnlyPages: figures.imageOnlyPages.isEmpty ? nil : figures.imageOnlyPages)
         return ExportResult(files: files, manifest: manifest, assets: figures.assets + figures.pageAssets)
     }
 
     // MARK: Parçalar
 
     private func header(exportID: UUID, createdAt: Date, sourceCount: Int, warnings: [String],
-                        hasStyles: Bool, figureCount: Int) -> String {
+                        hasStyles: Bool, figures: FigureCollector) -> String {
+        let figureCount = figures.entries.count
         var s = "# DersArşivi dışa aktarımı\n\n"
+        if let prompt {
+            var context = promptContext
+            context.sourceCount = sourceCount
+            context.includesImages = context.includesImages || !figures.assets.isEmpty || !figures.pageAssets.isEmpty
+            s += "## Yapay zekâya talimat: \(prompt.title)\n\n"
+            s += prompt.instructions(context) + "\n\n---\n\n## Kaynak paketi\n\n"
+        }
         s += "Profil: sadık metin · Kaynak sayısı: \(sourceCount) · Tarih: \(Self.isoDate(createdAt)) · "
         s += "Export: \(exportID.uuidString.lowercased())\n\n"
         s += "Metin kaynak görüntüsünden OCR ile çıkarıldı; ✏️ kullanıcı tarafından düzeltilmiş, "
@@ -214,6 +238,16 @@ public struct MarkdownExporter {
         if hasStyles {
             s += "Kaynaktaki biçim: ==metin== fosforlu kalemle vurgulanmış (sarı dışındaysa rengi yanında), "
             s += "⟦renk: metin⟧ renkli yazılmış. Renkler görüntüden otomatik tahmin edildi.\n"
+        }
+        if figures.hasMarks {
+            s += "⭐ ile başlayan satırların yanına elle işaret (yıldız, ünlem, çarpı, çıkartma) konmuş; önemli sayılmalı.\n"
+        }
+        if figures.hasHandwriting {
+            s += "✍️ öğrencinin el notudur; okunuşu tahminidir, notun görüntüsü \"El notu\" olarak eklenmiştir.\n"
+        }
+        if !figures.imageOnlyPages.isEmpty {
+            s += "Bazı sayfalar karışık veya el yazısı ağırlıklı olduğu için yalnız görüntü olarak aktarıldı; "
+            s += "bu sayfaların içeriğini görüntüden oku.\n"
         }
         if !warnings.isEmpty {
             s += "\n> **Eksik içerik:**\n"
@@ -251,15 +285,21 @@ public struct MarkdownExporter {
             if source.mediaType == .pdf || selected.count > 1 {
                 md += "\n### Sayfa \(page.displayName)\n"
             }
-            if includePageImages {
+            let processed = [.ready, .needsReview, .partial].contains(page.status)
+            let imageOnly = processed && archive.isImageOnly(page)
+            if includePageImages || imageOnly, let ref = page.workingImageRef ?? source.imageRef {
                 let path = "pages/\(Self.slug(source.sourceTitle))-\(Self.shortID(source.id))-sayfa-\(page.pageIndex + 1).jpg"
-                let ref = page.workingImageRef ?? source.localAssetRef
                 let crop = page.contentBox ?? BoundingBox(x: 0, y: 0, width: 1, height: 1)
                 collector.pageAssets.append(ExportAsset(path: path, imageRef: ref, crop: crop))
                 md += "\n![Sayfa \(page.displayName) görüntüsü](\(path))\n"
             }
+            if imageOnly {
+                md += "\n> 🖼️ Bu sayfa görsel olarak aktarıldı (el yazısı ağırlıklı veya karışık); içeriği görüntüden oku.\n"
+                included.append(page.pageIndex)
+                collector.imageOnlyPages.append("\(source.id.uuidString.lowercased())#\(page.pageIndex)")
+                continue
+            }
             let blocks = archive.blocks(of: page.id)
-            let processed = [.ready, .needsReview, .partial].contains(page.status)
             guard processed, !blocks.isEmpty else {
                 if processed {
                     md += "\n_(Bu sayfada metin bulunamadı.)_\n"
@@ -276,9 +316,18 @@ public struct MarkdownExporter {
             var pending = accepted
             for block in blocks {
                 // Şeklin içindeki kısa yazılar (etiketler) şeklin altında listelenir; metinde tekrarlanmaz.
-                // Uzun metin şeklin içine düşse bile metinde kalır: yazı kaybolmasın.
-                if let box = block.bbox, block.acceptedText.count <= Self.maxLabelBlockLength,
-                   accepted.contains(where: { box.fractionInside($0.bbox) >= 0.8 }) {
+                // Uzun metin şeklin içine düşse bile metinde kalır: yazı kaybolmasın. El notu bölgesindeki el yazısı
+                // ise notun altında okunuşuyla verilir.
+                if let box = block.bbox, accepted.contains(where: { figure in
+                    box.fractionInside(figure.bbox) >= 0.8
+                        && (block.acceptedText.count <= Self.maxLabelBlockLength
+                            || (figure.isHandwriting && block.kind == .handwriting && !block.isUserCorrected))
+                }) {
+                    continue
+                }
+                // Her slaytta tekrarlanan logo ve kurum yazısı.
+                if !block.isUserCorrected, let box = block.bbox,
+                   collector.boilerplate.contains(Self.boilerplateKey(block.acceptedText, box)) {
                     continue
                 }
                 if let box = block.bbox {
@@ -287,10 +336,19 @@ public struct MarkdownExporter {
                         pending.removeFirst()
                     }
                 }
+                md += "\n"
+                if block.marked == true {
+                    md += "⭐ "
+                    collector.hasMarks = true
+                }
+                if block.kind == .handwriting {
+                    md += "✍️ "
+                    collector.hasHandwriting = true
+                }
                 if let runs = block.runs, !block.isUserCorrected {
-                    md += "\n" + Self.render(runs)
+                    md += Self.render(runs)
                 } else {
-                    md += "\n" + Self.escape(block.acceptedText)
+                    md += Self.escape(block.acceptedText)
                 }
                 if block.isUserCorrected { md += " ✏️" }
                 md += "\n"
@@ -322,17 +380,25 @@ public struct MarkdownExporter {
         }
         collector.entries.append(.init(
             number: number, sourceID: source.id, pageIndex: page.pageIndex, file: file, bbox: figure.bbox,
-            labels: figure.labels.map { .init(text: $0.text, bbox: $0.bbox.relative(to: figure.bbox)) }))
+            labels: figure.labels.map { .init(text: $0.text, bbox: $0.bbox.relative(to: figure.bbox)) },
+            kind: figure.isHandwriting ? FigureKind.handwriting.rawValue : nil))
 
+        let name = figure.isHandwriting ? "El notu \(number)" : "Şekil \(number)"
+        if figure.isHandwriting { collector.hasHandwriting = true }
         var md = "\n"
         if let file {
-            md += "![Şekil \(number)](\(file))\n"
+            md += "![\(name)](\(file))\n"
         } else {
-            md += "> 🖼️ Şekil \(number) (görsel bu dosyada yok)\n"
+            md += "> 🖼️ \(name) (görsel bu dosyada yok)\n"
         }
         if !figure.labels.isEmpty {
-            let names = figure.labels.map { Self.inline($0.text) }.joined(separator: " · ")
-            md += "\n_Şekil \(number) etiketleri: \(names)_\n"
+            if figure.isHandwriting {
+                let text = figure.labels.map { Self.inline($0.text) }.joined(separator: " / ")
+                md += "\n_\(name) okunuşu (tahmini): ✍️ \(text)_\n"
+            } else {
+                let names = figure.labels.map { Self.inline($0.text) }.joined(separator: " · ")
+                md += "\n_\(name) etiketleri: \(names)_\n"
+            }
         }
         return md
     }
@@ -396,6 +462,33 @@ public struct MarkdownExporter {
 
     static let maxLabelBlockLength = 40
 
+    /// Arşivde çok sayıda kaynakta, sayfanın köşesinde tekrarlanan kısa yazılar (üniversite logosu, kurum adı).
+    /// Slayt başlıkları ortada durduğundan sayılmaz.
+    static func boilerplate(in archive: Archive) -> Set<String> {
+        var sourceOfPage: [UUID: UUID] = [:]
+        for page in archive.pages { sourceOfPage[page.id] = page.sourceID }
+        var sourcesByKey: [String: Set<UUID>] = [:]
+        for block in archive.blocks where !block.isUserCorrected {
+            guard let box = block.bbox, let sourceID = sourceOfPage[block.pageID] else { continue }
+            let key = boilerplateKey(block.acceptedText, box)
+            guard !key.isEmpty else { continue }
+            sourcesByKey[key, default: []].insert(sourceID)
+        }
+        let total = Set(archive.pages.filter { [.ready, .needsReview, .partial].contains($0.status) }.map(\.sourceID)).count
+        let needed = max(3, Int((Double(total) * 0.25).rounded(.up)))
+        return Set(sourcesByKey.filter { $0.value.count >= needed }.keys)
+    }
+
+    /// Köşedeki kısa yazının karşılaştırma anahtarı; köşede değilse veya uzunsa boş.
+    static func boilerplateKey(_ text: String, _ box: BoundingBox) -> String {
+        let cx = box.x + box.width / 2, cy = box.y + box.height / 2
+        guard cx < 0.3 || cx > 0.7, cy < 0.15 || cy > 0.85, text.count <= 25 else { return "" }
+        let folded = text.replacingOccurrences(of: "ı", with: "i")
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: nil)
+        let key = String(folded.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) }.map(Character.init))
+        return key.filter(\.isLetter).count >= 3 ? key : ""
+    }
+
     static func inline(_ text: String) -> String {
         escape(text).replacingOccurrences(of: "\n", with: " ")
     }
@@ -434,4 +527,8 @@ struct FigureCollector {
     var entries: [ExportManifest.FigureEntry] = []
     var assets: [ExportAsset] = []
     var pageAssets: [ExportAsset] = []
+    var boilerplate: Set<String> = []
+    var imageOnlyPages: [String] = []
+    var hasMarks = false
+    var hasHandwriting = false
 }

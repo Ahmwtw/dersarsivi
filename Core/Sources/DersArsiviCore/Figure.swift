@@ -9,6 +9,13 @@ public enum FigureStatus: String, Codable, Sendable {
     case dismissed
 }
 
+public enum FigureKind: String, Codable, Sendable {
+    /// Şema, grafik, fotoğraf, tablo.
+    case figure
+    /// Kullanıcının el notu; metne güvenilmez okunduğu için görüntüsü saklanır.
+    case handwriting
+}
+
 /// Şeklin içindeki bir yazı (ör. "Aort"). Kutusu sayfaya göredir; exportta şekle göreli verilir.
 public struct FigureLabel: Codable, Equatable, Sendable {
     public var text: String
@@ -32,9 +39,13 @@ public struct Figure: Codable, Equatable, Identifiable, Sendable {
     public var imageRef: String?
     public var labels: [FigureLabel]
     public var createdAt: Date
+    /// nil: eski arşiv kaydı, şekil sayılır.
+    public var kind: FigureKind? = nil
+
+    public var isHandwriting: Bool { kind == .handwriting }
 
     public init(id: UUID = UUID(), pageID: UUID, bbox: BoundingBox, status: FigureStatus, isAutoDetected: Bool,
-                imageRef: String? = nil, labels: [FigureLabel] = [], createdAt: Date) {
+                imageRef: String? = nil, labels: [FigureLabel] = [], createdAt: Date, kind: FigureKind? = nil) {
         self.id = id
         self.pageID = pageID
         self.bbox = bbox
@@ -43,16 +54,19 @@ public struct Figure: Codable, Equatable, Identifiable, Sendable {
         self.imageRef = imageRef
         self.labels = labels
         self.createdAt = createdAt
+        self.kind = kind
     }
 }
 
 public struct FigureSuggestion: Equatable, Sendable {
     public var bbox: BoundingBox
     public var labels: [FigureLabel]
+    public var kind: FigureKind
 
-    public init(bbox: BoundingBox, labels: [FigureLabel] = []) {
+    public init(bbox: BoundingBox, labels: [FigureLabel] = [], kind: FigureKind = .figure) {
         self.bbox = bbox
         self.labels = labels
+        self.kind = kind
     }
 }
 

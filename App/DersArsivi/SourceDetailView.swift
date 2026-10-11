@@ -209,7 +209,7 @@ private struct OriginalImageView: View {
     var body: some View {
         NavigationStack {
             ScrollView([.horizontal, .vertical]) {
-                if let image = UIImage(contentsOfFile: url.path) {
+                if let image = ThumbnailLoader.thumbnail(for: url, maxPixel: 3000) {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
