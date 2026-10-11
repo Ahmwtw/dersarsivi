@@ -119,6 +119,20 @@ public enum LayoutAnalyzer {
         return false
     }
 
+    /// Önceki satır cümle ortasında bitiyor (son karakter harf) ve sonraki satır "5. küçük harf" ile başlıyorsa
+    /// bu bir madde numarası değil, cümlenin devamındaki sıra sayısıdır.
+    static func isOrdinalInSentence(previous: String, next: String) -> Bool {
+        guard let last = previous.trimmingCharacters(in: .whitespaces).last, last.isLetter else { return false }
+        let t = next.drop { $0 == " " }
+        let digits = t.prefix { $0.isNumber }
+        guard !digits.isEmpty, digits.count <= 2 else { return false }
+        let rest = t.dropFirst(digits.count)
+        guard rest.first == "." else { return false }
+        let word = rest.dropFirst().drop { $0 == " " }
+        guard rest.dropFirst().first == " ", let first = word.first else { return false }
+        return first.isLowercase
+    }
+
     /// Sayfa numarası gibi yalnız rakamdan oluşan kısa satırlar paragrafı bölmesin diye ertelenir.
     static func isArtifact(_ text: String) -> Bool {
         let t = text.trimmingCharacters(in: .whitespaces)
@@ -158,8 +172,10 @@ public enum LayoutAnalyzer {
         // Hemen altında olmalı: üst üste binmeden, en fazla yarım satırlık boşlukla.
         let gap = b.minY - a.maxY
         guard gap > -0.3 * h, gap < 0.6 * h else { return false }
-        // Madde işaretiyle başlayan satır yeni paragraftır.
-        guard !startsNewItem(lines[n].text) else { return false }
+        // Madde işaretiyle başlayan satır yeni paragraftır; "... hat ile / 5. interkostal aralık" gibi cümle
+        // ortasında satıra düşen sıra sayısı hariç.
+        guard !startsNewItem(lines[n].text) || isOrdinalInSentence(previous: lines[p].text, next: lines[n].text)
+        else { return false }
         // Sol kenar: aynı hizada veya madde işaretinden sonraki metin hizasında.
         let anchor = rects[f].minX
         return b.minX >= anchor - 0.5 * h && b.minX <= anchor + 2.0 * h
