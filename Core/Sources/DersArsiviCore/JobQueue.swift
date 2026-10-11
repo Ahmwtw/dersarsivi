@@ -16,6 +16,8 @@ public struct ExtractionJob: Codable, Equatable, Identifiable, Sendable {
     public var attempts: Int
     public var lastError: String?
     public var updatedAt: Date
+    /// Kullanıcı açıkça yeniden okumak istedi: aynı ayarla yapılmış eski çıkarım kullanılmaz.
+    public var force: Bool?
 
     public init(id: UUID = UUID(), pageID: UUID, updatedAt: Date) {
         self.id = id
@@ -39,13 +41,20 @@ public struct JobQueue: Codable, Equatable, Sendable {
 
     /// Aynı sayfa için bekleyen veya çalışan iş varsa yenisini eklemez (idempotent).
     @discardableResult
-    public mutating func enqueue(pageID: UUID, at date: Date) -> ExtractionJob {
-        if let active = jobs.first(where: { $0.pageID == pageID && ($0.state == .queued || $0.state == .processing) }) {
-            return active
+    public mutating func enqueue(pageID: UUID, at date: Date, force: Bool = false) -> ExtractionJob {
+        if let i = jobs.firstIndex(where: { $0.pageID == pageID && ($0.state == .queued || $0.state == .processing) }) {
+            if force { jobs[i].force = true }
+            return jobs[i]
         }
-        let job = ExtractionJob(pageID: pageID, updatedAt: date)
+        var job = ExtractionJob(pageID: pageID, updatedAt: date)
+        if force { job.force = true }
         jobs.append(job)
         return job
+    }
+
+    /// Silinen sayfaların işlerini kaldırır.
+    public mutating func remove(pageIDs: Set<UUID>) {
+        jobs.removeAll { pageIDs.contains($0.pageID) }
     }
 
     /// Sıradaki işi alır ve `processing` yapar.

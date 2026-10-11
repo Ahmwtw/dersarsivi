@@ -8,6 +8,7 @@ struct GalleryView: View {
     @State private var isSelecting = false
     @State private var selection = Set<UUID>()
     @State private var showExport = false
+    @State private var confirmDelete = false
 
     private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8)]
 
@@ -62,11 +63,29 @@ struct GalleryView: View {
                         addButton
                     }
                 }
+                ToolbarItem(placement: .bottomBar) {
+                    if isSelecting {
+                        Button(role: .destructive) { confirmDelete = true } label: {
+                            Label("Sil (\(selection.count))", systemImage: "trash")
+                        }
+                        .disabled(selection.isEmpty)
+                    }
+                }
                 ToolbarItem(placement: .status) {
                     if model.isProcessing {
                         ProgressView().accessibilityLabel("Metin okunuyor")
                     }
                 }
+            }
+            .confirmationDialog("\(selection.count) görsel silinsin mi?", isPresented: $confirmDelete,
+                                titleVisibility: .visible) {
+                Button("Sil", role: .destructive) {
+                    model.deleteSources(Array(selection))
+                    selection.removeAll()
+                    isSelecting = false
+                }
+            } message: {
+                Text("Okunan metin, düzeltmeler ve kırpılan şekiller de silinir. Geri alınamaz.")
             }
             .sheet(isPresented: $showExport) {
                 ExportView(sourceIDs: sources.map(\.id).filter(selection.contains))

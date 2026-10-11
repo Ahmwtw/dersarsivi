@@ -100,7 +100,9 @@ final class AppModel: ObservableObject {
                                       engineVersion: extractor.engineVersion,
                                       configHash: extractor.configHash, startedAt: started)
         do {
-            if archive.cachedRun(cacheKey: runRecord.cacheKey) != nil, !archive.blocks(of: page.id).isEmpty {
+            // "Yeniden oku" (force) aynı ayarla yapılmış eski sonucu kullanmaz, görüntüyü baştan okur.
+            if job.force != true, archive.cachedRun(cacheKey: runRecord.cacheKey) != nil,
+               !archive.blocks(of: page.id).isEmpty {
                 archive.jobQueue.complete(jobID: job.id, at: Date())
                 try archive.setStatus(.ready, forPage: page.id)
                 return
@@ -132,6 +134,11 @@ final class AppModel: ObservableObject {
                     input = (straight, .up)
                     output = try await extractor.extract(from: straight, orientation: .up)
                 }
+            }
+            // Okuma sürerken kaynak silindiyse sonuç bırakılır.
+            guard archive.pages.contains(where: { $0.id == page.id }) else {
+                archive.jobQueue.cancel(jobID: job.id, at: Date())
+                return
             }
             try storeWorkingImage(working, pageID: page.id)
             runRecord.finishedAt = Date()
@@ -167,11 +174,21 @@ final class AppModel: ObservableObject {
         return (cg, CGImagePropertyOrientation(image.imageOrientation))
     }
 
+    /// Kullanıcının "Yeniden oku" isteği: önbellek atlanır, sayfa baştan okunur.
+    /// Kaydedilmiş ve yoksayılmış şekiller korunur; yalnız bekleyen öneriler yenilenir.
     func retry(pageID: UUID) {
-        archive.jobQueue.enqueue(pageID: pageID, at: Date())
+        archive.jobQueue.enqueue(pageID: pageID, at: Date(), force: true)
         try? archive.setStatus(.queued, forPage: pageID)
         persist()
         processQueue()
+    }
+
+    /// Kaynağı ve ona ait tüm dosyaları (orijinal, düzleştirilmiş sayfa, kırpımlar) siler.
+    func deleteSources(_ ids: [UUID]) {
+        for id in ids {
+            for ref in archive.removeSource(id) { store.removeFile(ref: ref) }
+        }
+        persist()
     }
 
     // MARK: Düzeltme ve başlık

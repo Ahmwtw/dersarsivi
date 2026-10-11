@@ -119,6 +119,27 @@ public struct Archive: Codable, Equatable, Sendable {
         return .added(source)
     }
 
+    /// Kaynağı ve ona ait her şeyi (sayfalar, bloklar, düzeltmeler, çıkarımlar, işler, şekiller) siler.
+    /// Silinmesi gereken dosyaların arşiv içi yollarını döndürür (orijinal, düzleştirilmiş sayfa, kırpımlar).
+    @discardableResult
+    public mutating func removeSource(_ id: UUID) -> [String] {
+        guard let source = source(id) else { return [] }
+        let pageIDs = Set(pages.filter { $0.sourceID == id }.map(\.id))
+        let blockIDs = Set(blocks.filter { pageIDs.contains($0.pageID) }.map(\.id))
+        var files = [source.localAssetRef]
+        files += pages.filter { pageIDs.contains($0.id) }.compactMap(\.workingImageRef)
+        files += figures.filter { pageIDs.contains($0.pageID) }.compactMap(\.imageRef)
+
+        sources.removeAll { $0.id == id }
+        pages.removeAll { pageIDs.contains($0.id) }
+        blocks.removeAll { pageIDs.contains($0.pageID) }
+        corrections.removeAll { blockIDs.contains($0.blockID) }
+        extractionRuns.removeAll { pageIDs.contains($0.pageID) }
+        figures.removeAll { pageIDs.contains($0.pageID) }
+        jobQueue.remove(pageIDs: pageIDs)
+        return files
+    }
+
     public mutating func renameSource(_ id: UUID, to title: String) {
         guard let i = sources.firstIndex(where: { $0.id == id }) else { return }
         sources[i].sourceTitle = title

@@ -131,6 +131,35 @@ final class ArchiveTests: XCTestCase {
         XCTAssertEqual(archive.cachedRun(cacheKey: r.cacheKey)?.id, r.id)
         XCTAssertNil(archive.cachedRun(cacheKey: r.cacheKey + "-baska-ayar"))
     }
+
+    func testRemovingSourceDeletesEverythingItOwnsAndReturnsItsFiles() throws {
+        var (archive, source) = makeArchive()
+        let page = archive.pages(of: source.id)[0]
+        archive.jobQueue.enqueue(pageID: page.id, at: Date())
+        try archive.applyExtraction([ExtractedBlock(text: "Aort")], run: makeRun(for: page, hash: source.contentHash))
+        try archive.correct(blockID: archive.blocks(of: page.id)[0].id, newText: "Aorta", at: Date())
+        archive.setWorkingImage("pages/p.jpg", forPage: page.id)
+        archive.applyFigureSuggestions([FigureSuggestion(bbox: BoundingBox(x: 0.1, y: 0.1, width: 0.5, height: 0.5))],
+                                       pageID: page.id, at: Date())
+        let figureID = try XCTUnwrap(archive.figures(of: page.id).first?.id)
+        try archive.acceptFigure(figureID, bbox: BoundingBox(x: 0.1, y: 0.1, width: 0.5, height: 0.5),
+                                 imageRef: "figures/f.jpg")
+
+        let (_, otherSource) = makeArchive(title: "Başka slayt")
+        archive.importSource(otherSource, pageSizes: [(10, 10)])
+
+        let files = archive.removeSource(source.id)
+        XCTAssertEqual(Set(files), ["originals/x.jpg", "pages/p.jpg", "figures/f.jpg"])
+        XCTAssertEqual(archive.sources.map(\.id), [otherSource.id])
+        XCTAssertTrue(archive.pages(of: source.id).isEmpty)
+        XCTAssertTrue(archive.blocks.isEmpty)
+        XCTAssertTrue(archive.corrections.isEmpty)
+        XCTAssertTrue(archive.extractionRuns.isEmpty)
+        XCTAssertTrue(archive.figures.isEmpty)
+        XCTAssertTrue(archive.jobQueue.jobs.isEmpty)
+        // Silinen görsel aynı içerikle yeniden eklenebilir.
+        XCTAssertEqual(archive.importSource(source, pageSizes: [(1, 1)]), .added(source))
+    }
 }
 
 final class StoreTests: XCTestCase {
@@ -161,6 +190,22 @@ final class StoreTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: store.url(forRef: ref).path))
     }
 
+    func testRemoveFileStaysInsideArchiveFolder() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = FileArchiveStore(rootURL: dir)
+        let (ref, _) = try store.storeOriginal(Data("x".utf8), id: UUID(), fileExtension: "png")
+        let outside = dir.deletingLastPathComponent().appendingPathComponent(UUID().uuidString + ".txt")
+        try Data("dışarıda".utf8).write(to: outside)
+        defer { try? FileManager.default.removeItem(at: outside) }
+
+        store.removeFile(ref: "../" + outside.lastPathComponent)
+        store.removeFile(ref: outside.path)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outside.path))
+        store.removeFile(ref: ref)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: store.url(forRef: ref).path))
+    }
+
     func testMissingArchiveLoadsEmpty() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         XCTAssertEqual(try FileArchiveStore(rootURL: dir).load(), Archive())
@@ -183,6 +228,18 @@ final class JobQueueTests: XCTestCase {
         XCTAssertEqual(q.jobs[0].state, .failed)
         XCTAssertEqual(q.jobs[0].attempts, 2)
         XCTAssertNil(q.claimNext(at: Date()))
+    }
+
+    func testForcedReReadIsMarkedEvenWhenAJobIsAlreadyWaiting() {
+        var q = JobQueue()
+        let page = UUID()
+        XCTAssertNil(q.enqueue(pageID: page, at: Date()).force)
+        XCTAssertEqual(q.enqueue(pageID: page, at: Date(), force: true).force, true)
+        XCTAssertEqual(q.claimNext(at: Date())?.force, true)
+        q.complete(jobID: q.jobs[0].id, at: Date())
+        XCTAssertEqual(q.enqueue(pageID: page, at: Date(), force: true).force, true, "biten işten sonra yeni iş açılır")
+        q.remove(pageIDs: [page])
+        XCTAssertTrue(q.jobs.isEmpty)
     }
 }
 

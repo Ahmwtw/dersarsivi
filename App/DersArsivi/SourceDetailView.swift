@@ -7,6 +7,8 @@ struct SourceDetailView: View {
     @State private var editingBlock: Block?
     @State private var title = ""
     @State private var showOriginal = false
+    @State private var confirmDelete = false
+    @Environment(\.dismiss) private var dismiss
 
     private var source: SourceAsset? { model.archive.source(sourceID) }
     private var page: Page? { model.archive.pages(of: sourceID).first }
@@ -38,8 +40,11 @@ struct SourceDetailView: View {
                     if page.status == .failed {
                         Button("Yeniden dene") { model.retry(pageID: page.id) }
                     } else if [.ready, .needsReview].contains(page.status) {
-                        // Okuma ayarları değiştiyse yeniden okur; düzeltmelerin korunur.
                         Button("Yeniden oku") { model.retry(pageID: page.id) }
+                    }
+                } footer: {
+                    if [.ready, .needsReview].contains(page.status) {
+                        Text("Yeniden oku görseli baştan okur. Metin düzeltmelerin, kaydettiğin ve yoksaydığın şekiller korunur; yalnız bekleyen şekil önerileri yenilenir.")
                     }
                 }
 
@@ -72,6 +77,21 @@ struct SourceDetailView: View {
             }
             .navigationTitle(source.sourceTitle)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(role: .destructive) { confirmDelete = true } label: {
+                        Label("Sil", systemImage: "trash")
+                    }
+                }
+            }
+            .confirmationDialog("Bu görsel silinsin mi?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Sil", role: .destructive) {
+                    dismiss()
+                    model.deleteSources([sourceID])
+                }
+            } message: {
+                Text("Okunan metin, düzeltmeler ve kırpılan şekiller de silinir. Geri alınamaz.")
+            }
             .onAppear { title = source.sourceTitle }
             .onDisappear { model.rename(sourceID: sourceID, to: title) }
             .sheet(item: $editingBlock) { block in

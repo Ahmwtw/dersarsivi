@@ -72,6 +72,12 @@ public struct FileArchiveStore: ArchiveStore {
         return "pages/\(name)"
     }
 
+    /// Kaynak silinirken orijinal dahil arşiv içindeki dosyayı siler. Arşiv klasörü dışına çıkamaz.
+    public func removeFile(ref: String) {
+        guard !ref.isEmpty, !ref.hasPrefix("/"), !ref.contains("..") else { return }
+        try? FileManager.default.removeItem(at: url(forRef: ref))
+    }
+
     /// Yalnız arşivin türetilmiş dosyalarını siler; orijinaller bu yolla silinemez.
     public func removeDerived(ref: String) {
         guard ref.hasPrefix("figures/") || ref.hasPrefix("pages/"), !ref.contains("..") else { return }
