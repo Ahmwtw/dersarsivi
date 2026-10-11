@@ -1,0 +1,27 @@
+name: iOS derlemesi
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  simulator-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode sürümü
+        run: xcodebuild -version
+      - name: XcodeGen kur
+        run: brew install xcodegen
+      - name: Xcode projesini üret
+        run: xcodegen generate
+      - name: Çekirdek testleri (macOS)
+        run: swift test --package-path Core
+      - name: Uygulamayı simülatör için derle (imzasız)
+        run: |
+          set -o pipefail
+          xcodebuild -project DersArsivi.xcodeproj -scheme DersArsivi \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO build
