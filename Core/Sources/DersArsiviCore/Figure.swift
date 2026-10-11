@@ -476,9 +476,12 @@ public enum FigureDetector {
         }
         guard inkTotal > 0 else { return false }
         let coverage = Double(inkTotal) / Double((x1 - x0) * (y1 - y0) * scan.pixelsPerCell)
-        let dominant = (0..<hueBins).map { b in
-            histogram[(b + hueBins - 1) % hueBins] + histogram[b] + histogram[(b + 1) % hueBins]
-        }.max() ?? 0
+        var dominant = 0
+        for b in 0..<hueBins {
+            let previous: Int = histogram[(b + hueBins - 1) % hueBins]
+            let next: Int = histogram[(b + 1) % hueBins]
+            dominant = max(dominant, previous + histogram[b] + next)
+        }
         return coverage < 0.3 && Double(dominant) / Double(inkTotal) >= 0.5
     }
 
