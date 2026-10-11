@@ -11,12 +11,12 @@ manifest JSON gidiş-dönüş.
 
 | Tarih | Ortam | Sonuç |
 |---|---|---|
-| 2026-10-11 | Yazıldı; bulut çalışma ortamında Swift yok | Henüz çalıştırılmadı. İlk CI koşusu sonucu buraya eklenecek |
+| 2026-10-11 | GitHub Actions, ubuntu-24.04 ve macos-15 (Xcode 16.4) | İlk koşu derlenmedi (test yardımcısı `run` adı XCTestCase ile çakıştı); düzeltmeden sonra tüm testler geçti |
 
 ## iOS
 | Kontrol | Durum |
 |---|---|
-| Simülatör için derleme (CI) | Henüz çalıştırılmadı |
+| Simülatör için derleme (CI) | Geçti, macos-15 / Xcode 16.4, 2026-10-11. Yalnız derleme; simülatörde çalıştırılmadı |
 | Gerçek cihazda içeri alma → OCR → düzeltme → export | Yapılmadı (TestFlight bekleniyor) |
 | Vision Türkçe desteği (`tr-TR`) | Yapılmadı; detay ekranındaki dil listesinden okunacak |
 | Uygulama kapanıp açılınca kuyruk ve düzeltme | Çekirdekte test var; cihazda yapılmadı |
