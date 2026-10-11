@@ -85,4 +85,29 @@ final class LayoutAnalyzerTests: XCTestCase {
         let result = LayoutAnalyzer.paragraphs(from: lines, pageWidth: 2000, pageHeight: 1257).map(\.text)
         XCTAssertEqual(result, ["Glikoliz", "1) Hekzokinaz glukozu fosforiller", "2) Fosfofruktokinaz", "kutusuz satır"])
     }
+
+    /// Gerçek slayt (kalp odakları): satır aralığı dar, OCR kutuları üst üste biniyor. Eskiden bu satırlar
+    /// soldan sağa dizilip "farklı yerlerde olabilirler." paragrafın başına geçiyordu.
+    func testTightlySpacedOverlappingLinesKeepTopToBottomOrder() {
+        let w = 2650.0, h = 1665.0
+        func n(_ t: String, _ x: Double, _ y: Double, _ bw: Double, _ bh: Double) -> ExtractedBlock {
+            ExtractedBlock(text: t, bbox: BoundingBox(x: x, y: y, width: bw, height: bh), confidence: 1)
+        }
+        let lines = [
+            n("farklı yerlerde olabilirler.", 0.139, 0.231, 0.207, 0.033),
+            n("Kalp odakları kalp seslerinin göğüs", 0.141, 0.152, 0.282, 0.03),
+            n("Anatomik izdüşüm lokalizasyonlarından", 0.142, 0.206, 0.32, 0.027),
+            n("üzerinde en iyi dinlendikleri yerlerdir.", 0.142, 0.182, 0.304, 0.025),
+            n("5. interkostal aralığın kesiştiği yer", 0.179, 0.381, 0.273, 0.033),
+            n("Mitral Odak:", 0.141, 0.321, 0.105, 0.025),
+            n("Göğüste solda midklavikular hat ile", 0.179, 0.356, 0.288, 0.03),
+        ]
+        let result = LayoutAnalyzer.paragraphs(from: lines, pageWidth: w, pageHeight: h).map(\.text)
+        XCTAssertEqual(result, [
+            "Kalp odakları kalp seslerinin göğüs üzerinde en iyi dinlendikleri yerlerdir. "
+                + "Anatomik izdüşüm lokalizasyonlarından farklı yerlerde olabilirler.",
+            "Mitral Odak:",
+            "Göğüste solda midklavikular hat ile 5. interkostal aralığın kesiştiği yer",
+        ])
+    }
 }

@@ -66,8 +66,23 @@ public enum LayoutAnalyzer {
             cut(bottom, rects: rects, lineHeight: lineHeight, into: &groups)
             return
         }
-        // 3) Bölünemiyor (aynı satırda yan yana kutular): soldan sağa.
-        groups.append(items.sorted { rects[$0].minX < rects[$1].minX })
+        // 3) Bölünemiyor: satır aralığı dar olduğundan kutular üst üste biniyor ya da yan yana. Kutular, dikeyde
+        //    yarıdan çok örtüşenler aynı satır olacak şekilde satırlara ayrılır; satırlar yukarıdan aşağı, satır
+        //    içi soldan sağa okunur. (Yalnız soldan sağa dizmek sıkışık paragrafı karıştırıyordu.)
+        var rows: [[Int]] = []
+        for i in items.sorted(by: { rects[$0].minY < rects[$1].minY }) {
+            if let row = rows.last {
+                let top = row.map { rects[$0].minY }.max()!, bottom = row.map { rects[$0].maxY }.min()!
+                let overlap = min(bottom, rects[i].maxY) - max(top, rects[i].minY)
+                let shortest = min(row.map { rects[$0].height }.min()!, rects[i].height)
+                if overlap >= 0.5 * shortest {
+                    rows[rows.count - 1].append(i)
+                    continue
+                }
+            }
+            rows.append([i])
+        }
+        groups.append(rows.flatMap { $0.sorted { rects[$0].minX < rects[$1].minX } })
     }
 
     /// Aralıkların birleşiminde kalan en geniş boşluk; boşluğun ortası `at` olarak döner.
