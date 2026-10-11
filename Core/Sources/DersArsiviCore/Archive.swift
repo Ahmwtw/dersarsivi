@@ -310,14 +310,11 @@ public struct Archive: Codable, Equatable, Sendable {
         figures[i].status = .dismissed
     }
 
-    /// Kaydedilen şekli siler; aynı yer tekrar önerilmesin diye yoksayılmış olarak kalır.
+    /// Kaydedilen şekli tamamen siler; "Yoksay"dan farklı olarak yeniden okumada aynı yer tekrar önerilebilir.
     /// Kırpım dosyasının yolunu döndürür; çağıran siler.
     @discardableResult
     public mutating func removeFigure(_ id: UUID) -> String? {
         guard let i = figures.firstIndex(where: { $0.id == id }) else { return nil }
-        let ref = figures[i].imageRef
-        figures[i].status = .dismissed
-        figures[i].imageRef = nil
-        return ref
+        return figures.remove(at: i).imageRef
     }
 }

@@ -151,6 +151,32 @@ final class FigureDetectorTests: XCTestCase {
         XCTAssertGreaterThan(c.box(160, 20, 300, 196).fractionInside(b), 0.9)
     }
 
+    /// Slayta mor kalemle yazılmış not önerilmez; yanındaki şema önerilir.
+    func testColoredPenNoteIsNotAFigure() {
+        var c = Canvas(width: 300, height: 200)
+        c.texture(30, 30, 130, 150, (150, 210, 235), (110, 170, 215))
+        // El yazısı taklidi: ince mor çizgiler, seyrek.
+        for y in stride(from: 60, to: 120, by: 6) {
+            c.rect(180, y, 260, y + 1, (120, 40, 200))
+            c.rect(180 + (y % 12) * 3, y, 181 + (y % 12) * 3, y + 6, (120, 40, 200))
+        }
+        let found = FigureDetector.suggestions(rgba: c.rgba, width: c.width, height: c.height, lines: [])
+        XCTAssertEqual(found.count, 1)
+        XCTAssertLessThan(try! XCTUnwrap(found.first?.bbox).maxX, 0.5, "kalem notu şekil sayılmamalı")
+    }
+
+    /// Şemaya neredeyse değen uzak işaret (yıldız, ok) şemayla tek kutuya alınmaz.
+    func testNearlyTouchingMarkIsNotMergedIntoFigure() {
+        var c = Canvas(width: 300, height: 200)
+        c.texture(30, 20, 200, 110, (150, 210, 235), (110, 170, 215))
+        c.rect(120, 113, 122, 150, (20, 20, 20))       // şemaya bir hücre kala biten çizgi
+        c.rect(110, 150, 150, 190, (20, 20, 20))       // uzak işaret
+        c.rect(120, 160, 140, 180, (255, 255, 255))
+        let found = FigureDetector.suggestions(rgba: c.rgba, width: c.width, height: c.height, lines: [])
+        let main = try! XCTUnwrap(found.max { $0.bbox.area < $1.bbox.area })
+        XCTAssertLessThan(main.bbox.maxY, 0.65, "ince çizgiyle bağlı işaret şemaya katılmamalı")
+    }
+
     /// Ekranın kenarından taşan komşu slaytın dar kesiti önerilmez.
     func testNarrowSliverAtContentEdgeIsNotSuggested() {
         var c = Canvas(width: 300, height: 200)
@@ -238,6 +264,9 @@ final class FigureArchiveTests: XCTestCase {
 
         XCTAssertEqual(archive.removeFigure(id), "figures/b.jpg")
         XCTAssertEqual(archive.figures(of: page.id), [])
+        // Silinen yer yoksayılmış sayılmaz; yeniden okuma onu tekrar önerebilir.
+        archive.applyFigureSuggestions([FigureSuggestion(bbox: figureBox)], pageID: page.id, at: Date())
+        XCTAssertEqual(archive.figures(of: page.id).map(\.status), [.suggested])
     }
 
     func testOldArchiveWithoutFiguresStillLoads() throws {

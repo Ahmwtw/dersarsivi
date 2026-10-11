@@ -127,6 +127,11 @@ public enum FigureDetector {
         public let content: BoundingBox
         let cols: Int, rows: Int
         let ink: [Bool]
+        /// Hücredeki mürekkep pikseli sayısı ve hücre başına piksel sayısı.
+        let inkPixels: [Int]
+        let pixelsPerCell: Int
+        /// Doygun mürekkep piksellerinin renk tonu dağılımı (hücre başına `hueBins` kutu).
+        let hues: [UInt16]
         let c0: Int, c1: Int, r0: Int, r1: Int
     }
 
@@ -149,6 +154,8 @@ public enum FigureDetector {
         // Düz renkli hücrelerin kaba renk kutusu; düz değilse -1.
         var flatBin = [Int](repeating: -1, count: cols * rows)
         let perCell = Double(cell * cell)
+        var inkPixels = [Int](repeating: 0, count: cols * rows)
+        var hues = [UInt16](repeating: 0, count: cols * rows * hueBins)
         for r in 0..<rows {
             for c in 0..<cols {
                 var inkCount = 0, bgCount = 0
@@ -159,13 +166,21 @@ public enum FigureDetector {
                         let pr = Double(rgba[i]), pg = Double(rgba[i + 1]), pb = Double(rgba[i + 2])
                         let dr = pr - background.r, dg = pg - background.g, db = pb - background.b
                         let d = dr * dr + dg * dg + db * db
-                        if d > inkSq { inkCount += 1 } else if d < bgSq { bgCount += 1 }
+                        if d > inkSq {
+                            inkCount += 1
+                            if let bin = saturatedHueBin(pr, pg, pb) {
+                                hues[(r * cols + c) * hueBins + bin] &+= 1
+                            }
+                        } else if d < bgSq {
+                            bgCount += 1
+                        }
                         sum = (sum.0 + pr, sum.1 + pg, sum.2 + pb)
                         sq = (sq.0 + pr * pr, sq.1 + pg * pg, sq.2 + pb * pb)
                         i += 4
                     }
                 }
                 let index = r * cols + c
+                inkPixels[index] = inkCount
                 ink[index] = Double(inkCount) / perCell >= 0.1
                 isBackground[index] = Double(bgCount) / perCell >= 0.5
                 let mean = (sum.0 / perCell, sum.1 / perCell, sum.2 / perCell)
@@ -229,7 +244,8 @@ public enum FigureDetector {
         guard c1 - c0 > 4, r1 - r0 > 4 else { return nil }
         let content = BoundingBox(x: Double(c0) / Double(cols), y: Double(r0) / Double(rows),
                                   width: Double(c1 - c0) / Double(cols), height: Double(r1 - r0) / Double(rows))
-        return PageScan(content: content, cols: cols, rows: rows, ink: ink, c0: c0, c1: c1, r0: r0, r1: r1)
+        return PageScan(content: content, cols: cols, rows: rows, ink: ink, inkPixels: inkPixels,
+                        pixelsPerCell: cell * cell, hues: hues, c0: c0, c1: c1, r0: r0, r1: r1)
     }
 
     /// İçerik alanı dışında kalan yazıları (not uygulamasının araç çubuğu, sayfa dışı menüler) eler.
@@ -280,22 +296,40 @@ public enum FigureDetector {
                 }
             }
         }
-        var boxes = components(grown, original: mask, cols: cols, rows: rows)
-
         // İçerik kenarına yapışık dar parça: ekranın kenarından taşan komşu slaytın veya kenarlığın kesiti.
-        boxes = boxes.filter { b in
+        func isEdgeSliver(_ b: BoundingBox) -> Bool {
             let x0 = Int((b.x * Double(cols)).rounded()), x1 = Int((b.maxX * Double(cols)).rounded())
             let y0 = Int((b.y * Double(rows)).rounded()), y1 = Int((b.maxY * Double(rows)).rounded())
-            if x0 <= c0 + 1 || x1 >= c1 - 1, Double(x1 - x0) < 0.15 * Double(c1 - c0) { return false }
-            if y0 <= r0 + 1 || y1 >= r1 - 1, Double(y1 - y0) < 0.15 * Double(r1 - r0) { return false }
-            return true
+            if x0 <= c0 + 1 || x1 >= c1 - 1, Double(x1 - x0) < 0.15 * Double(c1 - c0) { return true }
+            if y0 <= r0 + 1 || y1 >= r1 - 1, Double(y1 - y0) < 0.15 * Double(r1 - r0) { return true }
+            return false
         }
-
         // Boyut süzgeci: içerik alanına göre.
         let minW = 0.08 * content.width, minH = 0.08 * content.height
-        boxes = boxes.filter { b in
+        func hasFigureSize(_ b: BoundingBox) -> Bool {
             b.width >= minW && b.height >= minH && b.area >= 0.02 * content.area && b.area <= 0.85 * content.area
         }
+
+        var boxes: [BoundingBox] = []
+        for region in regions(grown, original: mask, cols: cols, rows: rows) where !isEdgeSliver(region.box) {
+            // Büyük bölge çoğu zaman şekle ince çizgilerle (el yazısı, ok, yıldız) yapışmış başka şeylerdir.
+            // Genişletmeden yeniden bölünür; ana parça(lar) belirgin biçimde küçükse onlar kullanılır.
+            if hasFigureSize(region.box), region.box.area > 0.3 * content.area {
+                var own = [Bool](repeating: false, count: cols * rows)
+                for i in region.cells { own[i] = true }
+                let parts = regions(own, original: own, cols: cols, rows: rows).map(\.box)
+                    .filter { !isEdgeSliver($0) && hasFigureSize($0) }
+                if let first = parts.first {
+                    let covered = parts.dropFirst().reduce(first) { $0.union($1) }
+                    if parts.count >= 2 || covered.area < 0.7 * region.box.area {
+                        boxes += parts
+                        continue
+                    }
+                }
+            }
+            boxes.append(region.box)
+        }
+        boxes = boxes.filter(hasFigureSize)
         // Sayfa genişliğinde ince şerit: başlık bandı, menü, düğme, tablo başlığı.
         boxes = boxes.filter { !($0.width >= 0.95 * content.width && $0.height <= 0.15 * content.height) }
         boxes = mergeNearby(boxes, gap: 0.008)
@@ -327,6 +361,8 @@ public enum FigureDetector {
             // Bölgenin çoğu yazıysa bu bir şekil değil, vurgulu/çerçeveli metindir.
             let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(box)?.area ?? 0) }
             guard textArea / max(box.area, 1e-9) <= 0.45 else { continue }
+            // Slayta kalemle eklenmiş renkli not şekil değildir.
+            guard !looksLikePenNote(box, scan: scan) else { continue }
             let padded = box.insetBy(dx: -0.01 * content.width, dy: -0.01 * content.height).clamped(to: content)
             let figureLabels = labels.sorted().map { FigureLabel(text: lines[$0].text, bbox: lines[$0].bbox) }
             result.append(FigureSuggestion(bbox: padded, labels: figureLabels))
@@ -383,17 +419,20 @@ public enum FigureDetector {
         return (first, last + 1)
     }
 
-    /// 8 komşulu bağlı bölgeler. Kutu, genişletilmemiş mürekkep hücrelerinden hesaplanır.
-    private static func components(_ grid: [Bool], original: [Bool], cols: Int, rows: Int) -> [BoundingBox] {
+    /// 8 komşulu bağlı bölgeler. Kutu ve hücre listesi genişletilmemiş mürekkep hücrelerinden hesaplanır.
+    private static func regions(_ grid: [Bool], original: [Bool], cols: Int,
+                                rows: Int) -> [(box: BoundingBox, cells: [Int])] {
         var seen = [Bool](repeating: false, count: grid.count)
-        var boxes: [BoundingBox] = []
+        var result: [(box: BoundingBox, cells: [Int])] = []
         for start in grid.indices where grid[start] && !seen[start] {
             var stack = [start]
             seen[start] = true
+            var cells: [Int] = []
             var minC = Int.max, minR = Int.max, maxC = -1, maxR = -1
             while let i = stack.popLast() {
                 let r = i / cols, c = i % cols
                 if original[i] {
+                    cells.append(i)
                     minC = min(minC, c); maxC = max(maxC, c); minR = min(minR, r); maxR = max(maxR, r)
                 }
                 for dr in -1...1 {
@@ -409,11 +448,58 @@ public enum FigureDetector {
                 }
             }
             guard maxC >= 0 else { continue }
-            boxes.append(BoundingBox(x: Double(minC) / Double(cols), y: Double(minR) / Double(rows),
-                                     width: Double(maxC - minC + 1) / Double(cols),
-                                     height: Double(maxR - minR + 1) / Double(rows)))
+            let box = BoundingBox(x: Double(minC) / Double(cols), y: Double(minR) / Double(rows),
+                                  width: Double(maxC - minC + 1) / Double(cols),
+                                  height: Double(maxR - minR + 1) / Double(rows))
+            result.append((box, cells))
         }
-        return boxes
+        return result
+    }
+
+    /// Kalemle eklenmiş not mu: mürekkep seyrek (ince çizgi) ve neredeyse tamamı tek bir doygun renkte.
+    /// Çizim ve fotoğraflar ya daha yoğun ya da çok renklidir.
+    static func looksLikePenNote(_ box: BoundingBox, scan: PageScan) -> Bool {
+        let cols = scan.cols, rows = scan.rows
+        let x0 = max(0, Int((box.x * Double(cols)).rounded(.down)))
+        let x1 = min(cols, Int((box.maxX * Double(cols)).rounded(.up)))
+        let y0 = max(0, Int((box.y * Double(rows)).rounded(.down)))
+        let y1 = min(rows, Int((box.maxY * Double(rows)).rounded(.up)))
+        guard x1 > x0, y1 > y0 else { return false }
+        var inkTotal = 0
+        var histogram = [Int](repeating: 0, count: hueBins)
+        for r in y0..<y1 {
+            for c in x0..<x1 {
+                let i = r * cols + c
+                inkTotal += scan.inkPixels[i]
+                for b in 0..<hueBins { histogram[b] += Int(scan.hues[i * hueBins + b]) }
+            }
+        }
+        guard inkTotal > 0 else { return false }
+        let coverage = Double(inkTotal) / Double((x1 - x0) * (y1 - y0) * scan.pixelsPerCell)
+        let dominant = (0..<hueBins).map { b in
+            histogram[(b + hueBins - 1) % hueBins] + histogram[b] + histogram[(b + 1) % hueBins]
+        }.max() ?? 0
+        return coverage < 0.3 && Double(dominant) / Double(inkTotal) >= 0.5
+    }
+
+    static let hueBins = 24
+
+    /// Doygun pikselin ton kutusu; gri, siyah ve soluk pikseller için nil.
+    static func saturatedHueBin(_ r: Double, _ g: Double, _ b: Double) -> Int? {
+        let hi = max(r, g, b), lo = min(r, g, b)
+        guard hi > 0, (hi - lo) / hi > 0.35 else { return nil }
+        let delta = hi - lo
+        var hue: Double
+        if hi == r {
+            hue = (g - b) / delta
+        } else if hi == g {
+            hue = 2 + (b - r) / delta
+        } else {
+            hue = 4 + (r - g) / delta
+        }
+        hue /= 6
+        if hue < 0 { hue += 1 }
+        return min(hueBins - 1, Int(hue * Double(hueBins)))
     }
 
     private static func mergeNearby(_ boxes: [BoundingBox], gap: Double) -> [BoundingBox] {
