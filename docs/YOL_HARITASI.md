@@ -34,7 +34,7 @@ Değişmez ilkeler:
 - [x] "Sadece görsel" modu: karışık sayfalar (el yazısı ağırlıklı, etiket yığını) kendiliğinden bu moda geçer;
       kullanıcı seçtiği görselleri bu moda alabilir. Bu sayfalar dışa aktarımda optimize edilmiş görüntü olarak gider
 - [x] Galeride "Tümünü seç"
-- [ ] PR #1'in birleştirilmesi (kullanıcı onayladı; CI yeşil olunca)
+- [x] PR #1'in birleştirilmesi
 
 ### Aşama 2: Kullanılabilir uygulama
 
