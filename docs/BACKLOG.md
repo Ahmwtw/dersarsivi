@@ -26,6 +26,13 @@
 - [ ] Farklı türlerden 10-20 örnekle düzen/paragraf test seti (kullanıcıdan örnek bekleniyor)
 - [ ] Yıldız, daire, el ile işaretler (deneysel)
 
+## Kullanıcı notları (2026-10-11, şimdilik yapılmayacak)
+- Pratik kısayollar: tümünü seç vb.
+- Klasör oluşturma, görselleri klasörlere ayırma
+- Promptlu export şablonları: flashcard, Anki uyumlu kart, özet, çıkmış soruları temize geçirme + en sonda cevap anahtarı, uygulama içi Anki ile uyumlu kart, quiz (çeşitlendirilecek)
+- UI tasarımı sonra; önce işlev
+- PDF ekleme (P0-10) öncelikli
+
 ## P1
 Share Extension · App Intent "Arşive ekle" · kestirme doğrulaması · bölge (bbox) ile blok eşleştirme ·
 iki sütun okuma sırası · şema/tablo yorumu · JSON round-trip · figürlü ZIP · soru temizleme ·
