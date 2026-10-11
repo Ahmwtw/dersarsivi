@@ -410,9 +410,11 @@ public enum FigureDetector {
             box = box.union(line.bbox)
         }
         if filtered {
-            // Bölgenin çoğu yazıysa bu bir şekil değil, vurgulu/çerçeveli metindir.
-            let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(box)?.area ?? 0) }
-            guard textArea / max(box.area, 1e-9) <= 0.45 else { return nil }
+            // Bölgenin çoğu yazıysa bu bir şekil değil, vurgulu/çerçeveli metindir. Oran etiketler eklenmeden
+            // önceki çizim kutusunda ölçülür: kutucuklu, bol yazılı şemaya yanındaki notlar eklenince oran
+            // yapay olarak yükselip şema eleniyordu.
+            let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(found)?.area ?? 0) }
+            guard textArea / max(found.area, 1e-9) <= 0.45 else { return nil }
             // Slayta kalemle eklenmiş renkli not şekil değildir.
             guard !looksLikePenNote(box, scan: scan) else { return nil }
         }
