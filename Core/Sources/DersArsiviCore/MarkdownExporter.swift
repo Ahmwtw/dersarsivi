@@ -249,8 +249,10 @@ public struct MarkdownExporter {
             let accepted = archive.figures(of: page.id).filter { $0.status == .accepted }
             var pending = accepted
             for block in blocks {
-                // Şeklin içindeki yazılar (etiketler) şeklin altında listelenir; metinde tekrarlanmaz.
-                if let box = block.bbox, accepted.contains(where: { box.fractionInside($0.bbox) >= 0.8 }) {
+                // Şeklin içindeki kısa yazılar (etiketler) şeklin altında listelenir; metinde tekrarlanmaz.
+                // Uzun metin şeklin içine düşse bile metinde kalır: yazı kaybolmasın.
+                if let box = block.bbox, block.acceptedText.count <= Self.maxLabelBlockLength,
+                   accepted.contains(where: { box.fractionInside($0.bbox) >= 0.8 }) {
                     continue
                 }
                 if let box = block.bbox {
@@ -365,6 +367,8 @@ public struct MarkdownExporter {
         }
         return out
     }
+
+    static let maxLabelBlockLength = 40
 
     static func inline(_ text: String) -> String {
         escape(text).replacingOccurrences(of: "\n", with: " ")

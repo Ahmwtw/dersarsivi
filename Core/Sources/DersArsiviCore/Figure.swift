@@ -112,6 +112,11 @@ public enum FigureDetector {
     static let inkDistance = 50.0
     static let backgroundDistance = 25.0
     static let maxSuggestions = 4
+    static let maxOutsideLabelLength = 30
+    /// Hücre içi renk sapması bunun altındaysa hücre düz renklidir.
+    static let flatDeviation = 10.0
+    /// Düz renkli hücrelerin bu oranını kaplayan renk ikinci zemin sayılır (panel, tablo satırı, düğme).
+    static let secondaryBackgroundShare = 0.08
 
     public typealias Line = (text: String, bbox: BoundingBox)
 
@@ -139,25 +144,42 @@ public enum FigureDetector {
         let inkSq = inkDistance * inkDistance, bgSq = backgroundDistance * backgroundDistance
         var ink = [Bool](repeating: false, count: cols * rows)
         var isBackground = [Bool](repeating: false, count: cols * rows)
+        // Düz renkli hücrelerin kaba renk kutusu; düz değilse -1.
+        var flatBin = [Int](repeating: -1, count: cols * rows)
         let perCell = Double(cell * cell)
         for r in 0..<rows {
             for c in 0..<cols {
                 var inkCount = 0, bgCount = 0
+                var sum = (0.0, 0.0, 0.0), sq = (0.0, 0.0, 0.0)
                 for y in (r * cell)..<(r * cell + cell) {
                     var i = (y * width + c * cell) * 4
                     for _ in 0..<cell {
-                        let dr = Double(rgba[i]) - background.r
-                        let dg = Double(rgba[i + 1]) - background.g
-                        let db = Double(rgba[i + 2]) - background.b
+                        let pr = Double(rgba[i]), pg = Double(rgba[i + 1]), pb = Double(rgba[i + 2])
+                        let dr = pr - background.r, dg = pg - background.g, db = pb - background.b
                         let d = dr * dr + dg * dg + db * db
                         if d > inkSq { inkCount += 1 } else if d < bgSq { bgCount += 1 }
+                        sum = (sum.0 + pr, sum.1 + pg, sum.2 + pb)
+                        sq = (sq.0 + pr * pr, sq.1 + pg * pg, sq.2 + pb * pb)
                         i += 4
                     }
                 }
-                ink[r * cols + c] = Double(inkCount) / perCell >= 0.1
-                isBackground[r * cols + c] = Double(bgCount) / perCell >= 0.5
+                let index = r * cols + c
+                ink[index] = Double(inkCount) / perCell >= 0.1
+                isBackground[index] = Double(bgCount) / perCell >= 0.5
+                let mean = (sum.0 / perCell, sum.1 / perCell, sum.2 / perCell)
+                let variance = (sq.0 / perCell - mean.0 * mean.0) + (sq.1 / perCell - mean.1 * mean.1)
+                    + (sq.2 / perCell - mean.2 * mean.2)
+                if cell > 1, (max(variance, 0) / 3).squareRoot() < flatDeviation {
+                    flatBin[index] = Int(mean.0) >> 5 << 6 | Int(mean.1) >> 5 << 3 | Int(mean.2) >> 5
+                }
             }
         }
+        // Geniş düz renkli alanlar (beyaz metin paneli, tablo satırları, uygulama düğmeleri) şekil değildir:
+        // sık görülen düz renkler ikinci zemin sayılır. Fotoğraf ve çizimler dokulu olduğundan etkilenmez.
+        var binCounts: [Int: Int] = [:]
+        for b in flatBin where b >= 0 { binCounts[b, default: 0] += 1 }
+        let frequent = Set(binCounts.filter { Double($0.value) >= secondaryBackgroundShare * Double(cols * rows) }.keys)
+        for i in ink.indices where ink[i] && flatBin[i] >= 0 && frequent.contains(flatBin[i]) { ink[i] = false }
 
         // İçerik alanı: zemin rengini yeterince içeren sütun ve satırlar. Koyu kenarlıklar ve araç çubukları elenir.
         guard let colSpan = span(count: cols, minFraction: 0.15, fraction: { c in
@@ -234,7 +256,9 @@ public enum FigureDetector {
         boxes = boxes.filter { b in
             b.width >= minW && b.height >= minH && b.area >= 0.02 * content.area && b.area <= 0.85 * content.area
         }
-        boxes = mergeNearby(boxes, gap: 0.02)
+        // Sayfa genişliğinde ince şerit: başlık bandı, menü, düğme, tablo başlığı.
+        boxes = boxes.filter { !($0.width >= 0.95 * content.width && $0.height <= 0.15 * content.height) }
+        boxes = mergeNearby(boxes, gap: 0.008)
 
         // Etiketler: şeklin üstündeki ya da hemen yanındaki kısa, normal boy yazılar. Başlıklar (iri yazı) ve
         // uzun paragraf satırları katılmaz.
@@ -243,22 +267,22 @@ public enum FigureDetector {
         let marginX = 0.03 * content.width, marginY = 0.03 * content.height
         var result: [FigureSuggestion] = []
         for var box in boxes {
+            // Etiket yalnız şeklin kendisine (zincirleme değil) yakın olmalı; yoksa yanındaki paragraf da
+            // satır satır şekle katılır.
             let core = box
+            let reach = core.insetBy(dx: -marginX, dy: -marginY)
             var labels: [Int] = []
-            for _ in 0..<3 {
-                let reach = box.insetBy(dx: -marginX, dy: -marginY)
-                var grewBox = false
-                for (i, line) in lines.enumerated() where !labels.contains(i) {
-                    guard line.bbox.height <= typical * 1.5, line.bbox.width <= box.width * 0.6,
-                          line.bbox.intersection(reach) != nil else { continue }
-                    // Yalnız rakamdan oluşan yazı (sayfa numarası) şeklin dışındaysa etiket sayılmaz.
-                    let digitsOnly = line.text.allSatisfy { $0.isNumber || $0.isWhitespace }
-                    if digitsOnly, line.bbox.intersection(core) == nil { continue }
-                    labels.append(i)
-                    box = box.union(line.bbox)
-                    grewBox = true
-                }
-                if !grewBox { break }
+            for (i, line) in lines.enumerated() {
+                guard line.bbox.height <= typical * 1.5, line.bbox.width <= core.width * 0.6,
+                      line.bbox.intersection(reach) != nil else { continue }
+                let inside = line.bbox.fractionInside(core) >= 0.8
+                // Şeklin dışındaki uzun satır paragraftır, etiket değil.
+                if !inside, line.text.count > maxOutsideLabelLength { continue }
+                // Yalnız rakamdan oluşan yazı (sayfa numarası) şeklin dışındaysa etiket sayılmaz.
+                let digitsOnly = line.text.allSatisfy { $0.isNumber || $0.isWhitespace }
+                if digitsOnly, line.bbox.intersection(core) == nil { continue }
+                labels.append(i)
+                box = box.union(line.bbox)
             }
             // Bölgenin çoğu yazıysa bu bir şekil değil, vurgulu/çerçeveli metindir.
             let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(box)?.area ?? 0) }

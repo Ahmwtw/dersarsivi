@@ -15,6 +15,18 @@ private struct Canvas {
         for _ in 0..<(width * height) { rgba += [fill.0, fill.1, fill.2, 255] }
     }
 
+    /// Fotoğraf dokusu taklidi: iki renk piksel piksel değişir (düz renkli panel değildir).
+    mutating func texture(_ x0: Int, _ y0: Int, _ x1: Int, _ y1: Int, _ a: (UInt8, UInt8, UInt8),
+                          _ b: (UInt8, UInt8, UInt8)) {
+        for y in max(0, y0)..<min(height, y1) {
+            for x in max(0, x0)..<min(width, x1) {
+                let c = (x + y) % 2 == 0 ? a : b
+                let i = (y * width + x) * 4
+                rgba[i] = c.0; rgba[i + 1] = c.1; rgba[i + 2] = c.2
+            }
+        }
+    }
+
     mutating func rect(_ x0: Int, _ y0: Int, _ x1: Int, _ y1: Int, _ c: (UInt8, UInt8, UInt8)) {
         for y in max(0, y0)..<min(height, y1) {
             for x in max(0, x0)..<min(width, x1) {
@@ -43,7 +55,7 @@ final class FigureDetectorTests: XCTestCase {
         c.rect(0, 0, 30, 200, (0, 0, 0))
         c.rect(270, 0, 300, 200, (0, 0, 0))
         c.rect(280, 20, 292, 120, (120, 60, 200))   // araç çubuğu düğmeleri
-        c.rect(160, 20, 250, 100, (150, 210, 235))  // fotoğraf (açık mavi zemin)
+        c.texture(160, 20, 250, 100, (150, 210, 235), (110, 170, 215))  // fotoğraf
         c.rect(190, 40, 220, 80, (30, 30, 30))      // fotoğraftaki nesne
         var lines: [FigureDetector.Line] = []
         for (i, y) in stride(from: 30, to: 180, by: 18).enumerated() {
@@ -93,6 +105,33 @@ final class FigureDetectorTests: XCTestCase {
         XCTAssertEqual(figure.labels.map(\.text), ["Aort", "Mitral"])
         XCTAssertGreaterThan(outside.bbox.fractionInside(figure.bbox), 0.99, "yandaki etiket kutuya katılmalı")
         XCTAssertGreaterThan(figure.bbox.y, title.bbox.maxY - 0.01, "başlık şekle katılmamalı")
+    }
+
+    /// Koyu slayt zemininde beyaz metin paneli ve dokulu histoloji görseli; ayrıca uygulama düğmeleri.
+    func testFlatPanelsAndButtonsAreNotFigures() {
+        let navy: (UInt8, UInt8, UInt8) = (10, 30, 90)
+        var c = Canvas(width: 300, height: 200, fill: navy)
+        c.rect(10, 40, 150, 180, (255, 255, 255))   // metin paneli
+        var lines: [FigureDetector.Line] = []
+        for (i, y) in stride(from: 50, to: 170, by: 16).enumerated() {
+            lines.append(c.textLine("madde \(i)", 20, y, 140, y + 8))
+        }
+        c.texture(165, 40, 295, 190, (150, 80, 170), (200, 150, 210))  // histoloji
+        let found = FigureDetector.suggestions(rgba: c.rgba, width: c.width, height: c.height, lines: lines)
+        XCTAssertEqual(found.count, 1)
+        let b = try! XCTUnwrap(found.first?.bbox)
+        XCTAssertGreaterThan(b.x, 0.5, "beyaz metin paneli şekle katılmamalı")
+        XCTAssertGreaterThan(c.box(165, 40, 295, 190).fractionInside(b), 0.95)
+
+        // Mor uygulama zemininde, içinde yazı olan tam genişlik düğmeler.
+        var app = Canvas(width: 200, height: 300, fill: (70, 25, 65))
+        var buttons: [FigureDetector.Line] = []
+        for (i, y) in stride(from: 120, to: 280, by: 40).enumerated() {
+            app.rect(0, y, 200, y + 30, (110, 70, 115))
+            buttons.append(app.textLine("şık \(i)", 70, y + 10, 130, y + 20))
+        }
+        XCTAssertEqual(FigureDetector.suggestions(rgba: app.rgba, width: app.width, height: app.height,
+                                                  lines: buttons), [])
     }
 
     func testToolbarTextOutsideSlideIsDropped() throws {
@@ -189,6 +228,8 @@ final class FigureArchiveTests: XCTestCase {
             ExtractedBlock(text: "Giriş paragrafı", bbox: BoundingBox(x: 0.1, y: 0.1, width: 0.8, height: 0.05)),
             ExtractedBlock(text: "Aort", bbox: BoundingBox(x: 0.35, y: 0.4, width: 0.05, height: 0.03)),
             ExtractedBlock(text: "Son paragraf", bbox: BoundingBox(x: 0.1, y: 0.9, width: 0.8, height: 0.05)),
+            ExtractedBlock(text: "Şeklin içine düşen uzun bir paragraf metni kaybolmamalı",
+                           bbox: BoundingBox(x: 0.32, y: 0.7, width: 0.3, height: 0.05)),
         ]
         let run = ExtractionRun(pageID: page.id, sourceContentHash: "h1", engine: "t", engineVersion: "1",
                                 configHash: "c", startedAt: Date(), finishedAt: Date())
@@ -208,6 +249,7 @@ final class FigureArchiveTests: XCTestCase {
         XCTAssertLessThan(image.lowerBound, try XCTUnwrap(md.range(of: "Son paragraf")).lowerBound)
         XCTAssertTrue(md.contains("_Şekil 1 etiketleri: Aort_"))
         XCTAssertEqual(md.components(separatedBy: "Aort").count - 1, 1, "etiket metinde tekrar edilmemeli")
+        XCTAssertTrue(md.contains("Şeklin içine düşen uzun bir paragraf metni kaybolmamalı"))
         XCTAssertEqual(result.assets.count, 1)
         let entry = try XCTUnwrap(result.manifest.figures?.first)
         XCTAssertEqual(entry.file, result.assets[0].path)

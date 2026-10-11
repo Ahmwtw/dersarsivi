@@ -35,7 +35,7 @@ struct VisionTextExtractor {
 
     /// Ayar özeti; cache anahtarında kullanılır. Ayar değişirse eski çıkarım tekrar kullanılmaz.
     var configHash: String {
-        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v1|rect-v1|\(Self.usableLanguages().joined(separator: ","))".utf8))
+        SHA256Hasher.hexDigest(Data("accurate|langcorr|layout-v1|style-v3|fig-v2|rect-v2|\(Self.usableLanguages().joined(separator: ","))".utf8))
     }
 
     func extract(from image: CGImage, orientation: CGImagePropertyOrientation) async throws -> ExtractionOutput {
@@ -103,7 +103,10 @@ struct VisionTextExtractor {
             return atan2(dy, dx) * 180 / .pi
         }.sorted()
         guard angles.count >= 3 else { return 0 }
-        return angles[angles.count / 2]
+        let median = angles[angles.count / 2]
+        // Satırların çoğu aynı eğimde değilse (el yazısı, karışık görseller) döndürme yapılmaz.
+        let agreeing = angles.filter { abs($0 - median) <= 1.5 }.count
+        return Double(agreeing) >= Double(angles.count) * 0.6 ? median : 0
     }
 
     /// Sayfa alanı ve şekil önerileri için görüntünün yönü düzeltilmiş küçük kopyası yeter.

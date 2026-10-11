@@ -110,8 +110,10 @@ final class AppModel: ObservableObject {
             }
             var input = image
             var working: CGImage?
+            // Ekran görüntüleri (PNG) zaten düzdür; içlerindeki eğik fotoğraflar yüzünden döndürülmez.
+            let isScreenshot = (source.originalFilename as NSString).pathExtension.lowercased() == "png"
             // Eğik çekilmiş sayfa fotoğrafı: önce sayfa köşelerinden perspektif düzeltilir.
-            if let flat = await Task.detached(priority: .userInitiated, operation: {
+            if !isScreenshot, let flat = await Task.detached(priority: .userInitiated, operation: {
                 PagePreparer.rectify(image.cgImage, orientation: image.orientation)
             }).value {
                 working = flat
@@ -120,7 +122,7 @@ final class AppModel: ObservableObject {
             var output = try await extractor.extract(from: input.cgImage, orientation: input.orientation)
             // Köşeler bulunamadıysa ama satırlar hâlâ eğikse görüntü döndürülüp bir kez daha okunur.
             let skew = output.skewDegrees
-            if abs(skew) >= PagePreparer.minSkewDegrees {
+            if !isScreenshot, abs(skew) >= PagePreparer.minSkewDegrees {
                 let current = input
                 if let straight = await Task.detached(priority: .userInitiated, operation: {
                     PagePreparer.rotate(current.cgImage, orientation: current.orientation,
