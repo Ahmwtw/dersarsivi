@@ -46,7 +46,8 @@ Değişmez ilkeler:
       eklenir ve ayrıca kopyalanabilir
 - [x] **Yeni arayüz:** kenar çubuklu iPad düzeni (Tümü / Klasörsüz / İşaretli ve notlu / Okunmayı bekleyen / klasörler),
       kartlı galeri, alttaki cam eylem çubuğu, Liquid Glass (iOS 26); iPhone'da aynı yapı tek sütun
-- [ ] iPad'de sayfa ile metni yan yana gösteren detay; sayfa üstünde satıra dokununca düzeltme
+- [x] iPad'de sayfa ile metni yan yana gösteren detay; sayfa üstünde satıra dokununca düzeltme
+- [x] Ayarlar: vurgu ve işaret renkleri, açık/koyu görünüm, kart boyutu
 - [x] Tam metin arama (tüm kaynaklarda)
 
 ### Aşama 3: Akıllı özellikler

@@ -189,6 +189,7 @@ struct ExportView: View {
 
 /// Talimat listesi: kategorilere göre gruplu, her biri simge, başlık ve tek satır açıklamayla.
 struct PromptPickerView: View {
+    @Environment(\.palette) private var palette
     @Binding var selection: String
     @Environment(\.dismiss) private var dismiss
 
@@ -230,7 +231,7 @@ struct PromptPickerView: View {
                 }
                 Spacer()
                 if selection == id {
-                    Image(systemName: "checkmark").foregroundStyle(Theme.accent).fontWeight(.semibold)
+                    Image(systemName: "checkmark").foregroundStyle(palette.accent).fontWeight(.semibold)
                 }
             }
             .contentShape(Rectangle())
@@ -241,6 +242,7 @@ struct PromptPickerView: View {
 
 /// Kategori renginde yuvarlak köşeli simge.
 struct PromptIcon: View {
+    @Environment(\.palette) private var palette
     let symbol: String
     let category: PromptTemplate.Category?
 
@@ -254,7 +256,7 @@ struct PromptIcon: View {
 
     private var tint: Color {
         switch category {
-        case .study: return Theme.accent
+        case .study: return palette.accent
         case .anki: return .teal
         case .questions: return .orange
         case .review: return .purple

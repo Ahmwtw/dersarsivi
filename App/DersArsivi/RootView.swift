@@ -4,6 +4,7 @@ import SwiftUI
 /// iPad'de kenar çubuğu + içerik; iPhone'da aynı yapı yığın olarak açılır ve doğrudan içerikten başlar.
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.palette) private var palette
     @State private var scope: LibraryScope? = .all
     @State private var compactColumn = NavigationSplitViewColumn.detail
     @State private var path = NavigationPath()
@@ -24,7 +25,7 @@ struct RootView: View {
                     }
             }
         }
-        .tint(Theme.accent)
+        .tint(palette.accent)
         .overlay(alignment: .top) { noticeBanner }
         .animation(.snappy, value: model.notice)
         .onChange(of: scope) { _, _ in path = NavigationPath() }
@@ -117,7 +118,7 @@ struct RootView: View {
                 } label: {
                     Label("Yeni klasör", systemImage: "folder.badge.plus")
                 }
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(palette.accent)
             } header: {
                 Text("Klasörler")
             }

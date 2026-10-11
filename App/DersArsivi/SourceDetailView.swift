@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SourceDetailView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.palette) private var palette
     let sourceID: UUID
     @State private var editingBlock: Block?
     @State private var title = ""
@@ -16,53 +17,24 @@ struct SourceDetailView: View {
     private var page: Page? { pages.first { $0.pageIndex == pageIndex } ?? pages.first }
     private var blocks: [Block] { page.map { model.archive.blocks(of: $0.id) } ?? [] }
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         if let source, let page {
-            List {
-                Section {
-                    Button { showOriginal = true } label: {
-                        ThumbnailView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source),
-                                      maxPixel: 1400, contentMode: .fit)
-                            .frame(maxHeight: 360)
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            GeometryReader { geo in
+                if sizeClass == .regular && geo.size.width >= 760 {
+                    // Geniş iPad ekranı: sayfa solda (satırlara dokunup düzelt), bilgiler ve metin sağda.
+                    HStack(spacing: 0) {
+                        PageCanvas(url: model.pageImageURL(for: page) ?? model.originalURL(for: source),
+                                   blocks: blocks, highlighted: editingBlock?.id) { editingBlock = $0 }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color(.secondarySystemBackground))
+                        Divider().ignoresSafeArea()
+                        detailList(source: source, page: page, showsPage: false)
+                            .frame(width: min(440, geo.size.width * 0.42))
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Sayfayı tam ekran aç")
-                    if pages.count > 1 { pageStrip }
-                    TextField("Başlık", text: $title)
-                        .font(.headline)
-                        .onSubmit { model.rename(sourceID: sourceID, to: title) }
-                }
-
-                statusSection(page)
-                exportStyleSection(source: source, page: page)
-
-                FiguresSection(source: source, page: page)
-
-                Section {
-                    if blocks.isEmpty {
-                        Text(page.status == .ready ? "Bu sayfada metin bulunamadı." : "Metin henüz okunmadı.")
-                            .foregroundStyle(.secondary)
-                    }
-                    ForEach(blocks) { block in
-                        Button { editingBlock = block } label: { BlockRow(block: block) }
-                            .buttonStyle(.plain)
-                    }
-                } header: {
-                    Text("Çıkarılan metin")
-                } footer: {
-                    Text("Bir satıra dokunarak düzelt. Düzeltmen sonraki okumalarda korunur ve dışa aktarımda kullanılır. "
-                         + "⭐ yanına işaret konmuş, ✍️ el yazısı satırdır.")
-                }
-
-                Section {
-                    DisclosureGroup("Okuma ayarı") {
-                        LabeledContent("Motor", value: source.mediaType == .pdf
-                                       ? "PDF metin katmanı, yoksa Apple Vision" : "Apple Vision (cihazda)")
-                        LabeledContent("Kullanılan diller",
-                                       value: VisionTextExtractor.usableLanguages().joined(separator: ", "))
-                    }
+                } else {
+                    detailList(source: source, page: page, showsPage: true)
                 }
             }
             .navigationTitle(source.sourceTitle)
@@ -104,10 +76,75 @@ struct SourceDetailView: View {
                 }
             }
             .fullScreenCover(isPresented: $showOriginal) {
-                OriginalImageView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source))
+                OriginalImageView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source),
+                                  pageID: page.id)
+                    .environmentObject(model)
+                    .environment(\.palette, palette)
             }
         } else {
             ContentUnavailableView("Kaynak bulunamadı", systemImage: "questionmark.folder")
+        }
+    }
+
+    /// Kaynak bilgileri, sayfa durumu, aktarım biçimi, şekiller ve okunan metin. iPad'de sayfa ayrı panelde
+    /// durduğu için burada gösterilmez.
+    private func detailList(source: SourceAsset, page: Page, showsPage: Bool) -> some View {
+        List {
+            Section {
+                if showsPage {
+                    Button { showOriginal = true } label: {
+                        ThumbnailView(url: model.pageImageURL(for: page) ?? model.originalURL(for: source),
+                                      maxPixel: 1400, contentMode: .fit)
+                            .frame(maxHeight: 360)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay(alignment: .bottomTrailing) {
+                                Label("Sayfada düzelt", systemImage: "text.viewfinder")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .glassCapsule()
+                                    .padding(8)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Sayfayı tam ekran aç, satırlara dokunarak düzelt")
+                }
+                if pages.count > 1 { pageStrip }
+                TextField("Başlık", text: $title)
+                    .font(.headline)
+                    .onSubmit { model.rename(sourceID: sourceID, to: title) }
+            }
+
+            statusSection(page)
+            exportStyleSection(source: source, page: page)
+
+            FiguresSection(source: source, page: page)
+
+            Section {
+                if blocks.isEmpty {
+                    Text(page.status == .ready ? "Bu sayfada metin bulunamadı." : "Metin henüz okunmadı.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(blocks) { block in
+                    Button { editingBlock = block } label: { BlockRow(block: block) }
+                        .buttonStyle(.plain)
+                }
+            } header: {
+                Text("Çıkarılan metin")
+            } footer: {
+                Text("Bir satıra (veya sayfadaki kutusuna) dokunarak düzelt. Düzeltmen sonraki okumalarda korunur ve "
+                     + "dışa aktarımda kullanılır. ⭐ yanına işaret konmuş, ✍️ el yazısı satırdır.")
+            }
+
+            Section {
+                DisclosureGroup("Okuma ayarı") {
+                    LabeledContent("Motor", value: source.mediaType == .pdf
+                                   ? "PDF metin katmanı, yoksa Apple Vision" : "Apple Vision (cihazda)")
+                    LabeledContent("Kullanılan diller",
+                                   value: VisionTextExtractor.usableLanguages().joined(separator: ", "))
+                }
+            }
         }
     }
 
@@ -128,11 +165,11 @@ struct SourceDetailView: View {
                                     .opacity(read ? 1 : 0.45)
                                     .overlay {
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .strokeBorder(selected ? Theme.accent : .clear, lineWidth: 2.5)
+                                            .strokeBorder(selected ? palette.accent : .clear, lineWidth: 2.5)
                                     }
                                 Text(p.pdfPageLabel ?? "\(p.pageIndex + 1)")
                                     .font(.caption2.weight(selected ? .bold : .regular))
-                                    .foregroundStyle(selected ? Theme.accent : .secondary)
+                                    .foregroundStyle(selected ? palette.accent : .secondary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -216,17 +253,18 @@ struct SourceDetailView: View {
 }
 
 private struct BlockRow: View {
+    @Environment(\.palette) private var palette
     let block: Block
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 if block.marked == true {
-                    Image(systemName: "star.fill").foregroundStyle(Theme.star)
+                    Image(systemName: "star.fill").foregroundStyle(palette.star)
                         .accessibilityLabel("İşaretli")
                 }
                 if block.kind == .handwriting {
-                    Image(systemName: "pencil.and.scribble").foregroundStyle(Theme.note)
+                    Image(systemName: "pencil.and.scribble").foregroundStyle(palette.note)
                         .accessibilityLabel("El yazısı")
                 }
                 if let runs = block.runs, !block.isUserCorrected {
@@ -278,7 +316,7 @@ extension NamedColor {
     }
 }
 
-private struct CorrectionSheet: View {
+struct CorrectionSheet: View {
     let block: Block
     let onSave: (String) -> Void
     @State private var text: String
@@ -318,27 +356,28 @@ private struct CorrectionSheet: View {
     }
 }
 
+/// Tam ekran sayfa: yakınlaştırılır, satır kutusuna dokununca düzeltme açılır.
 private struct OriginalImageView: View {
+    @EnvironmentObject private var model: AppModel
     let url: URL
+    let pageID: UUID
+    @State private var editing: Block?
     @Environment(\.dismiss) private var dismiss
-    @State private var scale: CGFloat = 1
 
     var body: some View {
         NavigationStack {
-            ScrollView([.horizontal, .vertical]) {
-                if let image = ThumbnailLoader.thumbnail(for: url, maxPixel: 3000) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: UIScreen.main.bounds.width * scale)
-                        .gesture(MagnifyGesture().onChanged { scale = max(1, min(5, $0.magnification)) })
-                } else {
-                    ContentUnavailableView("Orijinal bulunamıyor", systemImage: "exclamationmark.triangle")
+            PageCanvas(url: url, blocks: model.archive.blocks(of: pageID), highlighted: editing?.id) { editing = $0 }
+                .background(Color(.secondarySystemBackground))
+                .navigationTitle("Sayfa")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) { Button("Kapat") { dismiss() } }
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Kapat") { dismiss() } }
-            }
+                .sheet(item: $editing) { block in
+                    CorrectionSheet(block: block) { newText in
+                        model.correct(blockID: block.id, text: newText)
+                    }
+                }
         }
     }
 }

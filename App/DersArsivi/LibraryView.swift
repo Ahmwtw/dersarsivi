@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 /// Kütüphane: klasörler, kaynak ızgarası, seçim ve içeri alma.
 struct LibraryView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
+    @Environment(\.palette) private var palette
     let scope: LibraryScope
     let selectScope: (LibraryScope) -> Void
     /// Yeni klasör iste: parametre üst klasör (nil: en üst).
@@ -20,9 +22,13 @@ struct LibraryView: View {
     @State private var pendingPDFs: [PendingPDF] = []
     @State private var showExport = false
     @State private var confirmDelete = false
-    @AppStorage(AppModel.autoSaveFiguresKey) private var autoSaveFigures = false
 
-    private let columns = [GridItem(.adaptive(minimum: 150, maximum: 240), spacing: 14)]
+    @State private var showSettings = false
+
+    private var columns: [GridItem] {
+        let width = settings.cardSize.minimumWidth
+        return [GridItem(.adaptive(minimum: width, maximum: width * 1.6), spacing: 14)]
+    }
 
     private var folderID: UUID? {
         if case .folder(let id) = scope { return id }
@@ -53,7 +59,17 @@ struct LibraryView: View {
             .padding(.horizontal)
             .padding(.bottom, isSelecting ? 110 : 24)
         }
-        .background(Color(.systemGroupedBackground))
+        .background {
+            ZStack {
+                Color(.systemGroupedBackground)
+                if settings.tintedBackground {
+                    LinearGradient(colors: [palette.accent.opacity(0.14), palette.accent.opacity(0.02)],
+                                   startPoint: .top, endPoint: .bottom)
+                }
+            }
+            .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showSettings) { SettingsView() }
         .navigationTitle(isSelecting ? (selection.isEmpty ? "Seç" : "\(selection.count) seçili") : model.title(of: scope))
         .searchable(text: $search, prompt: "Başlıkta ve metinde ara")
         .toolbar { toolbar(sources: sources) }
@@ -245,16 +261,7 @@ struct LibraryView: View {
     }
 
     private var settingsMenu: some View {
-        Menu {
-            Toggle("Şekil önerilerini otomatik kaydet", isOn: $autoSaveFigures)
-            if model.archive.figures.contains(where: { $0.status == .suggested }) {
-                Button {
-                    Task { await model.saveAllSuggestions() }
-                } label: {
-                    Label("Bekleyen tüm önerileri kaydet", systemImage: "checkmark.circle")
-                }
-            }
-        } label: {
+        Button { showSettings = true } label: {
             Label("Ayarlar", systemImage: "gearshape")
         }
     }
@@ -270,7 +277,7 @@ struct LibraryView: View {
                 .foregroundStyle(.red)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(Theme.accent)
+        .foregroundStyle(palette.accent)
         .padding(8)
         .frame(maxWidth: 620)
         .glassSurface(in: RoundedRectangle(cornerRadius: 28, style: .continuous), interactive: true)
@@ -373,6 +380,7 @@ struct LibraryView: View {
 /// Galeri kartı: sayfa görüntüsü, başlık ve kısa bilgi.
 struct SourceCard: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.palette) private var palette
     let source: SourceAsset
     let summary: SourceSummary
     var selecting = false
@@ -395,14 +403,14 @@ struct SourceCard: View {
                             .font(.title2)
                             .symbolRenderingMode(.palette)
                             .foregroundStyle(selected ? Color.white : Color.white.opacity(0.9),
-                                             selected ? Theme.accent : Color.black.opacity(0.25))
+                                             selected ? palette.accent : Color.black.opacity(0.25))
                             .padding(8)
                     }
                 }
                 .overlay(alignment: .bottomLeading) { chips.padding(6) }
                 .overlay {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(selected ? Theme.accent : Color.primary.opacity(0.06),
+                        .strokeBorder(selected ? palette.accent : Color.primary.opacity(0.06),
                                       lineWidth: selected ? 3 : 1)
                 }
             VStack(alignment: .leading, spacing: 2) {
@@ -446,11 +454,11 @@ struct SourceCard: View {
     private var chips: some View {
         HStack(spacing: 4) {
             if summary.markedLines > 0 {
-                InfoChip(symbol: "star.fill", text: "\(summary.markedLines)", tint: Theme.star)
+                InfoChip(symbol: "star.fill", text: "\(summary.markedLines)", tint: palette.star)
                     .accessibilityLabel("\(summary.markedLines) işaretli satır")
             }
             if summary.notes > 0 {
-                InfoChip(symbol: "pencil.and.scribble", text: "\(summary.notes)", tint: Theme.note)
+                InfoChip(symbol: "pencil.and.scribble", text: "\(summary.notes)", tint: palette.note)
                     .accessibilityLabel("\(summary.notes) el notu satırı")
             }
             if summary.imageOnlyPages > 0 {
@@ -467,6 +475,7 @@ struct SourceCard: View {
 
 /// Klasör kutucuğu; üstüne kaynak sürüklenip bırakılabilir.
 private struct FolderTile: View {
+    @Environment(\.palette) private var palette
     let folder: Folder
     let count: Int
     let open: () -> Void
@@ -478,7 +487,7 @@ private struct FolderTile: View {
             VStack(alignment: .leading, spacing: 6) {
                 Image(systemName: "folder.fill")
                     .font(.title2)
-                    .foregroundStyle(Theme.accent.gradient)
+                    .foregroundStyle(palette.accent.gradient)
                 Spacer(minLength: 0)
                 Text(folder.name)
                     .font(.subheadline.weight(.semibold))
@@ -492,7 +501,7 @@ private struct FolderTile: View {
             .cardBackground()
             .overlay {
                 RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
-                    .strokeBorder(Theme.accent, lineWidth: targeted ? 2 : 0)
+                    .strokeBorder(palette.accent, lineWidth: targeted ? 2 : 0)
             }
         }
         .buttonStyle(.plain)
