@@ -8,6 +8,8 @@ struct ExportView: View {
     @State private var mode: ExportMode = .combined
     @State private var files: [URL] = []
     @State private var withFigures = true
+    @AppStorage("exportPageImages") private var withPages = false
+    @State private var debugFiles: [URL] = []
 
     private var savedFigureCount: Int {
         sourceIDs.flatMap { model.archive.pages(of: $0) }
@@ -41,6 +43,12 @@ struct ExportView: View {
                              : "Yalnız Markdown; şekillerin yeri ve etiketleri yazılır, görselleri eklenmez.")
                     }
                 }
+                Section {
+                    Toggle("Sayfa görüntülerini ekle", isOn: $withPages)
+                } footer: {
+                    Text("Her sayfanın düzleştirilmiş, kenarlıkları atılmış görüntüsü ZIP'e eklenir. El yazısı ve tablo "
+                         + "karışık sayfalarda yapay zekâ görüntüyü kendisi okuyabilir.")
+                }
                 if unprocessedCount > 0 {
                     Section {
                         Label("\(unprocessedCount) görsel henüz okunmadı. Dosyada eksik olarak belirtilecek.",
@@ -52,7 +60,8 @@ struct ExportView: View {
                     if files.isEmpty {
                         Button("Dosyayı hazırla") {
                             files = model.exportFiles(sourceIDs: sourceIDs, mode: mode,
-                                                      withFigures: withFigures && savedFigureCount > 0)
+                                                      withFigures: withFigures && savedFigureCount > 0,
+                                                      withPages: withPages)
                         }
                     } else {
                         ForEach(files, id: \.self) { url in
@@ -63,9 +72,24 @@ struct ExportView: View {
                         }
                     }
                 }
+                Section {
+                    if debugFiles.isEmpty {
+                        Button("Ölçüm paketi hazırla") {
+                            debugFiles = model.debugPack(sourceIDs: sourceIDs).map { [$0] } ?? []
+                        }
+                    } else {
+                        ShareLink(items: debugFiles) {
+                            Label("Ölçüm paketini paylaş", systemImage: "ladybug")
+                        }
+                    }
+                } footer: {
+                    Text("Geliştirme için: orijinal görseller, okunan satırlar, şekil önerileri ve kararların. "
+                         + "Kırpma algılamasını cihazındakiyle aynı girdilerle ölçmeye yarar.")
+                }
             }
             .onChange(of: mode) { _, _ in files = [] }
             .onChange(of: withFigures) { _, _ in files = [] }
+            .onChange(of: withPages) { _, _ in files = [] }
             .navigationTitle("\(sourceIDs.count) kaynak")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

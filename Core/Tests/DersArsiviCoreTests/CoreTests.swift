@@ -149,7 +149,8 @@ final class ArchiveTests: XCTestCase {
         archive.importSource(otherSource, pageSizes: [(10, 10)])
 
         let files = archive.removeSource(source.id)
-        XCTAssertEqual(Set(files), ["originals/x.jpg", "pages/p.jpg", "figures/f.jpg"])
+        XCTAssertEqual(Set(files), ["originals/x.jpg", "pages/p.jpg", "figures/f.jpg",
+                                    FileArchiveStore.linesRef(pageID: page.id)])
         XCTAssertEqual(archive.sources.map(\.id), [otherSource.id])
         XCTAssertTrue(archive.pages(of: source.id).isEmpty)
         XCTAssertTrue(archive.blocks.isEmpty)
@@ -188,6 +189,19 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(reloaded.blocks(of: page.id)[0].acceptedText, "Işık ĞÜŞİÖÇ")
         XCTAssertEqual(reloaded.jobQueue.pending.count, 1)
         XCTAssertTrue(FileManager.default.fileExists(atPath: store.url(forRef: ref).path))
+    }
+
+    func testLinesRoundTripPerPage() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = FileArchiveStore(rootURL: dir)
+        let page = UUID()
+        XCTAssertEqual(store.loadLines(pageID: page), [])
+        let lines = [FigureLabel(text: "Aort", bbox: BoundingBox(x: 0.1, y: 0.2, width: 0.1, height: 0.02))]
+        try store.storeLines(lines, pageID: page)
+        XCTAssertEqual(store.loadLines(pageID: page), lines)
+        store.removeFile(ref: FileArchiveStore.linesRef(pageID: page))
+        XCTAssertEqual(store.loadLines(pageID: page), [])
     }
 
     func testRemoveFileStaysInsideArchiveFolder() throws {

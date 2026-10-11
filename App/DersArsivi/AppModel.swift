@@ -143,7 +143,13 @@ final class AppModel: ObservableObject {
             try storeWorkingImage(working, pageID: page.id)
             runRecord.finishedAt = Date()
             try archive.applyExtraction(output.blocks, run: runRecord)
+            archive.setContentBox(output.content, forPage: page.id)
+            try? store.storeLines(output.lines, pageID: page.id)
             archive.applyFigureSuggestions(output.figures, pageID: page.id, at: Date())
+            // Ayar açıksa öneriler onay beklemeden kaydedilir; kullanıcı yalnız hatalıları düzeltir.
+            if UserDefaults.standard.bool(forKey: Self.autoSaveFiguresKey) {
+                await saveSuggestions(pageID: page.id)
+            }
             archive.jobQueue.complete(jobID: job.id, at: Date())
         } catch {
             let message = (error as? ExtractionFailure)?.message ?? error.localizedDescription
@@ -221,6 +227,26 @@ final class AppModel: ObservableObject {
 
     // MARK: Şekiller
 
+    static let autoSaveFiguresKey = "autoSaveFigures"
+
+    /// Sayfadaki bekleyen önerilerin hepsini olduğu gibi kaydeder.
+    func saveSuggestions(pageID: UUID) async {
+        for figure in archive.figures(of: pageID) where figure.status == .suggested {
+            await saveFigure(figure.id, bbox: figure.bbox)
+        }
+    }
+
+    /// Arşivdeki bütün bekleyen önerileri kaydeder.
+    func saveAllSuggestions() async {
+        for page in archive.pages { await saveSuggestions(pageID: page.id) }
+    }
+
+    /// Sayfanın tamamını (uygulama kenarlıkları hariç) tek şekil olarak kaydeder. Karışık sayfalar için.
+    func addWholePage(pageID: UUID) async {
+        guard let page = archive.pages.first(where: { $0.id == pageID }) else { return }
+        await addFigure(pageID: pageID, bbox: page.contentBox ?? BoundingBox(x: 0, y: 0, width: 1, height: 1))
+    }
+
     func figureImageURL(_ figure: Figure) -> URL? {
         figure.imageRef.map { store.url(forRef: $0) }
     }
@@ -280,15 +306,20 @@ final class AppModel: ObservableObject {
 
     /// Seçili kaynakları geçici klasöre yazar; paylaşım sayfasına verilecek URL'leri döndürür.
     /// `withFigures` açıksa Markdown, şekil görselleri ve manifest tek ZIP olur.
-    func exportFiles(sourceIDs: [UUID], mode: ExportMode, withFigures: Bool) -> [URL] {
+    func exportFiles(sourceIDs: [UUID], mode: ExportMode, withFigures: Bool, withPages: Bool) -> [URL] {
         do {
-            let result = try MarkdownExporter(includeFigureImages: withFigures).export(
+            let exporter = MarkdownExporter(includeFigureImages: withFigures, includePageImages: withPages)
+            let result = try exporter.export(
                 archive, selections: sourceIDs.map { SourceSelection(sourceID: $0) }, mode: mode, createdAt: Date())
             let dir = FileManager.default.temporaryDirectory
                 .appendingPathComponent("export-\(result.manifest.exportID.uuidString)", isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            if withFigures {
-                let zip = try result.zip(imageData: { [store] ref in try? Data(contentsOf: store.url(forRef: ref)) })
+            if exporter.producesZip {
+                let zip = try result.zip(imageData: { [store] asset in
+                    let url = store.url(forRef: asset.imageRef)
+                    guard let crop = asset.crop else { return try? Data(contentsOf: url) }
+                    return FigureCropper.crop(url: url, bbox: crop, maxSide: 2400)?.jpegData(compressionQuality: 0.85)
+                })
                 let short = result.manifest.exportID.uuidString.lowercased().prefix(8)
                 let url = dir.appendingPathComponent("dersarsivi-\(short).zip")
                 try zip.write(to: url, options: .atomic)
@@ -302,6 +333,76 @@ final class AppModel: ObservableObject {
         } catch {
             lastError = "Dışa aktarma başarısız: \(error.localizedDescription)"
             return []
+        }
+    }
+
+    /// Hata ayıklama paketi: orijinal ve okunan görüntüler, OCR satırları, şekil önerileri ve kullanıcının
+    /// kararları. Algılamayı cihazdakiyle birebir aynı girdilerle tekrar çalıştırıp ölçmek içindir.
+    func debugPack(sourceIDs: [UUID]) -> URL? {
+        struct PageInfo: Encodable {
+            var file: String
+            var pageIndex: Int
+            var width: Double
+            var height: Double
+            var status: String
+            var readImage: String
+            var contentBox: BoundingBox?
+            var lines: [FigureLabel]
+            var blocks: [FigureLabel]
+            var figures: [FigureInfo]
+        }
+        struct FigureInfo: Encodable {
+            var status: String
+            var auto: Bool
+            var bbox: BoundingBox
+        }
+        struct PackInfo: Encodable {
+            var configHash: String
+            var engine: String
+            var createdAt: Date
+            var pages: [PageInfo]
+        }
+        var zip = ZipArchive()
+        var infos: [PageInfo] = []
+        for (n, id) in sourceIDs.enumerated() {
+            guard let source = archive.source(id) else { continue }
+            let ext = (source.localAssetRef as NSString).pathExtension
+            let folder = String(format: "%03d", n + 1)
+            if let data = try? Data(contentsOf: originalURL(for: source)) {
+                zip.add(path: "\(folder)/original.\(ext)", contents: data)
+            }
+            for page in archive.pages(of: id) {
+                var readImage = "\(folder)/original.\(ext)"
+                if let ref = page.workingImageRef, let data = try? Data(contentsOf: store.url(forRef: ref)) {
+                    readImage = "\(folder)/okunan-\(page.pageIndex + 1).jpg"
+                    zip.add(path: readImage, contents: data)
+                }
+                infos.append(PageInfo(
+                    file: source.originalFilename, pageIndex: page.pageIndex, width: page.width, height: page.height,
+                    status: page.status.rawValue, readImage: readImage, contentBox: page.contentBox,
+                    lines: store.loadLines(pageID: page.id),
+                    blocks: archive.blocks(of: page.id).compactMap { b in
+                        b.bbox.map { FigureLabel(text: b.acceptedText, bbox: $0) }
+                    },
+                    figures: archive.figures.filter { $0.pageID == page.id }.map {
+                        FigureInfo(status: $0.status.rawValue, auto: $0.isAutoDetected, bbox: $0.bbox)
+                    }))
+            }
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        let info = PackInfo(configHash: extractor.configHash, engine: extractor.engineVersion, createdAt: Date(),
+                            pages: infos)
+        do {
+            zip.add(path: "paket.json", contents: try encoder.encode(info))
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("dersarsivi-olcum-\(UUID().uuidString.prefix(8).lowercased()).zip")
+            try zip.finish().write(to: url, options: .atomic)
+            return url
+        } catch {
+            lastError = "Paket hazırlanamadı: \(error.localizedDescription)"
+            return nil
         }
     }
 

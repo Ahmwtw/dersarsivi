@@ -72,6 +72,22 @@ public struct FileArchiveStore: ArchiveStore {
         return "pages/\(name)"
     }
 
+    /// OCR'ın okuduğu satırlar (kutularıyla). Arşiv dosyasını şişirmemek için sayfa başına ayrı dosyadır;
+    /// hata ayıklama paketi ve dokun-kırp bunları kullanır.
+    public static func linesRef(pageID: UUID) -> String { "lines/\(pageID.uuidString.lowercased()).json" }
+
+    public func storeLines(_ lines: [FigureLabel], pageID: UUID) throws {
+        let fileURL = url(forRef: Self.linesRef(pageID: pageID))
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        try JSONEncoder().encode(lines).write(to: fileURL, options: .atomic)
+    }
+
+    public func loadLines(pageID: UUID) -> [FigureLabel] {
+        guard let data = try? Data(contentsOf: url(forRef: Self.linesRef(pageID: pageID))) else { return [] }
+        return (try? JSONDecoder().decode([FigureLabel].self, from: data)) ?? []
+    }
+
     /// Kaynak silinirken orijinal dahil arşiv içindeki dosyayı siler. Arşiv klasörü dışına çıkamaz.
     public func removeFile(ref: String) {
         guard !ref.isEmpty, !ref.hasPrefix("/"), !ref.contains("..") else { return }

@@ -9,6 +9,7 @@ struct GalleryView: View {
     @State private var selection = Set<UUID>()
     @State private var showExport = false
     @State private var confirmDelete = false
+    @AppStorage(AppModel.autoSaveFiguresKey) private var autoSaveFigures = false
 
     private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8)]
 
@@ -60,7 +61,10 @@ struct GalleryView: View {
                         }
                         .disabled(selection.isEmpty)
                     } else {
-                        addButton
+                        HStack {
+                            settingsMenu
+                            addButton
+                        }
                     }
                 }
                 ToolbarItem(placement: .bottomBar) {
@@ -98,6 +102,21 @@ struct GalleryView: View {
         }
     }
 
+    private var settingsMenu: some View {
+        Menu {
+            Toggle("Şekil önerilerini otomatik kaydet", isOn: $autoSaveFigures)
+            if model.archive.figures.contains(where: { $0.status == .suggested }) {
+                Button {
+                    Task { await model.saveAllSuggestions() }
+                } label: {
+                    Label("Bekleyen tüm önerileri kaydet", systemImage: "checkmark.circle")
+                }
+            }
+        } label: {
+            Label("Ayarlar", systemImage: "gearshape")
+        }
+    }
+
     private var addButton: some View {
         PhotosPicker(selection: $pickerItems, maxSelectionCount: 30, matching: .images) {
             Label("Ekle", systemImage: "plus")
@@ -110,7 +129,18 @@ struct GalleryView: View {
         let content = VStack(alignment: .leading, spacing: 4) {
             Color.clear
                 .aspectRatio(3 / 4, contentMode: .fit)
-                .overlay { ThumbnailView(url: model.originalURL(for: source)) }
+                .overlay {
+                    let page = model.archive.pages(of: source.id).first
+                    let url = page.flatMap(model.pageImageURL(for:)) ?? model.originalURL(for: source)
+                    ThumbnailView(url: url)
+                        .overlay {
+                            if let page {
+                                FigureBoxesOverlay(url: url, boxes: model.archive.figures(of: page.id).map {
+                                    FigureBoxesOverlay.Item(box: $0.bbox, saved: $0.status == .accepted)
+                                })
+                            }
+                        }
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(alignment: .topLeading) { StatusBadge(status: status).padding(4) }
                 .overlay(alignment: .bottomTrailing) {

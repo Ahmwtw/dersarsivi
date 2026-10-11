@@ -9,6 +9,10 @@ struct ExtractionOutput {
     var figures: [FigureSuggestion]
     /// Satırların ortanca eğimi (derece, saat yönünün tersi pozitif). Eğik fotoğrafı döndürmek için.
     var skewDegrees: Double
+    /// Uygulama kenarlıkları hariç sayfa alanı.
+    var content: BoundingBox?
+    /// Sayfa alanındaki OCR satırları; hata ayıklama paketi ve dokun-kırp için saklanır.
+    var lines: [FigureLabel]
 }
 
 /// Cihaz üstü OCR: Apple Vision. Ağa veri göndermez.
@@ -77,7 +81,9 @@ struct VisionTextExtractor {
                     let boxed = pageLines.compactMap { line in line.bbox.map { (text: line.text, bbox: $0) } }
                     let figures = scan.map { FigureDetector.suggestions(scan: $0, lines: boxed) } ?? []
                     let skew = Self.medianSkew(observations, width: width, height: height)
-                    once.resume(returning: ExtractionOutput(blocks: blocks, figures: figures, skewDegrees: skew))
+                    once.resume(returning: ExtractionOutput(
+                        blocks: blocks, figures: figures, skewDegrees: skew, content: scan?.content,
+                        lines: boxed.map { FigureLabel(text: $0.text, bbox: $0.bbox) }))
                 }
                 request.recognitionLevel = .accurate
                 request.usesLanguageCorrection = true

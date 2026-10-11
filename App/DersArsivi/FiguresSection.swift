@@ -16,6 +16,7 @@ struct FiguresSection: View {
     }
 
     private var figures: [Figure] { model.archive.figures(of: page.id) }
+    private var suggestedCount: Int { figures.filter { $0.status == .suggested }.count }
     private var pageURL: URL { model.pageImageURL(for: page) ?? model.originalURL(for: source) }
 
     var body: some View {
@@ -28,10 +29,24 @@ struct FiguresSection: View {
                           onDismiss: { model.dismissFigure(figure.id) },
                           onDelete: { model.removeFigure(figure.id) })
             }
+            if suggestedCount >= 2 {
+                Button {
+                    run { await model.saveSuggestions(pageID: page.id) }
+                } label: {
+                    Label("Önerilerin hepsini kaydet (\(suggestedCount))", systemImage: "checkmark.circle")
+                }
+                .disabled(busy)
+            }
             Button {
                 editing = EditTarget(figureID: nil, initial: BoundingBox(x: 0.2, y: 0.2, width: 0.6, height: 0.6))
             } label: {
                 Label("Şekil kırp", systemImage: "crop")
+            }
+            .disabled(busy)
+            Button {
+                run { await model.addWholePage(pageID: page.id) }
+            } label: {
+                Label("Tüm sayfayı şekil olarak kaydet", systemImage: "rectangle.dashed")
             }
             .disabled(busy)
         } header: {
@@ -57,9 +72,13 @@ struct FiguresSection: View {
     }
 
     private func save(_ id: UUID, _ box: BoundingBox) {
+        run { await model.saveFigure(id, bbox: box) }
+    }
+
+    private func run(_ work: @escaping @MainActor () async -> Void) {
         busy = true
         Task {
-            await model.saveFigure(id, bbox: box)
+            await work()
             busy = false
         }
     }

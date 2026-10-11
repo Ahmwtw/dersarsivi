@@ -84,6 +84,9 @@ public struct Page: Codable, Equatable, Identifiable, Sendable {
     /// Okuma için düzleştirilmiş/döndürülmüş türev görüntü (eğik çekilmiş fotoğraf). Varsa blok ve şekil
     /// kutuları bu görüntüye göredir; orijinal dosya değişmez.
     public var workingImageRef: String? = nil
+    /// Ekran görüntüsündeki uygulama kenarlıkları ve araç çubukları hariç sayfa alanı (normalleştirilmiş).
+    /// "Tüm sayfa" şekli ve dışa aktarılan sayfa görüntüsü bu alana kırpılır.
+    public var contentBox: BoundingBox? = nil
 
     public init(
         id: UUID = UUID(),

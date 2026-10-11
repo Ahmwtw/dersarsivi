@@ -324,6 +324,26 @@ final class FigureArchiveTests: XCTestCase {
         XCTAssertEqual(zip[zip.count - 22 + 10], 3, "md + görsel + manifest")
         XCTAssertNotNil(zip.range(of: Data(result.assets[0].path.utf8)))
     }
+
+    func testPageImagesAreCroppedToContentAndLinked() throws {
+        var (archive, page) = makeArchive()
+        let content = BoundingBox(x: 0.1, y: 0, width: 0.8, height: 1)
+        archive.setContentBox(content, forPage: page.id)
+        archive.setWorkingImage("pages/duz.jpg", forPage: page.id)
+        try archive.applyExtraction([ExtractedBlock(text: "Metin")], run: ExtractionRun(
+            pageID: page.id, sourceContentHash: "h1", engine: "t", engineVersion: "1", configHash: "c",
+            startedAt: Date(), finishedAt: Date()))
+        let result = try MarkdownExporter(includePageImages: true)
+            .export(archive, selections: [SourceSelection(sourceID: page.sourceID)], mode: .combined, createdAt: Date())
+        let asset = try XCTUnwrap(result.assets.first)
+        XCTAssertEqual(asset.imageRef, "pages/duz.jpg", "düzleştirilmiş görüntü kullanılmalı")
+        XCTAssertEqual(asset.crop, content)
+        XCTAssertTrue(asset.path.hasPrefix("pages/"))
+        XCTAssertTrue(result.files[0].contents.contains("](\(asset.path))"))
+        XCTAssertFalse(result.files[0].contents.contains("görsel içermez"))
+        XCTAssertTrue(MarkdownExporter(includePageImages: true).producesZip)
+        XCTAssertFalse(MarkdownExporter().producesZip)
+    }
 }
 
 final class ZipTests: XCTestCase {

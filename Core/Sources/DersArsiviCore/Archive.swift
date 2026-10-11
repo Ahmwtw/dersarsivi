@@ -129,6 +129,7 @@ public struct Archive: Codable, Equatable, Sendable {
         var files = [source.localAssetRef]
         files += pages.filter { pageIDs.contains($0.id) }.compactMap(\.workingImageRef)
         files += figures.filter { pageIDs.contains($0.pageID) }.compactMap(\.imageRef)
+        files += pageIDs.map(FileArchiveStore.linesRef(pageID:))
 
         sources.removeAll { $0.id == id }
         pages.removeAll { pageIDs.contains($0.id) }
@@ -152,6 +153,11 @@ public struct Archive: Codable, Equatable, Sendable {
         let old = pages[i].workingImageRef
         pages[i].workingImageRef = ref
         return old == ref ? nil : old
+    }
+
+    public mutating func setContentBox(_ box: BoundingBox?, forPage pageID: UUID) {
+        guard let i = pages.firstIndex(where: { $0.id == pageID }) else { return }
+        pages[i].contentBox = box
     }
 
     public mutating func setStatus(_ status: PageStatus, forPage pageID: UUID, failureReason: String? = nil) throws {

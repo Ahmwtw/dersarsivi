@@ -74,10 +74,18 @@ public struct ExportFile: Equatable, Sendable {
     public var contents: String
 }
 
-/// ZIP'e konacak şekil görseli: arşivdeki kırpım dosyası ve ZIP içindeki yolu.
+/// ZIP'e konacak görsel: arşivdeki dosya ve ZIP içindeki yolu. `crop` varsa görsel bu alana kırpılıp
+/// JPEG olarak yazılır (sayfa görüntüsü); yoksa dosya olduğu gibi konur (şekil kırpımı).
 public struct ExportAsset: Equatable, Sendable {
     public var path: String
     public var imageRef: String
+    public var crop: BoundingBox?
+
+    public init(path: String, imageRef: String, crop: BoundingBox? = nil) {
+        self.path = path
+        self.imageRef = imageRef
+        self.crop = crop
+    }
 }
 
 public struct ExportResult: Equatable, Sendable {
@@ -85,12 +93,12 @@ public struct ExportResult: Equatable, Sendable {
     public var manifest: ExportManifest
     public var assets: [ExportAsset]
 
-    /// Markdown dosyaları, şekil görselleri ve manifest tek ZIP'te. `imageData` arşivdeki kırpımı okur.
-    public func zip(imageData: (String) -> Data?, modified: Date = Date()) throws -> Data {
+    /// Markdown dosyaları, görseller ve manifest tek ZIP'te. `imageData` görselin baytlarını üretir.
+    public func zip(imageData: (ExportAsset) -> Data?, modified: Date = Date()) throws -> Data {
         var archive = ZipArchive()
         for file in files { archive.add(path: file.name, contents: Data(file.contents.utf8), modified: modified) }
         for asset in assets {
-            if let data = imageData(asset.imageRef) {
+            if let data = imageData(asset) {
                 archive.add(path: asset.path, contents: data, modified: modified)
             }
         }
@@ -109,11 +117,19 @@ public struct MarkdownExporter {
     public var lowConfidenceThreshold: Double
     /// Şekiller `figures/` klasöründeki görsellere bağlanır (ZIP export). Kapalıyken yalnız yer ve etiketler yazılır.
     public var includeFigureImages: Bool
+    /// Her sayfanın (düzleştirilmiş, kenarlıkları atılmış) görüntüsü `pages/` klasörüne eklenir. Karışık sayfalarda
+    /// (el yazısı, tablo) yapay zekâ görüntüyü kendisi okuyabilsin diye.
+    public var includePageImages: Bool
 
-    public init(lowConfidenceThreshold: Double = 0.5, includeFigureImages: Bool = false) {
+    public init(lowConfidenceThreshold: Double = 0.5, includeFigureImages: Bool = false,
+                includePageImages: Bool = false) {
         self.lowConfidenceThreshold = lowConfidenceThreshold
         self.includeFigureImages = includeFigureImages
+        self.includePageImages = includePageImages
     }
+
+    /// ZIP gerekiyor mu: şekil ya da sayfa görseli eklenecekse.
+    public var producesZip: Bool { includeFigureImages || includePageImages }
 
     public func export(_ archive: Archive, selections: [SourceSelection], mode: ExportMode,
                        exportID: UUID = UUID(), createdAt: Date) throws -> ExportResult {
@@ -172,7 +188,7 @@ public struct MarkdownExporter {
         let manifest = ExportManifest(schemaVersion: archiveSchemaVersion, exportID: exportID, createdAt: createdAt,
                                       profile: .faithfulText, mode: mode, sources: entries, warnings: warnings,
                                       partialExport: partial, figures: figures.entries.isEmpty ? nil : figures.entries)
-        return ExportResult(files: files, manifest: manifest, assets: figures.assets)
+        return ExportResult(files: files, manifest: manifest, assets: figures.assets + figures.pageAssets)
     }
 
     // MARK: Parçalar
@@ -185,12 +201,15 @@ public struct MarkdownExporter {
         s += "Metin kaynak görüntüsünden OCR ile çıkarıldı; ✏️ kullanıcı tarafından düzeltilmiş, "
         s += "⚠️ belirsiz bölümleri gösterir. "
         if figureCount == 0 {
-            s += "Bu dosya görsel içermez.\n"
+            if !includePageImages { s += "Bu dosya görsel içermez.\n" }
         } else if includeFigureImages {
             s += "Şekiller `figures/` klasöründedir; şekil içindeki yazılar şeklin altında etiket olarak listelenir, "
             s += "etiket konumları `manifest.json` içindedir.\n"
         } else {
             s += "Şekillerin yeri ve etiketleri yazılıdır; görselleri bu dosyada yok (ZIP ile dışa aktarınca eklenir).\n"
+        }
+        if includePageImages {
+            s += "Her sayfanın görüntüsü `pages/` klasöründedir; el yazısı, tablo ve şekilleri görüntüden kontrol edebilirsin.\n"
         }
         if hasStyles {
             s += "Kaynaktaki biçim: ==metin== fosforlu kalemle vurgulanmış (sarı dışındaysa rengi yanında), "
@@ -231,6 +250,13 @@ public struct MarkdownExporter {
         for page in selected {
             if source.mediaType == .pdf || selected.count > 1 {
                 md += "\n### Sayfa \(page.displayName)\n"
+            }
+            if includePageImages {
+                let path = "pages/\(Self.slug(source.sourceTitle))-\(Self.shortID(source.id))-sayfa-\(page.pageIndex + 1).jpg"
+                let ref = page.workingImageRef ?? source.localAssetRef
+                let crop = page.contentBox ?? BoundingBox(x: 0, y: 0, width: 1, height: 1)
+                collector.pageAssets.append(ExportAsset(path: path, imageRef: ref, crop: crop))
+                md += "\n![Sayfa \(page.displayName) görüntüsü](\(path))\n"
             }
             let blocks = archive.blocks(of: page.id)
             let processed = [.ready, .needsReview, .partial].contains(page.status)
@@ -407,4 +433,5 @@ public struct MarkdownExporter {
 struct FigureCollector {
     var entries: [ExportManifest.FigureEntry] = []
     var assets: [ExportAsset] = []
+    var pageAssets: [ExportAsset] = []
 }
