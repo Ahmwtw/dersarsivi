@@ -267,35 +267,10 @@ public enum FigureDetector {
 
     /// - Parameter lines: OCR satırları; sol üst orijinli, normalleştirilmiş kutular.
     public static func suggestions(scan: PageScan, lines: [Line]) -> [FigureSuggestion] {
-        let cols = scan.cols, rows = scan.rows, ink = scan.ink, content = scan.content
+        let cols = scan.cols, rows = scan.rows, content = scan.content
         let c0 = scan.c0, c1 = scan.c1, r0 = scan.r0, r1 = scan.r1
-        var mask = [Bool](repeating: false, count: cols * rows)
-        for r in r0..<r1 { for c in c0..<c1 { mask[r * cols + c] = ink[r * cols + c] } }
+        let (mask, grown) = inkMask(scan: scan, lines: lines)
 
-        // Yazı satırlarını sil (yükseklik kadar payla; fosforlu kalem kenarları da gider).
-        for line in lines {
-            let pad = line.bbox.height * 0.3
-            let x0 = Int(((line.bbox.x - pad) * Double(cols)).rounded(.down))
-            let x1 = Int(((line.bbox.maxX + pad) * Double(cols)).rounded(.up))
-            let y0 = Int(((line.bbox.y - pad) * Double(rows)).rounded(.down))
-            let y1 = Int(((line.bbox.maxY + pad) * Double(rows)).rounded(.up))
-            for r in max(0, y0)..<min(rows, max(y1, 0)) {
-                for c in max(0, x0)..<min(cols, max(x1, 0)) { mask[r * cols + c] = false }
-            }
-        }
-
-        // Çizgileri birleştirmek için bir hücre genişlet, sonra bağlı bölgeleri bul.
-        var grown = mask
-        for r in 0..<rows {
-            for c in 0..<cols where mask[r * cols + c] {
-                for dr in -1...1 {
-                    for dc in -1...1 {
-                        let rr = r + dr, cc = c + dc
-                        if rr >= 0, rr < rows, cc >= 0, cc < cols { grown[rr * cols + cc] = true }
-                    }
-                }
-            }
-        }
         // İçerik kenarına yapışık dar parça: ekranın kenarından taşan komşu slaytın veya kenarlığın kesiti.
         func isEdgeSliver(_ b: BoundingBox) -> Bool {
             let x0 = Int((b.x * Double(cols)).rounded()), x1 = Int((b.maxX * Double(cols)).rounded())
@@ -334,41 +309,116 @@ public enum FigureDetector {
         boxes = boxes.filter { !($0.width >= 0.95 * content.width && $0.height <= 0.15 * content.height) }
         boxes = mergeNearby(boxes, gap: 0.008)
 
-        // Etiketler: şeklin üstündeki ya da hemen yanındaki kısa, normal boy yazılar. Başlıklar (iri yazı) ve
-        // uzun paragraf satırları katılmaz.
-        let heights = lines.map(\.bbox.height).sorted()
-        let typical = heights.isEmpty ? 0 : heights[heights.count / 2]
-        let marginX = 0.03 * content.width, marginY = 0.03 * content.height
         var result: [FigureSuggestion] = []
-        for var box in boxes {
-            // Etiket yalnız şeklin kendisine (zincirleme değil) yakın olmalı; yoksa yanındaki paragraf da
-            // satır satır şekle katılır.
-            let core = box
-            let reach = core.insetBy(dx: -marginX, dy: -marginY)
-            var labels: [Int] = []
-            for (i, line) in lines.enumerated() {
-                guard line.bbox.height <= typical * 1.5, line.bbox.width <= core.width * 0.6,
-                      line.bbox.intersection(reach) != nil else { continue }
-                let inside = line.bbox.fractionInside(core) >= 0.8
-                // Şeklin dışındaki uzun satır paragraftır, etiket değil.
-                if !inside, line.text.count > maxOutsideLabelLength { continue }
-                // Yalnız rakamdan oluşan yazı (sayfa numarası) şeklin dışındaysa etiket sayılmaz.
-                let digitsOnly = line.text.allSatisfy { $0.isNumber || $0.isWhitespace }
-                if digitsOnly, line.bbox.intersection(core) == nil { continue }
-                labels.append(i)
-                box = box.union(line.bbox)
-            }
-            // Bölgenin çoğu yazıysa bu bir şekil değil, vurgulu/çerçeveli metindir.
-            let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(box)?.area ?? 0) }
-            guard textArea / max(box.area, 1e-9) <= 0.45 else { continue }
-            // Slayta kalemle eklenmiş renkli not şekil değildir.
-            guard !looksLikePenNote(box, scan: scan) else { continue }
-            let padded = box.insetBy(dx: -0.01 * content.width, dy: -0.01 * content.height).clamped(to: content)
-            let figureLabels = labels.sorted().map { FigureLabel(text: lines[$0].text, bbox: lines[$0].bbox) }
-            result.append(FigureSuggestion(bbox: padded, labels: figureLabels))
+        for box in boxes {
+            if let suggestion = finished(box, scan: scan, lines: lines) { result.append(suggestion) }
         }
         result = Array(result.sorted { $0.bbox.area > $1.bbox.area }.prefix(maxSuggestions))
         return result.sorted { ($0.bbox.y, $0.bbox.x) < ($1.bbox.y, $1.bbox.x) }
+    }
+
+    /// Kullanıcının dokunduğu yerdeki şekil (dokun-kırp). Dokunulan yerin yakınında yazı dışı çizim yoksa nil.
+    /// - Parameter point: Normalleştirilmiş, sol üst orijinli nokta.
+    public static func region(at point: (x: Double, y: Double), scan: PageScan, lines: [Line]) -> FigureSuggestion? {
+        let cols = scan.cols, rows = scan.rows
+        let (mask, grown) = inkMask(scan: scan, lines: lines)
+        let tc = min(cols - 1, max(0, Int(point.x * Double(cols))))
+        let tr = min(rows - 1, max(0, Int(point.y * Double(rows))))
+        // Dokunulan hücreye en yakın mürekkep hücresi (parmak tam çizgiye denk gelmeyebilir).
+        var nearest: Int?
+        var best = Int.max
+        let reach = max(4, cols / 25)
+        for r in max(0, tr - reach)...min(rows - 1, tr + reach) {
+            for c in max(0, tc - reach)...min(cols - 1, tc + reach) where mask[r * cols + c] {
+                let d = (r - tr) * (r - tr) + (c - tc) * (c - tc)
+                if d < best { best = d; nearest = r * cols + c }
+            }
+        }
+        guard let nearest,
+              let region = regions(grown, original: mask, cols: cols, rows: rows)
+                .first(where: { $0.cells.contains(nearest) }) else { return nil }
+        var box = region.box
+        // Şekle ince çizgilerle yapışmış şeyler varsa genişletmeden bölünür; dokunulan parça alınır.
+        if box.area > 0.3 * scan.content.area {
+            var own = [Bool](repeating: false, count: cols * rows)
+            for i in region.cells { own[i] = true }
+            if let part = regions(own, original: own, cols: cols, rows: rows)
+                .first(where: { $0.cells.contains(nearest) }), part.box.area >= 0.02 * scan.content.area {
+                box = part.box
+            }
+        }
+        return finished(box, scan: scan, lines: lines, filtered: false)
+    }
+
+    /// Yazı satırları silinmiş mürekkep maskesi ve çizgileri birleştirmek için bir hücre genişletilmiş hali.
+    private static func inkMask(scan: PageScan, lines: [Line]) -> (mask: [Bool], grown: [Bool]) {
+        let cols = scan.cols, rows = scan.rows, ink = scan.ink
+        let c0 = scan.c0, c1 = scan.c1, r0 = scan.r0, r1 = scan.r1
+        var mask = [Bool](repeating: false, count: cols * rows)
+        for r in r0..<r1 { for c in c0..<c1 { mask[r * cols + c] = ink[r * cols + c] } }
+
+        // Yazı satırlarını sil (yükseklik kadar payla; fosforlu kalem kenarları da gider).
+        for line in lines {
+            let pad = line.bbox.height * 0.3
+            let x0 = Int(((line.bbox.x - pad) * Double(cols)).rounded(.down))
+            let x1 = Int(((line.bbox.maxX + pad) * Double(cols)).rounded(.up))
+            let y0 = Int(((line.bbox.y - pad) * Double(rows)).rounded(.down))
+            let y1 = Int(((line.bbox.maxY + pad) * Double(rows)).rounded(.up))
+            for r in max(0, y0)..<min(rows, max(y1, 0)) {
+                for c in max(0, x0)..<min(cols, max(x1, 0)) { mask[r * cols + c] = false }
+            }
+        }
+
+        // Çizgileri birleştirmek için bir hücre genişlet, sonra bağlı bölgeleri bul.
+        var grown = mask
+        for r in 0..<rows {
+            for c in 0..<cols where mask[r * cols + c] {
+                for dr in -1...1 {
+                    for dc in -1...1 {
+                        let rr = r + dr, cc = c + dc
+                        if rr >= 0, rr < rows, cc >= 0, cc < cols { grown[rr * cols + cc] = true }
+                    }
+                }
+            }
+        }
+        return (mask, grown)
+    }
+
+    /// Kutuya yakındaki etiketleri ekler, kenar payı verir. `filtered` açıkken yazı ağırlıklı bölgeler ve
+    /// kalem notları elenir (otomatik öneri); kullanıcı kendisi seçtiyse elenmez.
+    private static func finished(_ found: BoundingBox, scan: PageScan, lines: [Line],
+                                 filtered: Bool = true) -> FigureSuggestion? {
+        let content = scan.content
+        var box = found
+        // Etiketler: şeklin üstündeki ya da hemen yanındaki kısa, normal boy yazılar. Başlıklar (iri yazı) ve
+        // uzun paragraf satırları katılmaz. Etiket yalnız şeklin kendisine (zincirleme değil) yakın olmalı;
+        // yoksa yanındaki paragraf da satır satır şekle katılır.
+        let heights = lines.map(\.bbox.height).sorted()
+        let typical = heights.isEmpty ? 0 : heights[heights.count / 2]
+        let reach = found.insetBy(dx: -0.03 * content.width, dy: -0.03 * content.height)
+        var labels: [Int] = []
+        for (i, line) in lines.enumerated() {
+            guard line.bbox.height <= typical * 1.5, line.bbox.width <= found.width * 0.6,
+                  line.bbox.intersection(reach) != nil else { continue }
+            let inside = line.bbox.fractionInside(found) >= 0.8
+            // Şeklin dışındaki uzun satır paragraftır, etiket değil.
+            if !inside, line.text.count > maxOutsideLabelLength { continue }
+            // Yalnız rakamdan oluşan yazı (sayfa numarası) şeklin dışındaysa etiket sayılmaz.
+            let digitsOnly = line.text.allSatisfy { $0.isNumber || $0.isWhitespace }
+            if digitsOnly, line.bbox.intersection(found) == nil { continue }
+            labels.append(i)
+            box = box.union(line.bbox)
+        }
+        if filtered {
+            // Bölgenin çoğu yazıysa bu bir şekil değil, vurgulu/çerçeveli metindir.
+            let textArea = lines.reduce(0.0) { $0 + ($1.bbox.intersection(box)?.area ?? 0) }
+            guard textArea / max(box.area, 1e-9) <= 0.45 else { return nil }
+            // Slayta kalemle eklenmiş renkli not şekil değildir.
+            guard !looksLikePenNote(box, scan: scan) else { return nil }
+        }
+        let padded = box.insetBy(dx: -0.01 * content.width, dy: -0.01 * content.height).clamped(to: content)
+        let figureLabels = labels.map { FigureLabel(text: lines[$0].text, bbox: lines[$0].bbox) }
+        return FigureSuggestion(bbox: padded, labels: figureLabels)
     }
 
     /// İki farklı zemin renginin sınırındaki hücreler (beyaz panelin lacivert zemindeki kenarı gibi) karışık

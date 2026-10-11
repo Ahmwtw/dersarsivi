@@ -57,7 +57,8 @@ struct FiguresSection: View {
                  : "Kaydedilen şekiller ZIP dışa aktarımında görseliyle, içindeki yazılar etiket olarak eklenir.")
         }
         .sheet(item: $editing) { target in
-            CropEditorView(url: pageURL, title: "Şekli kırp", initial: target.initial) { box in
+            CropEditorView(url: pageURL, title: "Şekli kırp", initial: target.initial,
+                           findFigure: { x, y in await model.findFigure(pageID: page.id, x: x, y: y) }) { box in
                 if let id = target.figureID {
                     save(id, box)
                 } else {

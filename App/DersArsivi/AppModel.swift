@@ -141,6 +141,7 @@ final class AppModel: ObservableObject {
                 return
             }
             try storeWorkingImage(working, pageID: page.id)
+            scanCache[page.id] = nil
             runRecord.finishedAt = Date()
             try archive.applyExtraction(output.blocks, run: runRecord)
             archive.setContentBox(output.content, forPage: page.id)
@@ -228,6 +229,34 @@ final class AppModel: ObservableObject {
     // MARK: Şekiller
 
     static let autoSaveFiguresKey = "autoSaveFigures"
+    private var scanCache: [UUID: FigureDetector.PageScan] = [:]
+
+    /// Dokun-kırp: sayfada dokunulan noktadaki şeklin kutusu.
+    func findFigure(pageID: UUID, x: Double, y: Double) async -> BoundingBox? {
+        guard let page = archive.pages.first(where: { $0.id == pageID }),
+              let source = archive.source(page.sourceID) else { return nil }
+        var lines: [FigureDetector.Line] = store.loadLines(pageID: pageID).map { ($0.text, $0.bbox) }
+        if lines.isEmpty {
+            // Bu sürümden önce okunmuş sayfa: satırlar yerine paragraf kutuları kullanılır.
+            lines = archive.blocks(of: pageID).compactMap { b in b.bbox.map { (b.acceptedText, $0) } }
+        }
+        let scan: FigureDetector.PageScan
+        if let cached = scanCache[pageID] {
+            scan = cached
+        } else {
+            guard let image = loadImage(ref: page.workingImageRef ?? source.localAssetRef),
+                  let made = await Task.detached(priority: .userInitiated, operation: {
+                      VisionTextExtractor.pageScan(image: image.cgImage, orientation: image.orientation)
+                  }).value else { return nil }
+            scanCache[pageID] = made
+            scan = made
+        }
+        let point = (x: x, y: y)
+        let found = await Task.detached(priority: .userInitiated) { [lines] in
+            FigureDetector.region(at: point, scan: scan, lines: lines)
+        }.value
+        return found?.bbox
+    }
 
     /// Sayfadaki bekleyen önerilerin hepsini olduğu gibi kaydeder.
     func saveSuggestions(pageID: UUID) async {

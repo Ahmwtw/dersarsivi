@@ -2,18 +2,26 @@ import DersArsiviCore
 import SwiftUI
 
 /// Şekil kutusunu ayarlama ekranı: köşelerden boyutlandır, içinden sürükleyerek taşı.
+/// `findFigure` verilirse şekle dokununca kutu kendiliğinden çizilir (dokun-kırp).
 struct CropEditorView: View {
+    typealias Finder = @MainActor (_ x: Double, _ y: Double) async -> BoundingBox?
+
     let url: URL
     let title: String
+    let findFigure: Finder?
     let onSave: (BoundingBox) -> Void
     @State private var box: BoundingBox
     @State private var image: UIImage?
     @State private var dragStart: BoundingBox?
+    @State private var searching = false
+    @State private var notFound = false
     @Environment(\.dismiss) private var dismiss
 
-    init(url: URL, title: String, initial: BoundingBox, onSave: @escaping (BoundingBox) -> Void) {
+    init(url: URL, title: String, initial: BoundingBox, findFigure: Finder? = nil,
+         onSave: @escaping (BoundingBox) -> Void) {
         self.url = url
         self.title = title
+        self.findFigure = findFigure
         self.onSave = onSave
         _box = State(initialValue: initial)
     }
@@ -32,6 +40,13 @@ struct CropEditorView: View {
                             .frame(width: frame.width, height: frame.height)
                             .offset(x: frame.minX, y: frame.minY)
                         overlay(in: frame)
+                        if searching {
+                            ProgressView().position(x: frame.midX, y: frame.midY)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture(coordinateSpace: .local) { location in
+                        tapped(location, in: frame)
                     }
                 } else {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -50,15 +65,31 @@ struct CropEditorView: View {
                     }
                 }
                 ToolbarItem(placement: .bottomBar) {
-                    Text("Köşelerden boyutlandır, içinden sürükleyerek taşı.")
+                    Text(notFound ? "Burada şekil bulunamadı; kutuyu elle ayarla."
+                         : findFigure == nil ? "Köşelerden boyutlandır, içinden sürükleyerek taşı."
+                         : "Şekle dokun, kutu kendiliğinden çizilsin. Köşelerden ayarlayabilirsin.")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(notFound ? .orange : .secondary)
                 }
             }
             .task {
                 image = await Task.detached(priority: .userInitiated) { [url] in
                     ThumbnailLoader.thumbnail(for: url, maxPixel: 1600)
                 }.value
+            }
+        }
+    }
+
+    private func tapped(_ location: CGPoint, in frame: CGRect) {
+        guard let findFigure, !searching, frame.contains(location), frame.width > 0, frame.height > 0 else { return }
+        let x = (location.x - frame.minX) / frame.width, y = (location.y - frame.minY) / frame.height
+        searching = true
+        Task {
+            let found = await findFigure(x, y)
+            searching = false
+            notFound = found == nil
+            if let found {
+                withAnimation(.easeOut(duration: 0.2)) { box = found }
             }
         }
     }
@@ -79,7 +110,7 @@ struct CropEditorView: View {
                 .overlay(Rectangle().stroke(Color.yellow, lineWidth: 2))
                 .frame(width: r.width, height: r.height)
                 .position(x: r.midX, y: r.midY)
-                .gesture(drag(frame: frame, handle: nil))
+                .gesture(drag(frame: frame, handle: nil, minimumDistance: 4))
 
             ForEach(Handle.allCases, id: \.self) { handle in
                 Circle()
@@ -102,8 +133,8 @@ struct CropEditorView: View {
         }
     }
 
-    private func drag(frame: CGRect, handle: Handle?) -> some Gesture {
-        DragGesture(minimumDistance: 0)
+    private func drag(frame: CGRect, handle: Handle?, minimumDistance: CGFloat = 0) -> some Gesture {
+        DragGesture(minimumDistance: minimumDistance)
             .onChanged { value in
                 let start = dragStart ?? box
                 if dragStart == nil { dragStart = box }

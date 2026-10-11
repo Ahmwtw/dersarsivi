@@ -189,6 +189,25 @@ final class FigureDetectorTests: XCTestCase {
         XCTAssertGreaterThan(c.box(120, 40, 220, 160).fractionInside(try! XCTUnwrap(found.first?.bbox)), 0.95)
     }
 
+    /// Dokun-kırp: dokunulan şeklin kutusu bulunur; yazının üstüne ya da boş yere dokununca şekil yoktur.
+    func testTapFindsFigureUnderFinger() throws {
+        var c = Canvas(width: 300, height: 200)
+        c.texture(160, 30, 260, 150, (150, 210, 235), (110, 170, 215))
+        var lines: [FigureDetector.Line] = []
+        for (i, y) in stride(from: 30, to: 170, by: 18).enumerated() {
+            lines.append(c.textLine("satır \(i)", 20, y, 130, y + 8))
+        }
+        lines.append(c.textLine("Aort", 190, 60, 220, 68))
+        let scan = try XCTUnwrap(FigureDetector.scan(rgba: c.rgba, width: c.width, height: c.height))
+        let hit = try XCTUnwrap(FigureDetector.region(at: (x: 0.7, y: 0.5), scan: scan, lines: lines))
+        XCTAssertGreaterThan(c.box(160, 30, 260, 150).fractionInside(hit.bbox), 0.95)
+        XCTAssertGreaterThan(hit.bbox.x, 0.45, "yandaki yazı katılmamalı")
+        XCTAssertEqual(hit.labels.map(\.text), ["Aort"])
+        // Etiketin tam üstüne dokunmak da şekli bulur.
+        XCTAssertNotNil(FigureDetector.region(at: (x: 0.68, y: 0.32), scan: scan, lines: lines))
+        XCTAssertNil(FigureDetector.region(at: (x: 0.25, y: 0.5), scan: scan, lines: lines), "paragrafta şekil yok")
+    }
+
     func testToolbarTextOutsideSlideIsDropped() throws {
         var c = Canvas(width: 300, height: 200)
         c.rect(0, 0, 30, 200, (0, 0, 0))

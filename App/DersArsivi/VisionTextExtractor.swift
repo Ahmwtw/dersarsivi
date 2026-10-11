@@ -116,7 +116,7 @@ struct VisionTextExtractor {
     }
 
     /// Sayfa alanı ve şekil önerileri için görüntünün yönü düzeltilmiş küçük kopyası yeter.
-    private static func pageScan(image: CGImage, orientation: CGImagePropertyOrientation) -> FigureDetector.PageScan? {
+    static func pageScan(image: CGImage, orientation: CGImagePropertyOrientation) -> FigureDetector.PageScan? {
         let maxSide: CGFloat = 480
         let ui = UIImage(cgImage: image, scale: 1, orientation: UIImage.Orientation(orientation))
         let scale = min(1, maxSide / max(ui.size.width, ui.size.height, 1))
