@@ -1,0 +1,16 @@
+name: Çekirdek testleri
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift sürümü
+        run: swift --version
+      - name: Testler
+        run: swift test --package-path Core

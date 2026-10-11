@@ -1,0 +1,47 @@
+name: iOS derlemesi
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  simulator-build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode sürümü
+        run: xcodebuild -version
+      - name: XcodeGen kur
+        run: brew install xcodegen
+      - name: Xcode projesini üret
+        run: xcodegen generate
+      - name: Çekirdek testleri (macOS)
+        run: swift test --package-path Core
+      - name: Uygulamayı simülatör için derle (imzasız)
+        # Testler kırmızı olsa da uygulama derlemesinin sonucunu görmek için çalışır.
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          xcodebuild -project DersArsivi.xcodeproj -scheme DersArsivi \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Sideloadly için imzasız .ipa üret
+        run: |
+          set -o pipefail
+          xcodebuild -project DersArsivi.xcodeproj -scheme DersArsivi -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          mkdir -p ipa/Payload
+          cp -R DerivedData/Build/Products/Release-iphoneos/DersArsivi.app ipa/Payload/
+          (cd ipa && zip -qry ../DersArsivi-imzasiz.ipa Payload)
+          ls -lh DersArsivi-imzasiz.ipa
+
+      - name: .ipa dosyasını sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: DersArsivi-imzasiz-ipa
+          path: DersArsivi-imzasiz.ipa
+          retention-days: 30
