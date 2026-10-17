@@ -1,0 +1,334 @@
+<title>KVS Sanal Hasta</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Düzen: solda kontrol rafı, ortada yoğun bakım monitörü + laboratuvar sekmeleri, sağda "Neden?" defteri */
+:root{
+  --bg:#eef2f0; --panel:#ffffff; --panel2:#f6f8f7; --ink:#16201e; --muted:#5a6966; --line:#d5dedb;
+  --accent:#0d7a64; --accent-ink:#ffffff; --accent-soft:#d7efe8; --warn:#b86e00; --crit:#c2362b; --good:#1f8a4c;
+  --mon:#081110; --mon-line:#18302b; --mon-ink:#d8f3ea; --mon-dim:#6f9389;
+  --ecg:#39f08a; --art:#ff5a52; --cvp:#5fb6ff; --pap:#ffd34d; --spo:#5ef0f0; --resp:#f0f0f0;
+  --c1:#0d7a64; --c2:#c2362b; --c3:#2f6fd6; --c4:#b86e00; --c5:#7a4fc4; --c6:#2a8f9e; --c7:#8a8f2a;
+  --chip:#e3ebe8;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c1211; --panel:#131b19; --panel2:#18221f; --ink:#e3ece9; --muted:#93a6a1; --line:#26332f;
+  --accent:#3fc7a3; --accent-ink:#04201a; --accent-soft:#163a31; --warn:#f0a83a; --crit:#ff6b5e; --good:#4fd18a;
+  --mon:#050a09; --mon-line:#14261f; --chip:#1d2926;
+  --c1:#3fc7a3; --c2:#ff6b5e; --c3:#6fa5ff; --c4:#f0a83a; --c5:#b48cff; --c6:#5cc8d6; --c7:#c8cc5c;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0c1211; --panel:#131b19; --panel2:#18221f; --ink:#e3ece9; --muted:#93a6a1; --line:#26332f;
+  --accent:#3fc7a3; --accent-ink:#04201a; --accent-soft:#163a31; --warn:#f0a83a; --crit:#ff6b5e; --good:#4fd18a;
+  --mon:#050a09; --mon-line:#14261f; --chip:#1d2926;
+  --c1:#3fc7a3; --c2:#ff6b5e; --c3:#6fa5ff; --c4:#f0a83a; --c5:#b48cff; --c6:#5cc8d6; --c7:#c8cc5c;
+  color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.01em;margin:0;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---- üst çubuk */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:12px}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto;min-width:0}
+.brand h1{font-size:26px;line-height:1}
+.brand .sub{color:var(--muted);font-size:13px}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--crit);align-self:center;box-shadow:0 0 0 0 var(--crit);animation:pl 1s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+.tb{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent)}
+.sel{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 8px;max-width:100%}
+label.inl{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px}
+
+/* ---- ana ızgara */
+.grid{display:grid;grid-template-columns:330px minmax(0,1fr) 310px;gap:12px;align-items:start}
+@media (max-width:1280px){.grid{grid-template-columns:300px minmax(0,1fr)} .why{grid-column:1/-1}}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+
+/* ---- kontroller */
+.ctl{max-height:calc(100vh - 90px);overflow:auto;position:sticky;top:10px;padding:6px}
+@media (max-width:860px){.ctl{max-height:none;position:static;order:2} #app>main{order:1} .why{order:3}}
+.grp{border-bottom:1px solid var(--line)}
+.grp:last-child{border-bottom:0}
+.grp>summary{list-style:none;cursor:pointer;padding:9px 8px;font-family:var(--f-display);font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary .cnt{margin-left:auto;font-family:var(--f-body);font-size:11px;color:var(--accent);background:var(--accent-soft);padding:1px 7px;border-radius:9px}
+.grp>summary .cnt:empty{display:none}
+.grp>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.grp[open]>summary::before{transform:rotate(45deg)}
+.items{padding:0 8px 10px;display:grid;gap:9px}
+.it{display:grid;gap:3px}
+.it .row{display:flex;align-items:baseline;gap:6px}
+.it .lab{font-size:13px;font-weight:500;min-width:0}
+.it .val{margin-left:auto;font-family:var(--f-mono);font-size:12px;white-space:nowrap}
+.it .val.dev{color:var(--warn);font-weight:600}
+.it .meta{font-size:11px;color:var(--muted);display:flex;gap:6px}
+.it .meta .ref{margin-left:auto}
+input[type=range]{width:100%;accent-color:var(--accent);height:18px;margin:0}
+.it.tg{display:flex;align-items:center;gap:8px}
+.it.tg input{accent-color:var(--accent);width:16px;height:16px}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px}
+.btnrow .btn{font-size:12.5px;padding:5px 9px}
+.reset-g{font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:0;padding:0}
+
+/* ---- monitör */
+.monitor{background:var(--mon);color:var(--mon-ink);border-radius:var(--r);padding:10px;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:10px;border:1px solid var(--mon-line)}
+@media (max-width:640px){.monitor{grid-template-columns:minmax(0,1fr)}}
+.traces{display:grid;gap:4px;min-width:0}
+.tr{position:relative;min-width:0}
+.tr canvas{width:100%;height:84px;display:block}
+.tr .tl{position:absolute;left:6px;top:2px;font-family:var(--f-display);font-size:13px;letter-spacing:.06em;display:flex;gap:8px;align-items:center}
+.tr .tl select{background:transparent;border:1px solid var(--mon-line);color:inherit;border-radius:5px;font-size:12px;padding:0 3px}
+.tr .tl select option{background:#0b1513;color:#d8f3ea}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start}
+.nt{border:1px solid var(--mon-line);border-radius:7px;padding:5px 8px;min-width:0}
+.nt .k{font-family:var(--f-display);font-size:12px;letter-spacing:.08em;color:var(--mon-dim);display:flex;justify-content:space-between}
+.nt .v{font-family:var(--f-display);font-weight:600;font-size:30px;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nt .v small{font-size:15px;font-weight:500;opacity:.85}
+.nt.wide{grid-column:1/-1}
+#n_abp{grid-column:1/-1}
+.nt.alarm{border-color:var(--crit);animation:al 1s steps(2) infinite}
+@keyframes al{50%{background:color-mix(in srgb,var(--crit) 22%,transparent)}}
+@media (prefers-reduced-motion:reduce){.nt.alarm{animation:none;background:color-mix(in srgb,var(--crit) 18%,transparent)}}
+.c-ecg{color:var(--ecg)} .c-art{color:var(--art)} .c-cvp{color:var(--cvp)} .c-pap{color:var(--pap)} .c-spo{color:var(--spo)} .c-w{color:var(--mon-ink)}
+.status{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;min-height:22px}
+.tag{font-size:12px;border-radius:5px;padding:1px 7px;border:1px solid var(--mon-line);color:var(--mon-ink);white-space:nowrap}
+.tag.w{border-color:var(--warn);color:#ffc874} .tag.c{border-color:var(--crit);color:#ff9a90} .tag.g{border-color:#2c6d59;color:#8ff0cf}
+
+/* ---- sekmeler */
+.tabs{margin-top:12px}
+.tabbar{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);padding:0 6px}
+.tab{background:none;border:0;padding:9px 12px;cursor:pointer;font-family:var(--f-display);font-size:16px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.pane{padding:12px;display:none}
+.pane.act{display:block}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.two,.three{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}
+.box h3{font-size:16px;margin-bottom:6px;display:flex;gap:8px;align-items:baseline}
+.box h3 .ref{margin-left:auto}
+.ref{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:5px;white-space:nowrap}
+canvas.plot{width:100%;display:block;background:var(--panel);border-radius:6px;border:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:minmax(0,1.3fr) auto minmax(0,1fr);gap:3px 10px;font-size:13px;align-items:baseline}
+.kv .n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kv .u{color:var(--muted);font-size:11.5px}
+.kv .d{color:var(--muted);font-size:11.5px;grid-column:1/-1;margin:-2px 0 3px}
+table.t{border-collapse:collapse;width:100%;font-size:12.5px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+table.t td.n{font-family:var(--f-mono);text-align:right}
+table.t th{font-weight:600;color:var(--muted);font-size:11.5px}
+.scroll-x{overflow-x:auto}
+.note{font-size:12.5px;color:var(--muted)}
+.mini{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.bar{height:9px;border-radius:5px;background:var(--chip);overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--accent);border-radius:5px}
+.pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:9px;background:var(--chip)}
+.pill.w{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.pill.c{background:color-mix(in srgb,var(--crit) 20%,transparent);color:var(--crit)}
+.pill.g{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good)}
+
+/* ---- Neden paneli */
+.why{padding:10px;max-height:calc(100vh - 90px);overflow:auto;position:sticky;top:10px}
+@media (max-width:1280px){.why{position:static;max-height:none}}
+.why h2{font-size:20px}
+.why .sec{margin-top:10px}
+.why .sec h3{font-size:14px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-family:var(--f-body);font-weight:600;margin-bottom:5px}
+.act-list{display:grid;gap:5px}
+.act-i{font-size:12.5px;border-left:3px solid var(--line);padding:2px 0 2px 8px}
+.act-i.w{border-color:var(--warn)} .act-i.c{border-color:var(--crit)} .act-i.g{border-color:var(--good)}
+.act-i b{font-weight:600}
+.log{display:grid;gap:8px}
+.log-i{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12.5px}
+.log-i .h{font-weight:600;display:flex;gap:6px;align-items:baseline}
+.log-i .h .ref{margin-left:auto}
+.chain{margin-top:4px;line-height:1.55}
+.chain .ar{color:var(--accent);font-weight:700;padding:0 2px}
+.log-i .tm{font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+
+/* ---- vaka modu */
+.ov{position:fixed;inset:0;background:color-mix(in srgb,#000 55%,transparent);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));z-index:50;overflow:auto}
+.ov[hidden]{display:none!important}
+.dlg{background:var(--panel);color:var(--ink);border-radius:12px;max-width:640px;width:100%;padding:16px;border:1px solid var(--line);margin-top:30px}
+.dlg h2{font-size:24px;margin-bottom:6px}
+.casebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:color-mix(in srgb,var(--warn) 16%,var(--panel));border:1px solid var(--warn);border-radius:var(--r);padding:8px 10px;margin-bottom:10px}
+.casebar[hidden]{display:none!important}
+.casebar .vg{flex:1 1 300px;font-size:13.5px}
+.opt{display:block;width:100%;text-align:left;margin:5px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 15%,var(--panel))}
+.opt.wrong{border-color:var(--crit);background:color-mix(in srgb,var(--crit) 12%,var(--panel))}
+.locked .ctl{opacity:.35;pointer-events:none;filter:blur(1.5px)}
+.formula{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.fx{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px}
+.fx .fn{font-family:var(--f-display);font-size:15px;font-weight:600;display:flex;gap:6px}
+.fx .fn .ref{margin-left:auto}
+.fx .eq{font-family:var(--f-mono);font-size:13px;margin:4px 0;color:var(--accent)}
+.fx .live{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.foot{margin-top:14px;color:var(--muted);font-size:12px;display:flex;flex-wrap:wrap;gap:12px}
+.foot a{color:var(--accent)}
+svg text{font-family:var(--f-body)}
+
+/* ================= ÖĞRENCİ MODU ================= */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel)}
+.segb{border:0;background:none;padding:6px 11px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.segb[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+body.student #controls, body.student #whyPanel, body.student .xo{display:none!important}
+body:not(.student) #scontrols, body:not(.student) #console, body:not(.student) .sbanner, body:not(.student) .sstrip, body:not(.student) .full, body:not(.student) .ndl{display:none!important}
+/* basit kontroller */
+.scs{padding:4px 6px 8px}
+.scs-top{display:flex;align-items:center;gap:8px;padding:6px 4px 2px}
+.scs-top b{font-family:var(--f-display);font-size:18px}
+.scs-top .reset-g{margin-left:auto}
+.sc-sec{margin-top:10px}
+.sc-sec>h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;font-family:var(--f-body);font-weight:700;color:var(--muted);margin:0 4px 6px}
+.sc{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 8px 8px;margin-bottom:6px}
+.sc.dev{border-color:var(--warn)}
+.sc .t{font-weight:600;font-size:13.5px;display:flex;gap:6px;align-items:baseline}
+.sc .t .ref{margin-left:auto}
+.sc .h{font-size:11.5px;color:var(--muted);margin:1px 0 6px}
+.lvs{display:flex;flex-wrap:wrap;gap:4px}
+.lv{flex:1 1 0;min-width:52px;border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:4px 4px;cursor:pointer;font-size:12px;line-height:1.15;text-align:center}
+.lv small{display:block;font-size:10.5px;color:var(--muted);font-family:var(--f-mono)}
+.lv:hover{border-color:var(--accent)}
+.lv[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.lv[aria-pressed=true] small{color:inherit;opacity:.85}
+.lv.norm[aria-pressed=false]{border-style:dashed}
+.sc.dev .lv[aria-pressed=true]{background:var(--warn);border-color:var(--warn);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:4px 10px;font-size:12.5px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--warn);border-color:var(--warn);color:#fff}
+.busy-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);animation:bz .8s infinite alternate}
+@keyframes bz{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.busy-dot{animation:none}}
+/* sonuç şeridi */
+.sbanner{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px}
+.sbanner .lbl{font-weight:700}
+.sbanner.busy{border-color:var(--warn)}
+.dchip{font-family:var(--f-mono);font-size:12px;border-radius:6px;padding:1px 7px;background:var(--chip);white-space:nowrap}
+.dchip.up{background:color-mix(in srgb,var(--crit) 16%,var(--panel));color:var(--crit)}
+.dchip.dn{background:color-mix(in srgb,var(--c3) 18%,var(--panel));color:var(--c3)}
+.sbanner .go{margin-left:auto}
+/* monitör: açılımlar ve önce→sonra */
+.nt .full{font-family:var(--f-body);font-size:10.5px;letter-spacing:0;color:var(--mon-dim);margin-top:-1px;line-height:1.2}
+.nt .ndl{font-family:var(--f-mono);font-size:11px;color:var(--mon-dim);min-height:14px}
+.nt .ndl .u{color:#ff9a90} .nt .ndl .d{color:#8fc4ff}
+.nt.chg{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+/* sekme çerçevesi */
+.tab.chg{color:var(--ink);box-shadow:inset 0 0 0 2px var(--warn);border-radius:8px 8px 0 0;background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.tab.chg::after{content:"değişti";font-family:var(--f-body);font-size:10px;font-weight:700;color:#fff;background:var(--warn);border-radius:8px;padding:0 5px;margin-left:6px;vertical-align:2px}
+.pane.chgpane{box-shadow:inset 0 0 0 2px var(--warn)}
+.sstrip{background:color-mix(in srgb,var(--warn) 9%,var(--panel2));border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:13px}
+.sstrip:empty{display:none}
+.sstrip h4{margin:0 0 4px;font-size:13px}
+.sstrip .rows{display:flex;flex-wrap:wrap;gap:5px}
+.sstrip details{margin-top:6px}
+.sstrip summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:12.5px}
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 14px;margin-top:4px;font-size:12px}
+.gl b{font-family:var(--f-mono);font-weight:600;color:var(--accent)}
+/* konsol */
+.conh{display:flex;align-items:baseline;gap:8px}
+.conh .reset-g{margin-left:auto}
+.centry{margin-top:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);overflow:hidden}
+.centry>.ch{padding:7px 9px;font-weight:700;background:color-mix(in srgb,var(--accent) 10%,var(--panel2));display:flex;gap:6px;align-items:baseline}
+.centry>.ch .tm{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--muted);font-weight:400}
+.centry.old{opacity:.8}
+.centry.old>.ch{background:var(--panel2)}
+.csteps{padding:4px 9px 8px;display:grid;gap:6px}
+.cst{display:grid;grid-template-columns:24px minmax(0,1fr);gap:7px;font-size:12.8px;animation:cin .35s ease-out}
+@keyframes cin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cst{animation:none}}
+.cst .no{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.cst.ph .no{background:var(--warn);color:#fff}
+.cst.res .no{background:var(--good);color:#fff}
+.cst .tt{font-weight:700}
+.cst .tx{line-height:1.5}
+.cst .tx .ar{color:var(--accent);font-weight:700}
+.cst ul{margin:3px 0 0;padding-left:16px}
+.cst li{margin:1px 0}
+.tabgo{display:inline-block;margin-top:3px;font-size:11.5px;border:1px solid var(--warn);color:var(--warn);background:none;border-radius:10px;padding:0 8px;cursor:pointer}
+.rtab{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:3px}
+.rtab td{padding:2px 4px;border-bottom:1px solid var(--line)}
+.rtab td.n{font-family:var(--f-mono);text-align:right;white-space:nowrap}
+.rtab .up{color:var(--crit);font-weight:700} .rtab .dn{color:var(--c3);font-weight:700}
+.cmore{padding:0 9px 9px}
+</style>
+
+<div class="top">
+  <div class="brand"><span class="pulse" aria-hidden="true"></span><h1>KVS Sanal Hasta</h1><span class="sub">Kardiyovasküler fizyoloji simülatörü · 10 dersin tüm etkenleri tek modelde</span></div>
+  <div class="tb">
+    <div class="seg" id="modeSeg" role="group" aria-label="Kullanım modu"><button class="segb" data-m="student" aria-pressed="true">Öğrenci modu</button><button class="segb" data-m="expert" aria-pressed="false">Uzman modu</button></div>
+    <select id="scenario" class="sel" aria-label="Hazır senaryo"></select>
+    <label class="inl xo">Zaman <select id="speed" class="sel" aria-label="Yavaş mekanizmalar için zaman hızı">
+      <option value="1">1× gerçek</option><option value="10">10×</option><option value="60">60× (1 sn = 1 dk)</option><option value="600">600× (1 sn = 10 dk)</option><option value="3600">3600× (1 sn = 1 sa)</option><option value="21600">21600× (1 sn = 6 sa)</option></select></label>
+    <button class="btn xo" id="pause" aria-pressed="false">Duraklat</button>
+    <button class="btn" id="resetAll">Sıfırla</button>
+    <button class="btn" id="sound" aria-pressed="false">Ses kapalı</button>
+    <button class="btn primary" id="caseBtn">Vaka modu</button>
+  </div>
+</div>
+
+<div class="casebar" id="caseBar" hidden>
+  <div class="vg" id="caseVg"></div>
+  <button class="btn primary" id="caseAnswer">Tanıyı seç</button>
+  <button class="btn" id="caseQuit">Vakadan çık</button>
+</div>
+
+<div class="grid" id="app">
+  <aside class="card ctl" id="controls" aria-label="Kontroller"></aside>
+  <aside class="card ctl" id="scontrols" aria-label="Basit kontroller"></aside>
+
+  <main style="min-width:0">
+    <div class="sbanner" id="sBanner"></div>
+    <section class="monitor" aria-label="Hasta monitörü">
+      <div class="traces">
+        <div class="tr"><div class="tl c-ecg">EKG <select id="monLead" aria-label="Monitör derivasyonu"></select><span id="rhythmLbl" class="c-w" style="font-family:var(--f-body);font-size:12px;opacity:.8"></span></div><canvas id="cvEcg"></canvas></div>
+        <div class="tr"><div class="tl c-art">ART · arteriyel basınç</div><canvas id="cvArt"></canvas></div>
+        <div class="tr"><div class="tl c-cvp"><select id="monCh3" aria-label="Üçüncü kanal"><option value="cvp">CVP / JVP</option><option value="pap">PAP</option><option value="lvp">LV basıncı</option><option value="lap">LA basıncı</option></select></div><canvas id="cvCvp"></canvas></div>
+        <div class="tr"><div class="tl c-spo">PLETH · solunum</div><canvas id="cvPl" style="height:54px"></canvas></div>
+      </div>
+      <div class="nums" id="nums"></div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <section class="card tabs">
+      <div class="tabbar" role="tablist" id="tabbar"></div>
+      <div id="panes"></div>
+    </section>
+  </main>
+
+  <aside class="card why" id="console" aria-label="Konsol">
+    <div class="conh"><h2>Konsol</h2><button class="reset-g" id="conClear">Temizle</button></div>
+    <div class="note">Yaptığın her değişiklikten sonra vücudun ne yaptığı burada adım adım yazılır. Renkli çerçeveli sekmelerde değişiklik var.</div>
+    <div id="conBody"></div>
+  </aside>
+  <aside class="card why" id="whyPanel" aria-label="Neden paneli">
+    <h2>Neden?</h2>
+    <div class="note">Her değişiklik, vücudun verdiği yanıt zinciriyle burada açıklanır. Kodlar özet kitaptaki bölümü gösterir.</div>
+    <div class="sec"><h3>Şu an etkin mekanizmalar</h3><div class="act-list" id="actList"></div></div>
+    <div class="sec"><h3>Değişiklik zinciri</h3><div class="log" id="log"></div></div>
+  </aside>
+</div>
+
+<div class="foot">
+  <span>Model: kapalı devre zamanla değişen elastanslı dolaşım + EKG vektör modeli + baro/kemo/MSS refleksleri + RAAS/ADH/ANP + Starling/lenf. Eğitim amaçlıdır; klinik karar için kullanılmaz.</span>
+  <a href="https://claude.ai/code/artifact/6d8c3b69-1ab4-4421-bf85-88d7b48ae054" target="_blank" rel="noopener">Özet kitabı aç</a>
+</div>
+
+<div class="ov" id="caseOv" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="caseTitle"><div id="caseDlg"></div></div></div>
