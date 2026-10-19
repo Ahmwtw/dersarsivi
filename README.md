@@ -1,10 +1,10 @@
-# KVS Sanal Hasta
+# Ders Arşivi
 
-Kardiyovasküler fizyoloji simülatörü (10 dersin tüm etkenleri tek modelde).
+GitHub Pages ana sayfası iki bölüme açılır:
 
-- **Öğrenci modu:** basit kontroller, aşamalı sonuç (ilk etki → sinir sistemi ve hormonlar → günler sonra), adım adım konsol, kısaltma açılımları.
-- **Uzman modu:** tüm parametreler, gerçek zamanlı model, vaka modu, kalp sesleri.
+- **Spot Notlar** (`notlar/`): dolaşım kurulu fizyoloji ve anatomi spot notları, çıkmış sorular ve cevaplarıyla.
+- **Simülasyon** (`simulasyon/`): KVS Sanal Hasta, kardiyovasküler fizyoloji simülatörü (öğrenci ve uzman modu). Kaynak dosyalar `kaynak/` klasöründe.
 
-Canlı sayfa: `index.html` (GitHub Pages, bu dal). Kaynak dosyalar `kaynak/` klasöründe; `build.sh` hepsini tek HTML'de birleştirir.
+Her sayfanın üstündeki çubukla iki bölüm arasında geçiş yapılır.
 
 Eğitim amaçlıdır; klinik karar için kullanılmaz.
