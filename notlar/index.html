@@ -71,7 +71,7 @@ body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font
 header.top { padding-block: 48px 8px; }
 header.top h1 { font-size: 2rem; line-height: 1.25; font-weight: 600; margin: 0 0 8px; text-wrap: balance; }
 header.top p { color: var(--muted); margin: 0; }
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 8px; padding-block: 16px 12px; border-bottom: 1px solid var(--line); }
+.tabs { flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 8px; padding-block: 16px 12px; border-bottom: 1px solid var(--line); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 .tabs button { font: inherit; font-weight: 500; font-size: 1rem; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 8px 18px; border-radius: 999px; cursor: pointer; }
 .tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
@@ -100,7 +100,7 @@ li::marker { color: var(--c); }
 .tip-h { display: block; font-weight: 600; margin-bottom: 4px; }
 .tip p { margin: 0; }
 .foot { color: var(--muted); font-size: 0.85rem; padding-block: 48px 0; }
-@media (max-width: 480px) { body { font-size: 16px; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
+@media (max-width: 480px) { body { font-size: 16px; } .tabs button { padding: 6px 12px; font-size: 0.9rem; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 </head>
@@ -127,8 +127,8 @@ li::marker { color: var(--c); }
 </nav>
 <style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
 <div class="wrap">
-<header class="top"><h1>Dolaşım Kurulu Spot Notları</h1><p>Çıkmış sorular ve slaytlardan, sade ve kısa. Sınav 23 Ekim. 🍀</p></header>
-<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-fizyo" aria-controls="panel-fizyo" aria-selected="true" data-tab="fizyo">🫀 Fizyoloji</button><button type="button" role="tab" id="tab-anat" aria-controls="panel-anat" aria-selected="false" data-tab="anat">🫁 Anatomi</button></div>
+<header class="top"><h1>Dolaşım Kurulu Spot Notları</h1><p>Fizyoloji, anatomi, histoloji, biyokimya ve biyofizik. Çıkmış sorulardan, sade ve kısa. Sınav 23 Ekim. 🍀</p></header>
+<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-fizyo" aria-controls="panel-fizyo" aria-selected="true" data-tab="fizyo">🫀 Fizyoloji</button><button type="button" role="tab" id="tab-anat" aria-controls="panel-anat" aria-selected="false" data-tab="anat">🫁 Anatomi</button><button type="button" role="tab" id="tab-histo" aria-controls="panel-histo" aria-selected="false" data-tab="histo">🔬 Histoloji</button><button type="button" role="tab" id="tab-biyokim" aria-controls="panel-biyokim" aria-selected="false" data-tab="biyokim">🧪 Biyokimya</button><button type="button" role="tab" id="tab-biyofiz" aria-controls="panel-biyofiz" aria-selected="false" data-tab="biyofiz">⚡ Biyofizik</button></div>
 <div role="tabpanel" id="panel-fizyo" aria-labelledby="tab-fizyo"><nav class="toc"><a class="c-ink" href="#fizyo-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-red" href="#fizyo-1-kalp-hucresi-ve-aksiyon-potansiyeli">1. Kalp hücresi ve aksiyon potansiyeli</a><a class="c-orange" href="#fizyo-2-uyarinin-yayilmasi-ve-ekg-ye-giris">2. Uyarının yayılması ve EKG'ye giriş</a><a class="c-amber" href="#fizyo-3-ekg-aks-dalgalar-kalp-hizi">3. EKG: aks, dalgalar, kalp hızı</a><a class="c-green" href="#fizyo-4-kalp-dongusu-fazlar-basinclar-hacimler">4. Kalp döngüsü: fazlar, basınçlar, hacimler</a><a class="c-teal" href="#fizyo-5-basinc-hacim-dongusu-kalp-sesleri-ufur">5. Basınç–hacim döngüsü, kalp sesleri, üfürümler</a><a class="c-blue" href="#fizyo-6-kalp-debisi">6. Kalp debisi</a><a class="c-indigo" href="#fizyo-7-dolasim-mekanigi-basinc-akim-direnc">7. Dolaşım mekaniği: basınç, akım, direnç</a><a class="c-purple" href="#fizyo-8-kan-akimi-ve-duzenlenmesi">8. Kan akımı ve düzenlenmesi</a><a class="c-cyan" href="#fizyo-9-kapiller-dolasim-ve-odem">9. Kapiller dolaşım ve ödem</a><a class="c-rose" href="#fizyo-10-kan-basincinin-duzenlenmesi">10. Kan basıncının düzenlenmesi</a><a class="c-ink" href="#fizyo-sinav-sabahi-tek-sayfa">🎯 Sınav sabahı: tek sayfa</a></nav><section class="sec c-ink" id="fizyo-bu-not-nasil-okunur">
 <h2>Bu not nasıl okunur</h2>
 <p>Bütün çıkmış fizyoloji sorularını (yaklaşık 115 soru) bu yılın slaytlarıyla yan yana koydum. Konular derste anlatıldığı sırayla gidiyor: önce kalp hücresi, sonra EKG, kalp döngüsü, debi, damarlar ve en son kan basıncının kontrolü.</p>
@@ -1004,8 +1004,404 @@ li::marker { color: var(--c); }
 <li>Peroneus communis → fibula başı.</li>
 <li>Başparmak lenfi → kasık, 5. parmak → diz arkası.</li>
 </ul>
+</section></div><div role="tabpanel" id="panel-histo" aria-labelledby="tab-histo" hidden><nav class="toc"><a class="c-ink" href="#histo-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-red" href="#histo-1-kalbin-gelisimi">1. Kalbin gelişimi</a><a class="c-orange" href="#histo-2-fetal-dolasim-kalintilari">2. Fetal dolaşım kalıntıları</a><a class="c-rose" href="#histo-3-kalp-duvari-ve-ileti-hucreleri">3. Kalp duvarı ve ileti hücreleri</a><a class="c-blue" href="#histo-4-damar-duvari">4. Damar duvarı</a><a class="c-teal" href="#histo-5-kapiller-tipleri">5. Kapiller tipleri</a><a class="c-ink" href="#histo-sinav-sabahi">🎯 Sınav sabahı</a></nav><section class="sec c-ink" id="histo-bu-not-nasil-okunur">
+<h2>Bu not nasıl okunur</h2>
+<p>Bu not de <strong>sadece çıkmış sorulardan</strong> çıkarıldı. Solunum soruları dahil değil, sadece kalp ve damarlarla ilgili histoloji ve embriyoloji var.</p>
+<p>Histoloji soruları iki kümede toplanıyor: <strong>kalbin gelişimi</strong> (septumlar, sinüs venozus, fetal damarlar) ve <strong>damar ve kapiller yapısı</strong>. Kalp gelişimi sorularında tuzak hep aynı: <strong>primum ile secundum</strong> yer değiştiriliyor.</p>
+<h3>⭐ En çok tekrar edenler</h3>
+<ul>
+<li><strong>Foramen ovale</strong> septum <strong>secundum</strong>'da, <strong>foramen secundum</strong> septum <strong>primum</strong>'da. (4 kez)</li>
+<li><strong>Kesintili kapiller:</strong> dalak, karaciğer, kemik iliği. (3 kez)</li>
+<li><strong>Endokard</strong> tek katlı yassı epitelle örtülü. (2 kez)</li>
+<li><strong>Vasa vasorum</strong> = büyük damarları besleyen damarlar. (2 kez)</li>
+<li><strong>Sinüs venozus boynuzlarına girmeyen</strong> = portal ven. (2 kez)</li>
+<li><strong>Fetal damar eşleşmesi:</strong> umbilikal ven → lig. teres hepatis. (2 kez)</li>
+</ul>
+</section>
+<section class="sec c-red" id="histo-1-kalbin-gelisimi">
+<h2>1. Kalbin gelişimi</h2><span class="pill">9 soru</span>
+<p>En çok soru buradan. Sıra şöyle düşün: kalp nereden başlar, kalbe hangi damarlar girer, sonra septumlar nasıl oluşur.</p>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li>Kalp gelişimi <strong>splanknik mezodermde</strong> başlar.</li>
+<li><strong>Kalp halkası (looping)</strong> 22–24. günlerde oluşur.</li>
+<li>4. haftada kalbe üç çift ven girer: <strong>ana kardinal venler</strong> gövdeden, <strong>vitellin venler</strong> vitellus kesesinden, <strong>umbilikal venler</strong> plasentadan kan getirir.</li>
+<li>Bu venler kalp tüpünün <strong>kaudal</strong> ucundaki <strong>sinüs venozus</strong> boynuzlarına açılır.</li>
+<li><strong>Sol sinüs boynuzu</strong> küçülür ve <strong>koroner sinüs</strong> ile <strong>sol atriyumun oblik veni</strong> olur.</li>
+<li>Önce <strong>septum primum</strong> büyür. Üstünde delik açılır: <strong>foramen secundum</strong>.</li>
+<li>Sonra sağında <strong>septum secundum</strong> büyür. Onun bıraktığı açıklık: <strong>foramen ovale</strong>.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalp gelişimi hangi yapıda başlar?</p>
+<p class="a"><span class="ok">✅</span><span>Splanknik mezoderm.</span></p>
+<p class="w">Kayıtta "splenik" yazıyor, doğrusu splanknik.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalp halkası ne zaman oluşur?</p>
+<p class="a"><span class="ok">✅</span><span>22–24. günler arasında.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>4 haftalık embriyoda gövdeden kalbe kan taşıyan damar?</p>
+<p class="a"><span class="ok">✅</span><span>Ana kardinal venler.</span></p>
+<p class="w">Vitellin venler vitellus kesesinden, umbilikal venler plasentadan getirir.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalp tüpüne kaudal uçtan giren damar?</p>
+<p class="a"><span class="ok">✅</span><span>Vitellin ven.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sinüs venozus boynuzlarına giriş yapmayan damar? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Portal ven.</span></p>
+<p class="w">Boynuzlara umbilikal, vitellin ve ana kardinal venler girer. Portal ven sonradan vitellin venlerden gelişir, boynuza açılmaz.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Koroner sinüs neyden gelişir?</p>
+<p class="a"><span class="ok">✅</span><span>Sol sinüs venozus boynuzu.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sol sinüs boynuzundan gelişen yapı?</p>
+<p class="a"><span class="ok">✅</span><span>Sol atriyumun oblik veni.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen ovale nerededir? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Septum secundum üzerinde.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen secundum nerededir? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Septum primum üzerinde.</span></p>
+<p class="w">İsimler ters gibi görünüyor, tuzak da bu: <strong>secundum adlı delik primum'da</strong>, ovale ise secundum'da.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Foramen secundum → septum primum</strong>, <strong>foramen ovale → septum secundum</strong>. Sol sinüs boynuzu → <strong>koroner sinüs</strong>.</p></div>
+</section>
+<section class="sec c-orange" id="histo-2-fetal-dolasim-kalintilari">
+<h2>2. Fetal dolaşım kalıntıları</h2><span class="pill">3 soru</span>
+<p>Anatomide de çıkan konu. Burada soru "hangi fetal damar neye dönüşür" diye geliyor.</p>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Fetal damarlar ve doğum sonrası karşılıkları doğru eşleşmiş olan? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Umbilikal ven → lig. teres hepatis.</span></p>
+<p class="w">Çeldiriciler yanlış eşleşmiş: umbilikal <strong>arter</strong> lig. arteriosum değil, lig. umbilicale mediale olur. Lig. arteriosum ductus arteriosus'tan gelir.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Rahim içi dönemde görülmeyen dolaşım yapısı?</p>
+<p class="a"><span class="ok">✅</span><span>Lig. umbilicale mediale.</span></p>
+<p class="w">Bu bir kalıntı, sadece doğumdan sonra oluşur.</p>
+</div>
+<h3>🔗 Eşleşmeler</h3>
+<ul>
+<li>Umbilikal ven → <strong>lig. teres hepatis</strong></li>
+<li>Umbilikal arter → <strong>lig. umbilicale mediale</strong></li>
+<li>Ductus arteriosus → <strong>lig. arteriosum</strong></li>
+<li>Ductus venosus → <strong>lig. venosum</strong></li>
+</ul>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>"Arteriosum" sadece <strong>ductus arteriosus</strong>'tan gelir, umbilikal arterden değil.</p></div>
+</section>
+<section class="sec c-rose" id="histo-3-kalp-duvari-ve-ileti-hucreleri">
+<h2>3. Kalp duvarı ve ileti hücreleri</h2><span class="pill">5 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li><strong>Endokard</strong> tek katlı yassı epitel (endotel) ile örtülü.</li>
+<li><strong>Purkinje lifleri</strong> subendokardiyal bağ dokuda yer alır. Bunlar sinir değil, <strong>özelleşmiş kalp kası</strong> hücresi. Aralarında <strong>interkalar disk</strong> var.</li>
+<li><strong>Nodal hücreler</strong> (SA, AV) de özelleşmiş kardiyomiyositlerdir.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Endokard hangi epitelle örtülü? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Tek katlı yassı epitel.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Purkinje lifleri nerede bulunur?</p>
+<p class="a"><span class="ok">✅</span><span>Subendokardiyal bağ doku içinde.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Purkinje hücreleri için doğru olan?</p>
+<p class="a"><span class="ok">✅</span><span>Aralarında interkalar disk bulunur.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalpteki nodal kardiyomiyositler için doğru olan?</p>
+<p class="a"><span class="ok">✅</span><span>Özelleşmiş kardiyomiyositlerdir.</span></p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>İleti sistemi hücreleri <strong>kas</strong>, sinir değil. Fizyolojide de aynı cümle soruluyor.</p></div>
+</section>
+<section class="sec c-blue" id="histo-4-damar-duvari">
+<h2>4. Damar duvarı</h2><span class="pill">5 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li><strong>Vasa vasorum</strong> = büyük damarların duvarını besleyen küçük damarlar.</li>
+<li><strong>Nervi vasorum</strong> = damar duvarının sinirleri.</li>
+<li><strong>Venöz kapakçık</strong> = tunica intima'nın katlantısı, endotelle örtülü ve elastik lif içerir.</li>
+<li><strong>Venler ve lenf damarları</strong> ortak özellik olarak <strong>kapakçık</strong> taşır.</li>
+<li><strong>Müsküler (dağıtıcı) arter</strong> örneği: radial arter. Aorta, brakiyosefalik, subklavyan ve ana iliak <strong>elastik</strong> arterdir.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Vasa vasorum nedir? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Büyük damarları besleyen damarlar.</span></p>
+<p class="w">Çeldiriciler başka yapıların tarifi: bifurkasyon yeri, intima katlantısı (kapak), damar lenfatikleri.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Nervi vasorum nedir?</p>
+<p class="a"><span class="ok">✅</span><span>Damarların sinir dağılımı.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Venöz kapakçıkların yapısı?</p>
+<p class="a"><span class="ok">✅</span><span>Endotelle örtülü elastik lifler (intima katlantısı).</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Venler ve lenf damarlarının ortak özelliği?</p>
+<p class="a"><span class="ok">✅</span><span>Kapakçıklara sahip olmaları.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Müsküler arter yapısında olan? (aorta, brakiyosefalik, subklavyan, radial, ana iliak)</p>
+<p class="a"><span class="ok">✅</span><span>Radial arter.</span></p>
+<p class="w">Büyük ve kalbe yakın olanlar elastik, organa ve uzuvlara giden orta boylular müsküler.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Vasa = <strong>damar</strong>, nervi = <strong>sinir</strong>. Kalbe yakın büyük arterler <strong>elastik</strong>, uzaktakiler <strong>müsküler</strong>.</p></div>
+</section>
+<section class="sec c-teal" id="histo-5-kapiller-tipleri">
+<h2>5. Kapiller tipleri</h2><span class="pill">6 soru</span>
+<p>Bu konuda soru hep "bu organın kapilleri hangi tip" diye geliyor. Üç tipi ve örnek organlarını bilmen yeterli.</p>
+<h3>🧩 Üç tip</h3>
+<ul>
+<li><strong>Sürekli (kesintisiz):</strong> kas, akciğer, beyin, deri, <strong>timus</strong>.</li>
+<li><strong>Pencereli:</strong> böbrek, ince bağırsak, endokrin bezler.</li>
+<li><strong>Kesintili (sinüzoid):</strong> <strong>karaciğer, dalak, kemik iliği</strong>.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Dalak sinüzoidleri hangi tip kapiller? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Kesintili kapiller.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Karaciğer sinüzoidleri hangi tip?</p>
+<p class="a"><span class="ok">✅</span><span>Kesintili kapiller.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Akciğer kapillerleri hangi tip?</p>
+<p class="a"><span class="ok">✅</span><span>Sürekli kapiller.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Timustaki kapillerlerin özelliği?</p>
+<p class="a"><span class="ok">✅</span><span>Sürekli (kesintisiz) kapiller.</span></p>
+<p class="w">Timusta kan–timus bariyeri var, bu yüzden kapiller sıkı.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kemik iliğinin kapiller sistemi?</p>
+<p class="a"><span class="ok">✅</span><span>Kesintili (sinüzoid).</span></p>
+<p class="w">Bir derlemede anahtar "endotel ve bazal membran kesintisiz" diye işaretlenmiş. Ders kitaplarında kemik iliği sinüzoiddir, kesintilidir. Soru kökünü dikkatle oku.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hangisi lenfoid organ değildir?</p>
+<p class="a"><span class="ok">✅</span><span>Kayıtta "kemik iliği" yazıyor.</span></p>
+<p class="w">Bu kayıt şüpheli: kemik iliği <strong>primer lenfoid organdır</strong>. Şıklarda başka bir lenfoid olmayan organ varsa onu seç.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Sinüzoid = <strong>karaciğer, dalak, kemik iliği</strong>. Timus ve akciğer <strong>sürekli</strong>.</p></div>
+</section>
+<section class="sec c-ink" id="histo-sinav-sabahi">
+<h2>🎯 Sınav sabahı</h2>
+<ul>
+<li>Kalp <strong>splanknik mezodermden</strong>, looping 22–24. gün.</li>
+<li>Gövde → ana kardinal, vitellus kesesi → vitellin, plasenta → umbilikal ven. Portal ven boynuza girmez.</li>
+<li>Sol sinüs boynuzu → koroner sinüs ve sol atriyumun oblik veni.</li>
+<li><strong>Foramen secundum → septum primum</strong>, <strong>foramen ovale → septum secundum</strong>.</li>
+<li>Umbilikal ven → lig. teres hepatis.</li>
+<li>Endokard tek katlı yassı. Purkinje subendokardiyal, interkalar diskli kas hücresi.</li>
+<li>Vasa vasorum = besleyen damar, nervi vasorum = sinir.</li>
+<li>Ven + lenf damarı ortak: <strong>kapakçık</strong>. Radial arter <strong>müsküler</strong>.</li>
+<li>Sinüzoid: karaciğer, dalak, kemik iliği. Timus ve akciğer <strong>sürekli</strong>.</li>
+</ul>
+</section></div><div role="tabpanel" id="panel-biyokim" aria-labelledby="tab-biyokim" hidden><nav class="toc"><a class="c-ink" href="#biyokim-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-red" href="#biyokim-1-hem-sentezi">1. Hem sentezi</a><a class="c-rose" href="#biyokim-2-hemoglobin-ve-miyoglobin">2. Hemoglobin ve miyoglobin</a><a class="c-green" href="#biyokim-3-ksenobiyotik-metabolizmasi">3. Ksenobiyotik metabolizması</a><a class="c-amber" href="#biyokim-4-bilirubin-tasinmasi">4. Bilirubin taşınması</a><a class="c-ink" href="#biyokim-sinav-sabahi">🎯 Sınav sabahı</a></nav><section class="sec c-ink" id="biyokim-bu-not-nasil-okunur">
+<h2>Bu not nasıl okunur</h2>
+<p>Bu not <strong>sadece çıkmış sorulardan</strong> çıkarıldı. Biyokimya soruları her yıl üç konudan geliyor: <strong>hem sentezi</strong>, <strong>hemoglobin</strong> ve <strong>ksenobiyotik metabolizması</strong>. Bilirubin taşınması da iki kez soruldu.</p>
+<p>Sorular kısa ve ezbere dayalı. Aynı sorular yıldan yıla neredeyse aynı kelimelerle tekrar ediyor, bu yüzden en ucuz puanlar burada.</p>
+<h3>⭐ En çok tekrar edenler</h3>
+<ul>
+<li><strong>Hem sentezinin hız kısıtlayıcı enzimi: ALA sentaz.</strong> (3 kez)</li>
+<li><strong>Faz I = oksidasyon, hidroksilasyon. Faz II = glukuronidasyon.</strong> (5 kez)</li>
+<li><strong>Hemoglobinde demir globine histidinle bağlanır.</strong> (2 kez)</li>
+<li><strong>Bir hemoglobinde 4 hem var</strong>, miyoglobinde 1. (2 kez)</li>
+<li><strong>Bilirubin plazmada albüminle, hücre içinde ligandinle taşınır.</strong> (3 kez)</li>
+</ul>
+</section>
+<section class="sec c-red" id="biyokim-1-hem-sentezi">
+<h2>1. Hem sentezi</h2><span class="pill">4 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li>Başlangıç maddeleri: <strong>glisin + süksinil CoA</strong>.</li>
+<li>İlk ve <strong>hız kısıtlayıcı</strong> basamak: <strong>ALA sentaz</strong>. Koenzimi <strong>piridoksal fosfat</strong> (B6).</li>
+<li>ALA dehidrataz <strong>çinko</strong> ister. Son basamakta <strong>ferroşelataz</strong> protoporfirine <strong>demiri</strong> takar.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hem sentezinin hız kısıtlayıcı basamağındaki enzim? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>ALA sentaz.</span></p>
+<p class="w">Ferroşelataz son basamak, porfobilinojen deaminaz ortadaki bir basamak. Hız kısıtlayıcı hep ilk enzim.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Porfirin sentezini artırmak için hangi enzimin aktivitesi artırılmalı?</p>
+<p class="a"><span class="ok">✅</span><span>ALA sentaz.</span></p>
+<p class="w">Kayıtta "süksinil-CoA sentezinde görevli enzimler" yazıyor. Bu kayıt yanlış: porfirin yolunu hızlandıran tek enzim ALA sentaz.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hücre kültüründe hem sentezlemek için ortama ne eklemek gerekir? (enzimler hazır)</p>
+<p class="a"><span class="ok">✅</span><span>Piridoksal fosfat, glisin, süksinil CoA, çinko, demir.</span></p>
+<p class="w">Yolun başını (glisin + süksinil CoA + B6), ortasını (çinko) ve sonunu (demir) düşün.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Hız kısıtlayıcı = <strong>ALA sentaz</strong> (B6 ister). Demiri takan = <strong>ferroşelataz</strong>.</p></div>
+</section>
+<section class="sec c-rose" id="biyokim-2-hemoglobin-ve-miyoglobin">
+<h2>2. Hemoglobin ve miyoglobin</h2><span class="pill">6 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li><strong>Hemoglobin</strong> dört alt birim, <strong>4 hem</strong>. <strong>Miyoglobin</strong> tek zincir (monomer), 1 hem, kasta O₂ depolar.</li>
+<li>Hem demiri globine <strong>histidin</strong> ile bağlanır.</li>
+<li>Demir <strong>Fe²⁺</strong> (ferröz) olmalı. Fe³⁺ olursa (methemoglobin) O₂ bağlayamaz.</li>
+<li>Hemoglobin <strong>T (gergin)</strong> durumdan <strong>R (gevşek)</strong> duruma, <strong>O₂'nin demire bağlanmasıyla</strong> geçer.</li>
+<li><strong>2,3-BPG</strong> hemoglobinin O₂'ye bağlanmasını <strong>azaltır</strong>, O₂'yi dokuya bırakır.</li>
+<li><strong>HbF</strong> 2,3-BPG'yi daha az bağlar, bu yüzden O₂'ye daha çok ilgi gösterir.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Bir molekülünde 4 hem grubu bulunan protein?</p>
+<p class="a"><span class="ok">✅</span><span>Hemoglobin.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Monomerik, O₂ depolayan hem proteini?</p>
+<p class="a"><span class="ok">✅</span><span>Miyoglobin.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hemoglobinde demir globine hangi aminoasitle bağlanır? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Histidin.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hemoglobinin T durumundan R durumuna geçişi nasıl başlar?</p>
+<p class="a"><span class="ok">✅</span><span>O₂'nin demire bağlanmasıyla.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Ortamda bulunduğunda hemoglobinin O₂'ye bağlanmasını azaltan?</p>
+<p class="a"><span class="ok">✅</span><span>2,3-bisfosfogliserat.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>HbF ile ilgili yanlış olan?</p>
+<p class="a"><span class="ok">✅</span><span>"Yapısındaki demir Fe³⁺'tür."</span></p>
+<p class="w">Bütün işlevsel hemoglobinlerde demir Fe²⁺. Fe³⁺ olan methemoglobin.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Hb = 4 hem</strong>, <strong>Mb = 1 hem</strong>. Demir <strong>Fe²⁺</strong>, bağı <strong>histidin</strong>. 2,3-BPG ilgiyi <strong>azaltır</strong>.</p></div>
+</section>
+<section class="sec c-green" id="biyokim-3-ksenobiyotik-metabolizmasi">
+<h2>3. Ksenobiyotik metabolizması</h2><span class="pill">6 soru</span>
+<p>Soru hep "hangisi faz I, hangisi faz II" diye geliyor. İki grubu ayırmak yetiyor.</p>
+<h3>🧩 İki faz</h3>
+<ul>
+<li><strong>Faz I</strong> (molekülü değiştirir): <strong>oksidasyon, hidroksilasyon</strong>, dealkilasyon, hidroliz. Çoğunu <strong>sitokrom P450</strong> yapar.</li>
+<li><strong>Faz II</strong> (bir şey ekler, konjugasyon): <strong>glukuronidasyon</strong>, sülfatlama, asetilasyon, <strong>metilasyon</strong>. P450 kullanmaz.</li>
+<li>Metil grubunu veren: <strong>S-adenozil metiyonin (SAM)</strong>.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Faz II reaksiyonlarından olan?</p>
+<p class="a"><span class="ok">✅</span><span>Glukuronidasyon.</span></p>
+<p class="w">Diğer şıklar (aromatik hidroksilasyon, O-dealkilasyon, alifatik oksidasyon, hidroliz) hepsi faz I.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Faz I reaksiyonu? <span class="times">🔁 3 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Oksidasyon (bir yıl "aromatik hidroksilasyon" olarak).</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sitokrom P450'nin görev aldığı reaksiyon?</p>
+<p class="a"><span class="ok">✅</span><span>Hidroksilasyon.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>P450 aracılı olmayan reaksiyon?</p>
+<p class="a"><span class="ok">✅</span><span>Glukuronidasyon.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Ksenobiyotik metabolizmasında metil donörü?</p>
+<p class="a"><span class="ok">✅</span><span>S-adenozil metiyonin (SAM).</span></p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>P450 = faz I.</strong> "Ekleme" yapan her şey (glukuronik asit, metil, sülfat) <strong>faz II</strong>.</p></div>
+</section>
+<section class="sec c-amber" id="biyokim-4-bilirubin-tasinmasi">
+<h2>4. Bilirubin taşınması</h2><span class="pill">2 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li>Bilirubin suda çözünmez. <strong>Kanda albümine</strong> bağlı taşınır.</li>
+<li>Albüminde bilirubin için iki bağlanma yeri var (biri yüksek, biri düşük ilgili). Bu yüzden "<strong>A alt birimine 2 molekül bilirubin bağlanır</strong>" cümlesi albümin için.</li>
+<li>Karaciğer hücresine girince <strong>ligandin</strong> (Z proteini ailesinden) taşır.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hangisinin A alt birimine 2 molekül bilirubin bağlanır? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Albümin.</span></p>
+<p class="w">Bir derlemede "ligandin" işaretli. 2023'ün orijinal anahtarı albümin, onu seç.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Bilirubini hücre içinde taşıyan protein?</p>
+<p class="a"><span class="ok">✅</span><span>Ligandin.</span></p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Kanda albümin</strong>, <strong>hücre içinde ligandin</strong>.</p></div>
+</section>
+<section class="sec c-ink" id="biyokim-sinav-sabahi">
+<h2>🎯 Sınav sabahı</h2>
+<ul>
+<li>Hem: glisin + süksinil CoA. Hız kısıtlayıcı <strong>ALA sentaz</strong> (B6). Çinko ortada, <strong>demiri ferroşelataz</strong> takar.</li>
+<li>Hb <strong>4 hem</strong>, Mb <strong>1 hem</strong>. Demir <strong>Fe²⁺</strong>, globine <strong>histidinle</strong> bağlı.</li>
+<li>T → R geçişi O₂ bağlanınca. <strong>2,3-BPG</strong> O₂ ilgisini azaltır.</li>
+<li>HbF'de demir de Fe²⁺.</li>
+<li>Faz I: oksidasyon, hidroksilasyon (P450). Faz II: glukuronidasyon, metilasyon (SAM).</li>
+<li>Bilirubin kanda <strong>albümin</strong>, hücrede <strong>ligandin</strong>.</li>
+</ul>
+</section></div><div role="tabpanel" id="panel-biyofiz" aria-labelledby="tab-biyofiz" hidden><nav class="toc"><a class="c-ink" href="#biyofiz-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-blue" href="#biyofiz-1-denge-ve-hidrostatik-basinc">1. Denge ve hidrostatik basınç</a><a class="c-teal" href="#biyofiz-2-akis-ve-viskozite">2. Akış ve viskozite</a><a class="c-purple" href="#biyofiz-3-elektrik-ses-ve-digerleri">3. Elektrik, ses ve diğerleri</a><a class="c-ink" href="#biyofiz-sinav-sabahi">🎯 Sınav sabahı</a></nav><section class="sec c-ink" id="biyofiz-bu-not-nasil-okunur">
+<h2>Bu not nasıl okunur</h2>
+<p>Bu not <strong>sadece çıkmış sorulardan</strong> çıkarıldı. Biyofizik her yıl birkaç soruyla geliyor, ama sorular <strong>birebir tekrar ediyor</strong>. Yani bu sayfa sınavın en kolay puanı. 🎁</p>
+<h3>⭐ Her yıl gelenler</h3>
+<ul>
+<li><strong>Denge:</strong> kuvvetlerin ve momentlerin toplamı ayrı ayrı sıfır. (3 kez)</li>
+<li><strong>Yatan 1,80 m'lik kişi:</strong> başta da ayakta da ~<strong>100 mmHg</strong>. (3 kez)</li>
+<li><strong>Ostwald viskozimetresi:</strong> bağıl viskoziteyi ölçer. (3 kez)</li>
+<li><strong>Düzgün akış:</strong> akışkanın her noktasında hız aynı kalıyor. (2 kez)</li>
+<li><strong>Zorlukla duyulan ses: 0 dB.</strong> (2 kez)</li>
+</ul>
+</section>
+<section class="sec c-blue" id="biyofiz-1-denge-ve-hidrostatik-basinc">
+<h2>1. Denge ve hidrostatik basınç</h2><span class="pill">6 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li>Bir cisim (kemik) dengedeyse iki şey sıfır olmalı: <strong>kuvvetlerin toplamı</strong> ve <strong>momentlerin toplamı</strong>.</li>
+<li>Sıvının basıncı yükseklik farkıyla değişir: <strong>P = ρ·g·h</strong>. Kalpten aşağıdaki noktada basınç artar, yukarıdakinde azalır.</li>
+<li><strong>Yatarken</strong> baş, kalp ve ayak aynı yükseklikte. Yükseklik farkı yok, basınç her yerde ortalama aort basıncına (~100 mmHg) eşit.</li>
+<li><strong>Ayaktayken</strong> fark ortaya çıkar: ayakta basınç artar, başta azalır. Kabaca her 13,6 cm kan sütunu ≈ 10 mmHg.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kemiğin dengede kalması için hangi büyüklüklerin bileşkesi ayrı ayrı sıfır olmalı? <span class="times">🔁 3 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Kuvvetlerin ve momentlerin.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Ortalama aort basıncı 100 mmHg. 1,80 m boyundaki biri yatarken başına ve ayağına gelen arter basıncı? <span class="times">🔁 3 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>İkisinde de 100 mmHg.</span></p>
+<p class="w">Boy uzunluğu dikkat dağıtmak için verilmiş. Yatarken yükseklik farkı yok, ρgh terimi sıfır.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin izovolümetrik kasılma ve gevşeme evrelerinde yaptığı iş?</p>
+<p class="a"><span class="ok">✅</span><span>Sıfır.</span></p>
+<p class="w">Basınç–hacim işi W = P × ΔV. Hacim değişmiyorsa (ΔV = 0) iş de sıfır.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>"Yatarken" kelimesini görünce hesap yapma: <strong>her yer aynı basınç</strong>.</p></div>
+</section>
+<section class="sec c-teal" id="biyofiz-2-akis-ve-viskozite">
+<h2>2. Akış ve viskozite</h2><span class="pill">4 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li><strong>Düzgün akış:</strong> akışkanın her noktasında hız aynı ve sabit.</li>
+<li><strong>Laminer akış:</strong> katmanlar halinde, sessiz. <strong>Türbülan akış:</strong> girdaplı, ses yapar. Reynolds sayısı büyüdükçe türbülans olasılığı artar.</li>
+<li><strong>Ostwald viskozimetresi:</strong> U şeklinde cam boru. Sıvının belli bir yolu akma süresini, viskozitesi bilinen sıvıyla (su) karşılaştırır. Yani <strong>bağıl viskozite</strong> ölçer. Kan gibi sıvılar için kullanılır.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hareketli akışkanın tüm noktalarında hız değişmiyorsa bu akışın adı? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Düzgün akış.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Şekildeki düzeneğin adı ve ne için kullanıldığı? <span class="times">🔁 3 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>Ostwald viskozimetresi. Kan gibi sıvıların bağıl viskozitesini ölçer.</span></p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Ostwald = <strong>bağıl</strong> viskozite (suya göre), mutlak değil.</p></div>
+</section>
+<section class="sec c-purple" id="biyofiz-3-elektrik-ses-ve-digerleri">
+<h2>3. Elektrik, ses ve diğerleri</h2><span class="pill">5 soru</span>
+<h3>📌 Akılda kalsın</h3>
+<ul>
+<li>Kalpte yayılan depolarizasyon dalgası bir <strong>elektriksel dipol</strong> gibi davranır. EKG bu dipolün vücut yüzeyindeki yansımasıdır.</li>
+<li>Ses şiddeti düzeyi desibelle (dB) ölçülür. <strong>İşitme eşiği</strong>, yani zorlukla duyulan ses <strong>0 dB</strong>.</li>
+</ul>
+<h3>📝 Çıkmış sorular</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Ventriküllerde yayılan depolarizasyon dalgaları neyle temsil edilir?</p>
+<p class="a"><span class="ok">✅</span><span>Elektriksel dipol.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Zorlukla duyulan bir sesin şiddet düzeyi kaç dB? <span class="times">🔁 2 kez</span></p>
+<p class="a"><span class="ok">✅</span><span>0 dB.</span></p>
+<p class="w">Şıklarda 10, 20, 40, 50 de var. Eşik değer tanım gereği 0.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Barotravmalardan olmayan?</p>
+<p class="a"><span class="ok">✅</span><span>Akselerasyon.</span></p>
+<p class="w">Barotravma basınç değişiminden olur (dalış, uçuş). Akselerasyon hızlanmayla ilgili, ayrı bir konu.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kanalopatiler için yanlış örnek?</p>
+<p class="a"><span class="ok">✅</span><span>Dekompresyon (vurgun).</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Ergonominin amacı olmayan?</p>
+<p class="a"><span class="ok">✅</span><span>İnsan performansını düşürerek sistem performansını azaltmak.</span></p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Depolarizasyon dalgası = <strong>dipol</strong>. İşitme eşiği = <strong>0 dB</strong>.</p></div>
+</section>
+<section class="sec c-ink" id="biyofiz-sinav-sabahi">
+<h2>🎯 Sınav sabahı</h2>
+<ul>
+<li>Denge: <strong>ΣF = 0</strong> ve <strong>ΣM = 0</strong>.</li>
+<li>Yatarken baş = ayak = <strong>100 mmHg</strong>. Ayakta P = ρgh farkı eklenir.</li>
+<li>İzovolümetrik evrelerde iş <strong>0</strong> (hacim değişmiyor).</li>
+<li>Düzgün akış: her noktada hız aynı.</li>
+<li>Ostwald: <strong>bağıl viskozite</strong>.</li>
+<li>Depolarizasyon = <strong>elektriksel dipol</strong>. Zorlukla duyulan ses <strong>0 dB</strong>.</li>
+<li>Barotravma değil: akselerasyon. Kanalopati değil: dekompresyon.</li>
+</ul>
 </section></div>
-<p class="foot">Kaynaklar: 2023–24 orijinal kitapçık, 2024 ve 2025 öğrenci hatırlamaları, D2 soru derlemesi ve bu yılın fizyoloji slaytları.</p>
+<p class="foot">Kaynaklar: 2023–24 orijinal kitapçık, 2024 ve 2025 öğrenci hatırlamaları, D2 soru derlemesi ve bu yılın fizyoloji slaytları. Fizyoloji dışındaki notlar yalnızca çıkmış sorulardan çıkarıldı.</p>
 </div>
 <script>
 (function () {
