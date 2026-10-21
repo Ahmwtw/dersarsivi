@@ -99,6 +99,19 @@ li::marker { color: var(--c); }
 .tip { margin: 28px 0 0; padding: 18px 20px; border-radius: 16px; border: 1.5px dashed var(--c); }
 .tip-h { display: block; font-weight: 600; margin-bottom: 4px; }
 .tip p { margin: 0; }
+.rom { font-size: 0.93rem; color: var(--fg); padding-left: 4px; }
+.opt { font-size: 0.95rem; line-height: 1.5; padding: 3px 10px; border-radius: 10px; }
+.opt.right { background: var(--card); font-weight: 600; color: var(--c); }
+.tick { font-weight: 700; }
+.src { display: inline-block; font-size: 0.75rem; color: var(--muted); border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 0 8px; margin-left: 4px; white-space: nowrap; }
+.chg { background: var(--hl); color: var(--fg); border-radius: 10px; padding: 8px 12px; font-size: 0.93rem; }
+.chg-h { display: block; font-weight: 600; }
+.var { background: var(--card); border-radius: 12px; padding: 10px 14px; font-size: 0.93rem; }
+.var-h { display: block; font-weight: 600; margin-bottom: 4px; color: var(--c); }
+.var ul { gap: 4px; margin: 0; }
+.mn { margin: 18px 0; padding: 16px 20px; border-radius: 16px; background: var(--soft); }
+.mn-h { display: block; font-weight: 600; color: var(--c); margin-bottom: 4px; }
+.mn p { margin: 0; }
 .foot { color: var(--muted); font-size: 0.85rem; padding-block: 48px 0; }
 @media (max-width: 480px) { body { font-size: 16px; } .tabs button { padding: 6px 12px; font-size: 0.9rem; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
@@ -128,7 +141,7 @@ li::marker { color: var(--c); }
 <style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
 <div class="wrap">
 <header class="top"><h1>Dolaşım Kurulu Spot Notları</h1><p>Fizyoloji, anatomi, histoloji, biyokimya ve biyofizik. Çıkmış sorulardan, sade ve kısa. Sınav 23 Ekim. 🍀</p></header>
-<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-fizyo" aria-controls="panel-fizyo" aria-selected="true" data-tab="fizyo">🫀 Fizyoloji</button><button type="button" role="tab" id="tab-anat" aria-controls="panel-anat" aria-selected="false" data-tab="anat">🫁 Anatomi</button><button type="button" role="tab" id="tab-histo" aria-controls="panel-histo" aria-selected="false" data-tab="histo">🔬 Histoloji</button><button type="button" role="tab" id="tab-biyokim" aria-controls="panel-biyokim" aria-selected="false" data-tab="biyokim">🧪 Biyokimya</button><button type="button" role="tab" id="tab-biyofiz" aria-controls="panel-biyofiz" aria-selected="false" data-tab="biyofiz">⚡ Biyofizik</button></div>
+<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-fizyo" aria-controls="panel-fizyo" aria-selected="true" data-tab="fizyo">🫀 Fizyoloji</button><button type="button" role="tab" id="tab-anat" aria-controls="panel-anat" aria-selected="false" data-tab="anat">🦴 Anatomi</button><button type="button" role="tab" id="tab-histo" aria-controls="panel-histo" aria-selected="false" data-tab="histo">🔬 Histoloji</button><button type="button" role="tab" id="tab-biyokim" aria-controls="panel-biyokim" aria-selected="false" data-tab="biyokim">🧪 Biyokimya</button><button type="button" role="tab" id="tab-biyofiz" aria-controls="panel-biyofiz" aria-selected="false" data-tab="biyofiz">⚡ Biyofizik</button></div>
 <div role="tabpanel" id="panel-fizyo" aria-labelledby="tab-fizyo"><nav class="toc"><a class="c-ink" href="#fizyo-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-red" href="#fizyo-1-kalp-hucresi-ve-aksiyon-potansiyeli">1. Kalp hücresi ve aksiyon potansiyeli</a><a class="c-orange" href="#fizyo-2-uyarinin-yayilmasi-ve-ekg-ye-giris">2. Uyarının yayılması ve EKG'ye giriş</a><a class="c-amber" href="#fizyo-3-ekg-aks-dalgalar-kalp-hizi">3. EKG: aks, dalgalar, kalp hızı</a><a class="c-green" href="#fizyo-4-kalp-dongusu-fazlar-basinclar-hacimler">4. Kalp döngüsü: fazlar, basınçlar, hacimler</a><a class="c-teal" href="#fizyo-5-basinc-hacim-dongusu-kalp-sesleri-ufur">5. Basınç–hacim döngüsü, kalp sesleri, üfürümler</a><a class="c-blue" href="#fizyo-6-kalp-debisi">6. Kalp debisi</a><a class="c-indigo" href="#fizyo-7-dolasim-mekanigi-basinc-akim-direnc">7. Dolaşım mekaniği: basınç, akım, direnç</a><a class="c-purple" href="#fizyo-8-kan-akimi-ve-duzenlenmesi">8. Kan akımı ve düzenlenmesi</a><a class="c-cyan" href="#fizyo-9-kapiller-dolasim-ve-odem">9. Kapiller dolaşım ve ödem</a><a class="c-rose" href="#fizyo-10-kan-basincinin-duzenlenmesi">10. Kan basıncının düzenlenmesi</a><a class="c-ink" href="#fizyo-sinav-sabahi-tek-sayfa">🎯 Sınav sabahı: tek sayfa</a></nav><section class="sec c-ink" id="fizyo-bu-not-nasil-okunur">
 <h2>Bu not nasıl okunur</h2>
 <p>Bütün çıkmış fizyoloji sorularını (yaklaşık 115 soru) bu yılın slaytlarıyla yan yana koydum. Konular derste anlatıldığı sırayla gidiyor: önce kalp hücresi, sonra EKG, kalp döngüsü, debi, damarlar ve en son kan basıncının kontrolü.</p>
@@ -721,288 +734,605 @@ li::marker { color: var(--c); }
 <li>Fenilefrin → refleks bradikardi. Fenilefrin + propranolol ortak: <strong>kalp hızı düşer</strong>.</li>
 <li>Ayakta durma ödemi: <strong>kapiller basınç ↑</strong>. Albümin düşüklüğü: <strong>interstisyel sıvı ↑</strong>.</li>
 </ul>
-</section></div><div role="tabpanel" id="panel-anat" aria-labelledby="tab-anat" hidden><nav class="toc"><a class="c-ink" href="#anat-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-green" href="#anat-1-genel-tanimlar-ve-fetal-dolasim">1. Genel tanımlar ve fetal dolaşım</a><a class="c-red" href="#anat-2-kalbin-anatomisi">2. Kalbin anatomisi</a><a class="c-amber" href="#anat-3-bas-boyun-damarlari-ve-lenfatikleri">3. Baş-boyun damarları ve lenfatikleri</a><a class="c-blue" href="#anat-4-ust-ekstremite-damarlari">4. Üst ekstremite damarları</a><a class="c-purple" href="#anat-5-alt-ekstremite-damarlari-ve-lenfatikle">5. Alt ekstremite damarları ve lenfatikleri</a><a class="c-ink" href="#anat-sinav-sabahi-tek-sayfa">🎯 Sınav sabahı: tek sayfa</a></nav><section class="sec c-ink" id="anat-bu-not-nasil-okunur">
+</section></div><div role="tabpanel" id="panel-anat" aria-labelledby="tab-anat" hidden><nav class="toc"><a class="c-ink" href="#anat-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-green" href="#anat-1-dolasim-sistemine-giris">1. Dolaşım sistemine giriş</a><a class="c-red" href="#anat-2-kalbin-anatomisi">2. Kalbin anatomisi</a><a class="c-amber" href="#anat-3-bas-boyun-damarlari-ve-lenfatikleri">3. Baş-boyun damarları ve lenfatikleri</a><a class="c-blue" href="#anat-4-ust-ekstremite-damarlari-ve-lenfatikle">4. Üst ekstremite damarları ve lenfatikleri</a><a class="c-purple" href="#anat-5-alt-ekstremite-damarlari-ve-lenfatikle">5. Alt ekstremite damarları ve lenfatikleri</a><a class="c-ink" href="#anat-sinav-sabahi-tek-sayfa">🎯 Sınav sabahı: tek sayfa</a></nav><section class="sec c-ink" id="anat-bu-not-nasil-okunur">
 <h2>Bu not nasıl okunur</h2>
-<p>Bu notta slayt yok. Her şey <strong>sadece çıkmış sorulardan</strong> çıkarıldı: 2023 kitapçığı, 2024 ve 2025 hatırlamaları ve D2 derlemesi.</p>
-<p>Anatomi soruları üç kalıptan geliyor, bunu bilmek işin yarısı:</p>
+<p>Bu notun omurgası <strong>çıkmış sorular</strong>. Slaytlar sadece "hoca bu soruyu değiştirirse hangi şıkkı koyar" sorusunun cevabı için kullanıldı. Konular derste anlatıldığı sırayla gidiyor: dolaşıma giriş, kalp, baş-boyun, üst ekstremite, alt ekstremite.</p>
+<p>Her soru kartında şunlar var: <strong>soru</strong>, <strong>şıkları</strong> (doğrusu işaretli), <strong>neden o cevap</strong> ve <strong>🎯 başka nasıl sorulabilir</strong>. Sarı kutulu <strong>🔄 Değiştirilmiş soru</strong> etiketi, hocanın aynı soruyu sonraki yıl kökünü ya da şıklarını değiştirerek sorduğu yerleri gösteriyor. <strong>Bunlar en önemlileri</strong>, çünkü hoca bir soruyu bir kez değiştirdiyse yine değiştirebilir.</p>
+<p>Kartın sağ üstündeki küçük etiket sorunun hangi kaynakta çıktığını gösteriyor: <strong>2023</strong> (orijinal kitapçık, şıklı), <strong>2024</strong> ve <strong>2025</strong> (öğrenci hatırlaması, çoğu şıksız), <strong>D2</strong> (soru derlemesi).</p>
+<h3>🔄 Hocanın değiştirdiği sorular (önce bunları çalış)</h3>
 <ul>
-<li><strong>"Dalı değildir" soruları:</strong> yanlış şık hep <strong>komşu arterin</strong> dalı. Radialis ↔ ulnaris, ECA ↔ ICA ↔ subclavia, femoralis ↔ iliaca externa.</li>
-<li><strong>"Nereden geçer" soruları:</strong> çeldiriciler <strong>komşu açıklığın</strong> içeriği. Suprapiriforme ↔ infrapiriforme, dörtgen ↔ üçgen aralık.</li>
-<li><strong>Fetal yapı soruları:</strong> yanlış şıklar diğer fetal yapıların tarifi.</li>
-</ul>
-<p>Yani her konuyu komşusuyla birlikte çalış.</p>
-<h3>⭐ En çok tekrar eden 10 soru</h3>
-<ul>
-<li><strong>Sinus transversus pericardii</strong> → arteriyel ve venöz kılıfın arası. (5 kez)</li>
-<li><strong>ECA dalları</strong> → ophthalmica ve thyroidea inferior ECA dalı değil. (5 kez)</li>
-<li><strong>Ductus arteriosus / venosus</strong> → DA truncus pulmonalis ile aortu, DV v. porta ile VCI'yı bağlar. (5 kez)</li>
-<li><strong>Ulnaris / radialis dalları</strong> → princeps pollicis radialisin, interossea communis ulnarisin dalı. (5 kez)</li>
-<li><strong>Foramen infrapiriforme</strong> → glutea inferior, ischiadicus, cutaneus femoris posterior. (4 kez)</li>
-<li><strong>A. poplitea'nın dalı olmayan</strong> → descendens genus. (4 kez)</li>
-<li><strong>İleti sistemi</strong> → sağ dal trabecula septomarginalis'ten geçer. (3 kez)</li>
-<li><strong>Burnu besleyen ICA dalı</strong> → a. ethmoidalis anterior. (3 kez)</li>
-<li><strong>Spatium quadrangulare</strong> → n. axillaris. (3 kez)</li>
-<li><strong>A. thoracica interna</strong> → özofagusu beslemez, axillaris değil subclavia dalı. (3 kez)</li>
+<li><strong>Ductus arteriosus → ductus venosus:</strong> Aynı beş şık, sadece kök değişti. Bir yıl a şıkkı yanlış, ertesi yıl doğru.</li>
+<li><strong>Sinus transversus → sinus obliquus:</strong> 2024'te diğer sinüs soruldu. D2'de transversus'un şıkları da değişti.</li>
+<li><strong>İleti sistemi "doğru" → "doğru değil":</strong> Aynı şıklar, ters kök.</li>
+<li><strong>ECA dalları:</strong> Üç ayrı yılda üç ayrı roma rakamı listesi.</li>
+<li><strong>Burnu besleyen ICA dalı → a. maxillaris dalları:</strong> Tek şıklıdan çok şıklıya döndü.</li>
+<li><strong>Ulnaris dalları → ulnaris dalı değil → radialis dalı değil → princeps pollicis:</strong> Dört farklı kök, hepsi aynı ayrıma dayanıyor.</li>
+<li><strong>Spatium quadrangulare → spatium triangulare inferior.</strong></li>
+<li><strong>Sol ön interkostal ven → sağ arka interkostal ven.</strong></li>
+<li><strong>Foramen infrapiriforme'den geçen (roma rakamlı) → geçmeyen (tek şık).</strong></li>
+<li><strong>A. fibularis'in çıktığı damar → a. dorsalis pedis'in çıktığı damar.</strong></li>
+<li><strong>A. poplitea'nın dalı değil → diz anastomozuna katılan arterler.</strong></li>
+<li><strong>Ayak başparmağı lenfi → 5. ayak parmağı lenfi.</strong></li>
+<li><strong>A. thoracica interna:</strong> "kanlandırmaz", "a. axillaris dalı değil" ve "ön interkostal arterin kaynağı" olarak üç ayrı kökle.</li>
 </ul>
 </section>
-<section class="sec c-green" id="anat-1-genel-tanimlar-ve-fetal-dolasim">
-<h2>1. Genel tanımlar ve fetal dolaşım</h2><span class="pill">4 soru</span>
-<p>Genel tanım soruları hep <strong>fetal şantlar</strong> üzerinden geliyor: şant neyi neye bağlıyor, kapanınca geride ne kalıyor.</p>
-<h3>📝 Çıkmış sorular</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Ductus arteriosus için doğru olan? <span class="times">🔁 3 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Fetal dönemde truncus pulmonalis ile aorta arasında bağlantı kurar.</span></p>
-<p class="w">Diğer şıklar başka fetal yapıların tarifi. "V. porta ile VCI arası" ductus venosus, "kapanınca lig. teres hepatis" v. umbilicalis, "kapanınca lig. umbilicale mediale" a. umbilicalis.</p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Ductus venosus için doğru olan? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Fetal dönemde v. porta hepatis ile VCI arasında bağlantı kurar.</span></p>
-<p class="w">Bir önceki sorunun çeldiricisi burada doğru cevap. D2'deki tuzak şık: "kapanınca Botallo ligamenti olur". Yanlış, Botallo ductus arteriosus'un kalıntısı.</p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Lig. arteriosum nerede?</p>
-<p class="a"><span class="ok">✅</span><span>Aorta ile truncus pulmonalis arasında.</span></p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Sağlıklı erişkinde varlığını sürdüren yapı?</p>
-<p class="a"><span class="ok">✅</span><span>Chorda arteriae umbilicalis.</span></p>
-<p class="w">A. umbilicalis'in uzak kısmı erişkinde bağ olarak kalır (lig. umbilicale mediale).</p>
-</div>
-<h3>🔗 Fetal yapı → erişkinde kalan</h3>
+<section class="sec c-green" id="anat-1-dolasim-sistemine-giris">
+<h2>1. Dolaşım sistemine giriş</h2><span class="pill">slayttan</span>
+<p>Bu dersten anatomi kitapçıklarında doğrudan soru çıkmamış. Ama <strong>vasa vasorum</strong> ve <strong>sinüzoid</strong> histolojide soruldu, slayttaki listeler de "hangisi değildir" sorusuna çok uygun. Kısa geç.</p>
+<h3>📌 Slayttaki listeler</h3>
 <ul>
-<li><strong>Ductus arteriosus</strong> → lig. arteriosum (Botallo)</li>
-<li><strong>Ductus venosus</strong> → lig. venosum</li>
-<li><strong>V. umbilicalis</strong> → lig. teres hepatis</li>
-<li><strong>A. umbilicalis</strong> → lig. umbilicale mediale</li>
-<li><strong>Foramen ovale</strong> → fossa ovalis</li>
+<li><strong>Arteriol:</strong> en ince arter, çapı 100 µm'den küçük, duvarı kalın. Kan basıncını kapillere girmeden düşürür.</li>
+<li><strong>Kapiller çok olan dokular:</strong> kas, bezler, karaciğer, akciğer, böbrek. <strong>Az olan:</strong> tendon, ligament. <strong>Hiç olmayan:</strong> kornea, lens, kalp kapağı, hiyalin kıkırdak.</li>
+<li><strong>Sinüzoid olan yerler:</strong> karaciğer, dalak, kemik iliği, adenohipofiz, böbrek üstü korteksi, paratiroid.</li>
+<li><strong>Terminal arterler</strong> (anastomoz yok, tıkanırsa nekroz): retina, beyin, böbrek, dalak, bağırsak.</li>
+<li><strong>Vasa vasorum</strong> = damar duvarını besleyen damarlar. <strong>A. nutricia</strong> = kemiği besleyen arter.</li>
+<li><strong>Venae comitantes</strong> = bir arterin yanındaki çift ven.</li>
+<li><strong>Kapaksız ve artere eşlik etmeyen venler:</strong> azygos sistemi, vertebral sistem, portal sistem.</li>
+<li><strong>Pulmoner venler</strong> 4 tane, oksijenli kanı sol atriyuma getirir. <strong>Portal venlerde</strong> kapak yok.</li>
+<li><strong>Nabız alınan yerler:</strong> a. temporalis superficialis, carotis communis, brachialis, radialis, ulnaris, femoralis, poplitea, dorsalis pedis, tibialis posterior.</li>
+<li><strong>AV anastomoz:</strong> kapiller olmadan arterden vene geçiş, parmak uçlarında, ısı düzenlemesinde.</li>
+<li><strong>V. diploica</strong> kafa kemiklerinin iki tabakası arasında. <strong>V. emissaria</strong> kafa içi venleri kafa dışı venlere bağlar.</li>
 </ul>
-<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Botallo = arteriosum</strong>, venosum değil. "Lig. teres hepatis olur" görürsen bu <strong>v. umbilicalis</strong>.</p></div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>"Hangisinde kapiller yoktur" diye sorulursa: <strong>kornea, lens, kalp kapağı, hiyalin kıkırdak</strong>. "Hangisi terminal arter değildir" diye sorulursa listede olmayanı (ör. el, kas) seç.</p></div>
 </section>
 <section class="sec c-red" id="anat-2-kalbin-anatomisi">
-<h2>2. Kalbin anatomisi</h2><span class="pill">8 soru</span>
-<p><strong>En çok soru çıkan anatomi konusu.</strong> Sırayla: perikard boşlukları, apex, ileti sistemi, kapaklar, koroner damarlar.</p>
-<h3>🫀 Perikard</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Sinus transversus pericardii nereden geçer? <span class="times">🔁 5 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Arteriyel ve venöz seröz kılıfların arasından.</span></p>
-<p class="w">Seröz perikard büyük damarları iki kılıfla sarar. Arteriyel kılıfta aort ve truncus pulmonalis, venöz kılıfta VCS, VCI ve pulmoner venler. <strong>Transversus iki kılıfın arası</strong>, <strong>obliquus venöz kılıfın altı</strong>. "Aort ile truncus arasından" şıkkı tuzak: sinüs onların arasından değil, arkasından geçer.</p>
+<h2>2. Kalbin anatomisi</h2><span class="pill">10 soru, 22 kez</span>
+<p>En çok soru çıkan anatomi konusu. Slayttaki sırayla: gelişim ve fetal dolaşım → konum ve apex → perikard → sağ atriyum → sağ ventrikül → kapaklar → ileti sistemi → koroner damarlar.</p>
+<h3>👶 Fetal dolaşım ve kalıntılar</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>"Ductus arteriosus" için hangisi doğrudur? <span class="src">2023 · 2025 · D2</span></p>
+<p class="opt">a) Embriyolojik dönemde v. porta hepatis ile VCI arasında anastomoz oluşturur.</p>
+<p class="opt">b) Embriyolojik dönemde VCS ile v. pulmonalis arasında anastomoz oluşturur.</p>
+<p class="opt">c) Yenidoğanda kapanması sonucunda lig. teres hepatis oluşur.</p>
+<p class="opt right">d) Embriyolojik dönemde truncus pulmonalis ile aorta arasında anastomoz oluşur. <span class=tick>✓</span></p>
+<p class="opt">e) Yenidoğanda kapanması sonucunda lig. umbilicale mediale oluşur.</p>
+<p class="w">Yanlış şıkların her biri <strong>başka bir fetal yapının doğru tarifi</strong>: a) ductus venosus, c) v. umbilicalis, e) a. umbilicalis. b) hiçbir şey değil, uydurma.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Sinus obliquus pericardii nereden geçer?</p>
-<p class="a"><span class="ok">✅</span><span>Venöz kılıfın altından.</span></p>
-<p class="w">Bir önceki sorunun çeldiricisi burada doğru cevap. İkisini birlikte çalış.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>"Ductus venosus" için hangisi doğrudur? <span class="src">2024 · D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Önceki sorunun aynı şıkları, sadece kök "ductus venosus" oldu. Önceki yıl yanlış olan <strong>a</strong> bu kez doğru. D2'de d şıkkı da değişti: "kapanınca Botallo ligamenti oluşur".</p>
+<p class="opt right">A) Embriyolojik dönemde v. porta hepatis ile VCI arasında anastomoz oluşturur. <span class=tick>✓</span></p>
+<p class="opt">B) Embriyolojik dönemde VCS ile v. pulmonalis arasında anastomoz oluşturur.</p>
+<p class="opt">C) Yenidoğanda kapanması sonucunda lig. teres hepatis oluşur.</p>
+<p class="opt">D) Yenidoğanda kapanması sonucunda Botallo ligamenti oluşur.</p>
+<p class="opt">E) Yenidoğanda kapanması sonucunda lig. umbilicale mediale oluşur.</p>
+<p class="w">Botallo ductus <strong>arteriosus</strong>'un kalıntısı. Ductus venosus'un kalıntısı <strong>lig. venosum (Arantius)</strong>.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Aynı beş şıkla "v. umbilicalis için doğru" sorulursa → kapanınca lig. teres hepatis.</li>
+<li>"A. umbilicalis için doğru" → kapanınca lig. umbilicale mediale (chorda a. umbilicalis).</li>
+<li>"Foramen ovale kapanınca ne olur" → fossa ovalis.</li>
+<li>Şıklara "Arantius ligamenti" gelirse ductus venosus'a aittir.</li>
+</ul></div>
 </div>
-<h3>📍 Apex</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Apex cordis nerede? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Sternumun solunda, 5. interkostal aralıkta (midklaviküler hat).</span></p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hangisi sağlıklı bir erişkinin dolaşım sisteminde varlığını sürdürür? <span class="src">D2</span></p>
+<p class="opt">a) Ductus arteriosus</p>
+<p class="opt">b) Ductus venosus</p>
+<p class="opt">c) Vena umbilicalis</p>
+<p class="opt right">d) Chorda arteriae umbilicalis <span class=tick>✓</span></p>
+<p class="opt">e) Foramen ovale</p>
+<p class="w">Diğer dördü fetal yapı, doğumdan sonra kapanır. Chorda a. umbilicalis ise <strong>kalıntının kendisi</strong> (lig. umbilicale mediale), erişkinde vardır.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Aynı mantıkla doğru cevap olabilecekler: lig. arteriosum, lig. venosum, lig. teres hepatis, fossa ovalis.</li>
+</ul></div>
 </div>
-<h3>⚡ İleti sistemi</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>İleti sistemi yapılarının yeri için doğru olan? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Sağ dal (crus dextrum) trabecula septomarginalis'ten geçer.</span></p>
-<p class="w">Çeldiricilerde SA ve AV düğümün yerleri <strong>yer değiştirilmiş</strong>. Doğrusu: SA düğüm <strong>crista terminalis</strong>'te, AV düğüm <strong>Koch üçgeninde</strong>. Purkinje ağı ventriküllerde.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sağlıklı erişkinde lig. arteriosum'un yeri? <span class="src">D2</span></p>
+<p class="a"><span class="ok">✅</span><span>Aorta ile truncus pulmonalis arasında.</span></p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>İleti sistemiyle ilgili yanlış olan?</p>
-<p class="a"><span class="ok">✅</span><span>"Plexus subendocardialis sol atriyumdadır." Doğrusu ventriküllerde.</span></p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Kalıntılar:</strong> Ductus <strong>A</strong>rteriosus → lig. <strong>A</strong>rteriosum (Botallo) · Ductus <strong>V</strong>enosus → lig. <strong>V</strong>enosum (Arantius) · <strong>V</strong>. umbilicalis → lig. <strong>teres</strong> hepatis · <strong>A</strong>. umbilicalis → lig. umbilicale <strong>mediale</strong> · Foramen ovale → <strong>fossa</strong> ovalis. Kural: "ductus" kendi adını taşıyan ligamente döner, umbilikal damarlar "teres" ve "mediale" olur.</p></div>
+<p>Slayttan: Fetüste oksijenli kan <strong>sol</strong> v. umbilicalis ile gelir (sağı kaybolur). Ductus venosus karaciğeri by-pass eder, VCI'ya ulaşır. Sağ atriyumda basınç yüksek olduğu için kan foramen ovale'den sola geçer. Doğumda O₂ artar, prostaglandin düşer, <strong>ductus arteriosus kapanır</strong>. Sol atriyum basıncı yükselince foramen ovale <strong>septum primum</strong> ile kapanır.</p>
+<h3>📍 Konum, yüzler, apex</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Apex cordis yerleşimi için hangisi doğrudur? <span class="src">2025 · D2</span></p>
+<p class="a"><span class="ok">✅</span><span>Sternumun solunda, 5. interkostal aralıkta (linea medioclavicularis ile kesişim).</span></p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Kalp <strong>mediastinum medius</strong>'tadır, 1/3'ü orta hattın sağında.</li>
+<li>Yatarken T5–T8, ayakta T6–T9 vertebralar arası. 3.–6. kostalar arası.</li>
+<li><strong>Facies sternocostalis</strong> büyük kısmı = <strong>sağ ventrikül</strong>. <strong>Facies posterior (basis cordis)</strong> = <strong>sol atriyum</strong>. <strong>Facies diaphragmatica</strong> = <strong>sol ventrikül</strong>.</li>
+<li><strong>Margo dexter</strong> = sağ atriyum, <strong>margo sinister</strong> = sol ventrikül + auricula sinistra, <strong>margo inferior</strong> = sağ ventrikül.</li>
+</ul></div>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Crista terminalis için doğru olan?</p>
-<p class="a"><span class="ok">✅</span><span>İçinde SA düğüm bulunur.</span></p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p>Kalbin "arkası" sol atriyum (özofagusa yaslanır), "önü" sağ ventrikül (sternuma yaslanır).</p></div>
+<h3>🎒 Perikard</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>"Sinus transversus pericardii"nin geçiş yeri? <span class="src">2023 · 2025 · D2 ×3</span></p>
+<p class="opt">a) Aorta ve truncus pulmonalis arasından</p>
+<p class="opt">b) Vena cava superior ve inferior arasından</p>
+<p class="opt">c) Vagina serosa venosum'un altından</p>
+<p class="opt">d) Vagina caroticum'un altından</p>
+<p class="opt right">e) Vagina serosa venosum ve vagina serosa arteriosum arasından <span class=tick>✓</span></p>
+<p class="w">Seröz perikard büyük damarları iki kılıfla sarar. <strong>Arteriyel kılıf:</strong> aorta ascendens + truncus pulmonalis. <strong>Venöz kılıf:</strong> VCS, VCI, vv. pulmonales. <strong>Transversus (Thiele kanalı) iki kılıfın arası</strong>, <strong>obliquus venöz kılıfın altındaki çıkmaz</strong>.</p>
 </div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sinus transversus, şıkları değişmiş hali <span class="src">D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Şıklar yenilendi: d) ve e) yerine yeni çeldiriciler geldi. Doğru cevap c'ye kaydı.</p>
+<p class="opt">A) Aorta ve truncus pulmonalis arasından</p>
+<p class="opt">B) Vena cava superior ve inferior arasından</p>
+<p class="opt right">C) Vagina serosa arteriosum ve vagina serosa venosum arasından <span class=tick>✓</span></p>
+<p class="opt">D) V. jugularis interna ve a. carotis communis arasından</p>
+<p class="opt">E) Vagina caroticum ve vagina serosa arteriosum arasından</p>
+<p class="w">D ve E boyundaki <strong>vagina carotica</strong>'dan alınmış, kalple ilgisi yok. A şıkkı en tehlikelisi: sinüs aorta ile truncus'un <strong>arkasından</strong> geçer, aralarından değil.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sinus obliquus pericardii'nin geçiş yeri? <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Bir önceki sorunun ikizi. Transversus'un c şıkkı burada doğru cevap.</p>
+<p class="a"><span class="ok">✅</span><span>Vagina serosa venosum'un altından.</span></p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Sinus obliquus'un ön duvarını yapan" → sol atriyum.</li>
+<li>"Perikardın kanlanması" → a. thoracica interna (a. pericardiacophrenica, a. musculophrenica). "Siniri" → n. phrenicus. "Venleri" → v. azygos ve v. thoracica interna.</li>
+<li>"Pericardium fibrosum'un örtmediği damar" → VCI.</li>
+</ul></div>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>T</strong>ransversus = <strong>T</strong>ünel (iki kılıf arasından geçilir). <strong>O</strong>bliquus = <strong>O</strong>muz cebi gibi çıkmaz (venöz kılıfın altı).</p></div>
+<h3>❤️ Sağ atriyum ve sağ ventrikül</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>"Crista terminalis" için hangisi doğrudur? <span class="src">D2</span></p>
+<p class="opt">a) Ventriculus dexter'de yer alır.</p>
+<p class="opt">b) Ventriculus sinister'de yer alır.</p>
+<p class="opt">c) Septum interatriale'de bulunur.</p>
+<p class="opt">d) İçerisinde nodus atrioventricularis bulunur.</p>
+<p class="opt right">e) İçerisinde nodus sinoatrialis bulunur. <span class=tick>✓</span></p>
+<p class="w">Crista terminalis <strong>sağ atriyumun</strong> iç yüzünde, VCS ile VCI ağzı arasında uzanır. Dışarıdan sulcus terminalis olarak görülür. Önünde m. pectinati (pürüzlü auricula), arkasında düz sinus venarum var.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Septum interatriale'de bulunur" şıkkı fossa ovalis içindir. "Nodus AV" Koch üçgeninde.</li>
+<li>Slayttan olası doğrular: fossa ovalis = <strong>septum primum</strong>, limbus fossa ovalis = <strong>septum secundum</strong>. VCI ağzındaki kapak = <strong>Eustachian</strong>, sinus coronarius ağzındaki kapak = <strong>Thebesian</strong>.</li>
+<li><strong>Trabecula septomarginalis</strong> (moderatör bant, Da Vinci kordu) <strong>sağ ventrikülde</strong>: septum ile ön papiller kas arasında, içinden crus dextrum (Purkinje) geçer.</li>
+<li>Sağ ventrikülde <strong>crista supraventricularis</strong> triküspit ile pulmoner kapak arasında, <strong>conus arteriosus</strong> pulmoner çıkış yolu.</li>
+</ul></div>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p>Koch üçgeninin üç kenarı: <strong>T</strong>riküspitin septal yaprağı · <strong>T</strong>odaro tendonu · sinus <strong>C</strong>oronarius ağzı. İçinde AV düğüm. "<strong>TTC</strong> = AV'nin evi."</p></div>
 <h3>🚪 Kapaklar</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Chorda tendinea hangi kapaklarla ilişkili?</p>
-<p class="a"><span class="ok">✅</span><span>Triküspit ve mitral.</span></p>
-<p class="w">Chorda sadece AV kapaklarda var. Aort ve pulmoner kapakta yok.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hangi kapaklar chorda tendinea ile ilişkilidir? <span class="src">2024</span></p>
+<p class="a"><span class="ok">✅</span><span>Valva tricuspidalis ve valva mitralis.</span></p>
+<p class="w">Chorda ve papiller kas sadece <strong>AV kapaklarda</strong> var. Semilunar kapaklarda (aort, pulmoner) yok, onlar ceplerine dolan kanla kapanır.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Triküspitin en büyük yaprağı <strong>cuspis anterior</strong>. Mitral 2 yapraklı (anterior, posterior).</li>
+<li>Aort kapağının yaprakları: sağ koroner, sol koroner, posterior (non-koroner). Koroner arterler <strong>sinus aortae (Valsalva)</strong>'dan çıkar.</li>
+<li>Semilunar yaprakların ortasındaki nodül = <strong>Arantius nodülü</strong>.</li>
+<li>Kalbin en büyük kapak ağzı = ostium atrioventriculare dextrum (triküspit).</li>
+</ul></div>
 </div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Anatomik izdüşüm ≠ dinleme odağı.</strong> Anatomide: pulmoner sol 3. kıkırdak, aort sol 3. ICS, mitral sol 4. kıkırdak, triküspit sağ 4. ICS. Fizyolojide oskültasyon odakları farklı (aort sağ 2. ICS, mitral apeks). Soru hangisini istiyor, dikkat.</p></div>
+<h3>⚡ İleti sistemi</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin ileti sistemine ait yapıların yerleşimi için hangisi doğrudur? <span class="src">2023 · D2</span></p>
+<p class="opt">a) Nodus sinoatrialis Koch üçgeni içinde yer alır.</p>
+<p class="opt">b) Nodus atrioventricularis sulcus terminalis'te yer alır.</p>
+<p class="opt">c) Fasciculus atrioventricularis crista terminalis'in içinde yer alır.</p>
+<p class="opt right">d) Fasciculus AV crus dextrum'u trabecula septomarginalis'ten geçer. <span class=tick>✓</span></p>
+<p class="opt">e) Plexus subendocardialis atrium sinistrum'da yer alır.</p>
+<p class="w">a ve b <strong>yer değiştirilmiş</strong>: SA → crista/sulcus terminalis, AV → Koch üçgeni. c'de His demeti crista'ya konmuş, oysa His <strong>trigonum fibrosum dextrum'u</strong> deler. e'de Purkinje atriyuma konmuş, oysa <strong>ventrikül</strong> subendokardında.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin ileti sistemine ait yapıların yerleşimi için hangisi doğru değildir? <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı şıklar, ters kök. Bu kez doğru cevap <strong>e</strong>: "Plexus subendocardialis atrium sinistrum'da yer alır."</p>
+<p class="a"><span class="ok">✅</span><span>Plexus subendocardialis atrium sinistrum'da yer alır.</span></p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Doğru olarak gelebilecek slayt cümleleri: SA düğüm <strong>Keith-Flack</strong>, VCS'nin sağ atriyuma girdiği yerde · AV düğüm <strong>Aschoff-Tawara</strong>, iletinin <strong>en yavaş</strong> olduğu yer · His demeti septumun <strong>pars membranacea</strong>'sının arka alt kenarında · Purkinje <strong>en hızlı</strong> ileti.</li>
+<li>"Todaro tendonu neyin yerini gösterir" → nodus AV.</li>
+</ul></div>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>SA = Sulcus (crista) terminalis</strong>, ikisi de "S" ile. <strong>AV = Koch</strong> (AV düğüm Koch'un evinde). Sağ dal <strong>septomarginalis</strong>'ten geçer: "sağ dal köprüden geçer" (moderatör bant bir köprü gibi septumdan papiller kasa uzanır).</p></div>
 <h3>🩸 Koroner damarlar</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin kanlanmasıyla ilgili doğru olan?</p>
-<p class="a"><span class="ok">✅</span><span>Sol koroner arter aorta ascendens'ten çıkar.</span></p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin kanlanması için hangisi doğrudur? <span class="src">D2</span></p>
+<p class="a"><span class="ok">✅</span><span>A. coronaria sinistra'nın orijin yeri aorta ascendens'tir.</span></p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin kanlanmasıyla ilgili doğru olan? (başka bir yıl)</p>
-<p class="a"><span class="ok">✅</span><span>V. cordis magna, ön interventriküler dala (LAD) eşlik eder.</span></p>
-<p class="w">Ven–arter eşleri: <strong>v. cordis magna ↔ LAD</strong>, <strong>v. cordis media ↔ arka interventriküler dal</strong>, <strong>v. cordis parva ↔ sağ koroner</strong>. Hepsi sinus coronarius'a, o da sağ atriyuma dökülür.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Kalbin kanlanması için hangisi doğrudur? (şıklı varyant) <span class="src">D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı kök, bu kez venler de şıklara girdi. Her şıkta küçük bir kelime değiştirilmiş.</p>
+<p class="opt">a) R. interventricularis posterior, a. coronaria sinistra'nın dalıdır.</p>
+<p class="opt">b) R. interventricularis anterior, a. coronaria dextra'nın dalıdır.</p>
+<p class="opt">c) A. coronaria dextra'nın orijin yeri aorta descendens'tir.</p>
+<p class="opt right">d) V. cordis magna, r. interventricularis sinistra (anterior)'ya eşlik eder. <span class=tick>✓</span></p>
+<p class="opt">e) V. cordis parva, r. interventricularis dextra'ya eşlik eder.</p>
+<p class="w">a ve b'de arterler <strong>yer değiştirilmiş</strong>: posterior = sağ koroner (%70), anterior (LAD) = sol koroner. c'de "ascendens" yerine "descendens" yazılmış. e'de v. cordis parva, sağ koronerin <strong>r. marginalis dextra</strong>'sına eşlik eder. "R. interventricularis dextra" diye bir dal yok.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li><strong>V. cordis media</strong> → sulcus interventricularis posterior (r. interventricularis posterior'a eşlik).</li>
+<li>Sinus coronarius'a <strong>açılmayan</strong> venler: <strong>vv. cardiacae minimae (Thebesian)</strong> ve <strong>vv. cardiacae anteriores</strong>. Doğrudan sağ atriyuma açılırlar.</li>
+<li>Sağ koroner'in dalları: r. coni arteriosi, <strong>r. nodi sinoatrialis</strong> (çoğunlukla), r. marginalis dextra, r. interventricularis posterior, <strong>r. nodi atrioventricularis</strong>.</li>
+<li>Sol koroner'in dalları: <strong>LAD (r. interventricularis anterior)</strong> ve <strong>r. circumflexus</strong> (r. marginalis sinister).</li>
+<li>"Dominant koroner" = septumun arka-alt 1/3'ünü besleyen. %70 sağ, %10 sol, %20 her ikisi.</li>
+<li>Koroner arterlere kan <strong>diyastolde</strong> dolar.</li>
+</ul></div>
 </div>
-<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Transversus = arası</strong>, <strong>obliquus = altı</strong>. <strong>SA = crista terminalis</strong>, <strong>AV = Koch üçgeni</strong>. Chorda = <strong>triküspit + mitral</strong>.</p></div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Ven–arter eşleri:</strong> Magna ↔ LAD (önde), Media ↔ arka interventriküler (arkada, "media" ortada), Parva ↔ sağ marjinal (sağda, en küçük). Hepsi sinus coronarius'a → sağ atriyum.</p></div>
+<p>Kalbin lenfi (slayttan): sol kalp <strong>sağ</strong> angulus venosus'a, sağ kalp <strong>sol</strong> angulus venosus'a gider. Sol toplayıcı damar nodi tracheobronchiales inferiores'e, sağ toplayıcı nodi brachiocephalici'ye drene olur.</p>
 </section>
 <section class="sec c-amber" id="anat-3-bas-boyun-damarlari-ve-lenfatikleri">
-<h2>3. Baş-boyun damarları ve lenfatikleri</h2><span class="pill">8 soru</span>
-<p>Bütün sorular tek bir soruya dayanıyor: bu arter <strong>ECA</strong>'dan mı, <strong>ICA</strong>'dan mı, yoksa <strong>a. subclavia</strong>'dan mı çıkıyor?</p>
-<h3>🌳 A. carotis externa</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Hepsi ECA dalı olan seçenek? (occipitalis, facialis, thyroidea inferior, vertebralis, thyroidea superior) <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Occipitalis, facialis, thyroidea superior.</span></p>
-<p class="w">Thyroidea inferior truncus thyrocervicalis'ten, vertebralis subclavia'dan çıkar. Bu ikisini eleyince tek şık kalıyor.</p>
+<h2>3. Baş-boyun damarları ve lenfatikleri</h2><span class="pill">8 soru, 18 kez</span>
+<p>Bütün sorular tek bir ayrıma dayanıyor: bu arter <strong>ECA</strong>'dan mı, <strong>ICA</strong>'dan mı, yoksa <strong>a. subclavia</strong>'dan mı? Bunu kesin bilirsen şıkların yarısını elersin.</p>
+<h3>🌳 Arcus aorta ve karotisler</h3>
+<ul>
+<li>Arcus aorta dalları: <strong>truncus brachiocephalicus</strong> (→ sağ subclavia + sağ carotis communis), <strong>sol carotis communis</strong>, <strong>sol subclavia</strong>.</li>
+<li><strong>Bifurcatio carotica C4</strong> hizasında. Burada <strong>sinus caroticus</strong> (baroreseptör) ve <strong>glomus caroticum</strong> (kemoreseptör) var. İkisi de <strong>n. glossopharyngeus (IX)</strong> ile haber verir.</li>
+<li>Vagina carotica içinde: a. carotis communis, v. jugularis interna, n. vagus.</li>
+<li><strong>ICA'nın boyun kısmı dal vermez.</strong> İlk dalı kafa içinde <strong>a. ophthalmica</strong>.</li>
+</ul>
+<h3>🌿 A. carotis externa dalları</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Tamamı a. carotis externa dallarından oluşan seçenek? <span class="src">2023 · D2</span></p>
+<p class="rom">I- a. occipitalis · II- a. facialis · III- a. thyroidea inferior · IV- a. vertebralis · V- a. thyroidea superior</p>
+<p class="opt">a) I, II, III</p>
+<p class="opt right">b) I, II, V <span class=tick>✓</span></p>
+<p class="opt">c) II, III, V</p>
+<p class="opt">d) II, IV, V</p>
+<p class="opt">e) III, IV, V</p>
+<p class="w">Thyroidea <strong>inferior</strong> truncus thyrocervicalis'ten, vertebralis subclavia'dan çıkar. III ve IV'ü ele, tek şık kalır.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Hepsi ECA dalı olan seçenek? (başka yıl)</p>
-<p class="a"><span class="ok">✅</span><span>Maxillaris, pharyngea ascendens, thyroidea superior.</span></p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Tamamı ECA dalı olan seçenek? (2024 listesi) <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Liste değişti, maxillaris ve pharyngea ascendens girdi.</p>
+<p class="a"><span class="ok">✅</span><span>II- a. maxillaris, III- a. pharyngea ascendens, V- a. thyroidea superior.</span></p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Hepsi ECA dalı olan? (occipitalis, maxillaris, ophthalmica, thyroidea sup., thyroidea inf.)</p>
-<p class="a"><span class="ok">✅</span><span>Occipitalis, maxillaris, thyroidea superior.</span></p>
-<p class="w">Ophthalmica ICA'dan çıkar, ECA listesinde görürsen ele.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Tamamı ECA dalı olan seçenek? (D2 listesi) <span class="src">D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Listeye <strong>a. ophthalmica</strong> girdi. Hem ophthalmica (ICA) hem thyroidea inferior (subclavia) tuzak.</p>
+<p class="rom">I- a. occipitalis · II- a. maxillaris · III- a. ophthalmica · IV- a. thyroidea superior · V- a. thyroidea inferior</p>
+<p class="opt">a) I, II, III</p>
+<p class="opt right">b) I, II, IV <span class=tick>✓</span></p>
+<p class="opt">c) II, III, IV</p>
+<p class="opt">d) II, IV, V</p>
+<p class="opt">e) III, IV, V</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>ECA dalları hangileri?</p>
-<p class="a"><span class="ok">✅</span><span>Temporalis superficialis, pharyngea ascendens, auricularis posterior.</span></p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Hangileri a. carotis externa'nın dallarıdır? <span class="src">D2</span></p>
+<p class="a"><span class="ok">✅</span><span>A. temporalis superficialis, a. pharyngea ascendens, a. auricularis posterior.</span></p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Listeye gelebilecek <strong>tuzaklar</strong>: a. ophthalmica (ICA), a. thyroidea inferior, a. vertebralis, a. transversa colli, a. suprascapularis (hepsi subclavia), a. cerebri media (ICA).</li>
+</ul></div>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. meningea media nereden çıkar? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. maxillaris.</span></p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>ECA'nın 8 dalı, aşağıdan yukarı:</strong> "<strong>S</strong>ome <strong>A</strong>natomists <strong>L</strong>ike <strong>F</strong>reaking <strong>O</strong>ut <strong>P</strong>oor <strong>M</strong>edical <strong>S</strong>tudents" → <strong>S</strong>uperior thyroid, <strong>A</strong>scending pharyngeal, <strong>L</strong>ingual, <strong>F</strong>acial, <strong>O</strong>ccipital, <strong>P</strong>osterior auricular, <strong>M</strong>axillary, <strong>S</strong>uperficial temporal. Türkçe akılda tutmak için: "<strong>Tiroidin üstü, yutağa, dile, yüze, ense, kulak arkası, çene, şakak.</strong>"</p></div>
+<h3>🧠 A. meningea media</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. meningea media'nın orijin aldığı arter? <span class="src">D2 ×2</span></p>
+<p class="opt">A) A. occipitalis</p>
+<p class="opt right">B) A. maxillaris <span class=tick>✓</span></p>
+<p class="opt">C) A. ophthalmica</p>
+<p class="opt">D) A. thyroidea superior</p>
+<p class="opt">E) A. thyroidea inferior</p>
+<p class="w">Meningea media maxillaris'in dalıdır, foramen spinosum'dan kafa içine girer. Şıklardaki diğerleri yine "ECA mı, ICA mı, subclavia mı" ayrımı: occipitalis ve thyroidea superior ECA, ophthalmica ICA, thyroidea inferior subclavia.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"A. maxillaris'in dalı olan" sorulursa: meningea media, <strong>alveolaris inferior</strong>, sphenopalatina, infraorbitalis.</li>
+<li>"Epidural hematomda yaralanan arter" → meningea media.</li>
+</ul></div>
 </div>
 <h3>👃 Burnun arterleri</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Burnu besleyen, ICA kökenli arter? <span class="times">🔁 3 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. ethmoidalis anterior.</span></p>
-<p class="w">ICA → a. ophthalmica → aa. ethmoidales. Sphenopalatina, infraorbitalis ve facialis ECA tarafından.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Burnu kanlandıran arterlerden hangisi a. carotis interna'nın dallarından orijin alır? <span class="src">2023 · 2025 · D2</span></p>
+<p class="opt">a) A. sphenopalatina</p>
+<p class="opt">b) A. infraorbitalis</p>
+<p class="opt">c) A. facialis</p>
+<p class="opt right">d) A. ethmoidalis anterior <span class=tick>✓</span></p>
+<p class="opt">e) A. facialis</p>
+<p class="w">ICA → <strong>a. ophthalmica</strong> → aa. ethmoidales anterior ve posterior (ve a. dorsalis nasi). Sphenopalatina ve infraorbitalis a. maxillaris'ten, facialis doğrudan ECA'dan.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Burnu besleyen, a. maxillaris kökenli arterler?</p>
-<p class="a"><span class="ok">✅</span><span>A. sphenopalatina ve a. infraorbitalis.</span></p>
-<p class="w">Bir önceki sorunun aynası. Bir yıl ICA'lıyı, ertesi yıl maxillaris'lileri soruyor.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Burnu kanlandıran ve a. maxillaris'ten çıkan arterler? <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Tek doğru şıklı soru roma rakamlı oldu ve bu kez <strong>ECA tarafı</strong> soruldu.</p>
+<p class="a"><span class="ok">✅</span><span>IV- a. sphenopalatina, V- a. infraorbitalis.</span></p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"A. facialis'ten çıkan burun arteri" → a. angularis, a. labialis superior.</li>
+<li>"A. ethmoidalis posterior hangi arterin dalı" → a. ophthalmica (ICA).</li>
+<li>Slayttaki TUS sorusu: burun sırtına dolgu enjeksiyonunda körlük → a. angularis (ECA) ile a. dorsalis nasi (ICA) anastomozu.</li>
+</ul></div>
 </div>
-<h3>🩸 Venler ve lenf</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Kafa içinde sinus cavernosus'a dökülen ven?</p>
-<p class="a"><span class="ok">✅</span><span>V. angularis.</span></p>
-<p class="w">Yolu: v. angularis → v. ophthalmica superior → sinus cavernosus. Yüzdeki enfeksiyonun beyne ulaşma yolu bu.</p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p>Burnun <strong>üstü ve gözü ICA</strong>, <strong>altı ve arkası ECA</strong>. "Etmoid tavanda, tavan ICA'nın."</p></div>
+<h3>🩸 Yüz ve boyun venleri</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Cranium içinde sinus cavernosus'a drene olan ven? <span class="src">D2</span></p>
+<p class="opt">a) V. maxillaris</p>
+<p class="opt">b) V. temporalis superficialis</p>
+<p class="opt right">c) V. angularis <span class=tick>✓</span></p>
+<p class="opt">d) V. lingualis</p>
+<p class="opt">e) V. occipitalis</p>
+<p class="w">Yol: v. angularis → <strong>v. ophthalmica superior</strong> → sinus cavernosus. V. angularis kapaksız olduğu için yüzdeki enfeksiyon kafa içine taşınabilir ("tehlikeli üçgen").</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Hangisi sinus cavernosus'a drene <strong>olmaz</strong>" → v. maxillaris, v. temporalis superficialis, v. occipitalis, v. lingualis, v. jugularis externa.</li>
+<li>Doğru cevap olarak <strong>v. ophthalmica superior</strong> de gelebilir.</li>
+<li>"V. retromandibularis hangi venlerin birleşmesiyle oluşur" → v. temporalis superficialis + v. maxillaris.</li>
+<li>"V. facialis nereye dökülür" → v. jugularis interna.</li>
+<li>Boyunda yüzeyel: v. jugularis externa, v. jugularis anterior. Derin: v. jugularis interna.</li>
+<li>"VCS'ye dökülen" (slayt): v. brachiocephalica (iki taraf birleşir), v. azygos.</li>
+</ul></div>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Baş-boyunda derin lenf düğümü?</p>
-<p class="a"><span class="ok">✅</span><span>Nll. pretracheales.</span></p>
-<p class="w">Derin grup: pretrakeal, paratrakeal, prelaringeal, retrofaringeal ve juguler zincir. Yüzeyel grup: submental, submandibular, oksipital, mastoid, parotis.</p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Tehlikeli üçgen:</strong> angularis → ophthalmica superior → cavernosus. "Burnun kenarındaki sivilce beyne gider."</p></div>
+<h3>🧲 Baş-boyun lenfatikleri</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Baş-boyun bölgesinde derin yerleşimli lenf düğümü? <span class="src">D2</span></p>
+<p class="a"><span class="ok">✅</span><span>N.l. pretrachealis.</span></p>
+<p class="w">Slaytta derin baş-boyun lenf düğümleri altı bölgeye ayrılıyor. Pretracheal, <strong>VI. bölgede (ön servikal)</strong>.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Derin olarak gelebilecekler: <strong>jugulodigastricus, juguloomohyoideus, supraclavicularis, prelaryngeal, pretracheal, paratracheal, retropharyngeal</strong>.</li>
+<li>Yüzeyel olarak gelebilecekler (yanlış şık): <strong>occipitalis, mastoideus (retroauricularis), parotidei superficiales (preauricularis), cervicales superficiales, buccalis</strong>.</li>
+<li>"Tiroid bezinin lenfi" → prelaryngeal, pretracheal, paratracheal.</li>
+<li>"Submandibular düğüme drene olan" → alın ve yüzün önü, ağız, dil, sinus maxillaris, dişler. "Submental" → alt dudak ortası, çene derisi.</li>
+<li>Waldeyer halkası: tonsilla palatina, tubaria, lingualis, pharyngea.</li>
+</ul></div>
 </div>
-<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Ophthalmica = ICA.</strong> Thyroidea <strong>superior</strong> ECA'dan, <strong>inferior</strong> subclavia'dan. Vertebralis subclavia'nın ilk dalı.</p></div>
-<p>💬 2025 kaydında iki soru karışmış görünüyor: "foramen infraorbital'den geçmeyen" ve "orbitanın medial kompartmanı" diye yazılan sorular aslında <strong>foramen infrapiriforme</strong> ve <strong>uyluğun medial kompartmanı</strong> soruları. İkisinin de cevabı a. obturatoria. 5. bölümde var.</p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p>"<strong>Juguler zincir derindir</strong>": adında *jugulo-* geçen her düğüm (jugulodigastricus, juguloomohyoideus) v. jugularis interna boyunca, yani derin. *Trachea* ve *larynx* çevresi de derin.</p></div>
 </section>
-<section class="sec c-blue" id="anat-4-ust-ekstremite-damarlari">
-<h2>4. Üst ekstremite damarları</h2><span class="pill">10 soru</span>
-<p>İki konu öne çıkıyor: <strong>radialis mi ulnaris mi</strong> ve <strong>koltuk altındaki aralıklardan ne geçer</strong>. Üst ekstremite lenfi hiçbir yıl sorulmamış.</p>
-<h3>🌳 Subclavia ve axillaris</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. axillaris'in dalı olmayan?</p>
+<section class="sec c-blue" id="anat-4-ust-ekstremite-damarlari-ve-lenfatikle">
+<h2>4. Üst ekstremite damarları ve lenfatikleri</h2><span class="pill">11 soru, 22 kez</span>
+<p>İki ana tema: <strong>radialis mi ulnaris mi</strong> ve <strong>koltuk altı aralıklarından ne geçer</strong>. Bir de a. subclavia'nın dalı olan <strong>a. thoracica interna</strong> üç farklı kökle soruldu.</p>
+<h3>🌳 A. subclavia ve dalları</h3>
+<ul>
+<li>Sağ subclavia truncus brachiocephalicus'tan, sol subclavia arcus aorta'dan çıkar.</li>
+<li>M. scalenus anterior arteri üç parçaya böler.</li>
+</ul>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Subclavia dalları "VIT C D":</strong> <strong>V</strong>ertebralis (ilk dal), <strong>I</strong>nternal thoracic (thoracica interna), <strong>T</strong>hyrocervical trunk, <strong>C</strong>ostocervical trunk, <strong>D</strong>orsal scapular. Truncus thyrocervicalis'in dalları "<strong>STAT</strong>": <strong>S</strong>uprascapularis, <strong>T</strong>ransversa colli, <strong>A</strong>scendens cervicalis, <strong>T</strong>hyroidea inferior.</p></div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. thoracica interna tarafından kanlandırılmayan yapı? <span class="src">2025 · D2 ×2</span></p>
+<p class="opt">A) Thymus</p>
+<p class="opt right">B) Oesophagus <span class=tick>✓</span></p>
+<p class="opt">C) Pericardium fibrosum</p>
+<p class="opt">D) Sternum</p>
+<p class="opt">E) Diaphragma</p>
+<p class="w">Thoracica interna göğüs <strong>ön duvarını</strong> besler: meme, timus, sternum, perikard, diyafram, ön interkostaller, karın ön duvarı (epigastrica superior). Özofagus <strong>arka mediastende</strong>; boyun kısmını a. thyroidea inferior, göğüs kısmını aorta besler.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Kanlandırmaz" diye gelebilecek diğer yanlış şıklar: trachea, akciğer, özofagus, kalp kası (myocardium koroner arterlerden).</li>
+<li>Doğru (kanlandırır) olarak gelebilecekler: <strong>glandula mammaria</strong>, m. pectoralis, karın ön duvarı.</li>
+</ul></div>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. axillaris'in dalı değildir? <span class="src">D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı arter bu kez "dalı değil" sorusunda tuzak oldu.</p>
 <p class="a"><span class="ok">✅</span><span>A. thoracica interna.</span></p>
-<p class="w">Thoracica interna subclavia'nın dalı. Axillaris'in dalları: thoracica superior, thoracoacromialis, thoracica lateralis, subscapularis, circumflexa humeri anterior ve posterior.</p>
+<p class="w">Thoracica interna <strong>a. subclavia</strong>'nın dalı.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. thoracica interna'nın beslemediği yapı? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Özofagus.</span></p>
-<p class="w">Thoracica interna göğüs ön duvarını besler: ön interkostal arterler, meme, timus, perikard, diyafram.</p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Ön interkostal arterler nereden çıkar?</p>
-<p class="a"><span class="ok">✅</span><span>A. thoracica interna ve a. musculophrenica.</span></p>
-</div>
-<h3>🔲 Koltuk altı aralıkları</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Dörtgen aralıktan (spatium quadrangulare) geçen? <span class="times">🔁 3 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>N. axillaris (yanında a. circumflexa humeri posterior).</span></p>
-<p class="w">Çeldiriciler komşu aralıklardan: circumflexa scapulae <strong>üçgen aralıktan</strong>, n. radialis <strong>üçgen yarıktan</strong> geçer. Circumflexa humeri anterior hiçbir aralıktan geçmez.</p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Alt üçgen aralıktan (spatium triangulare inferior) geçen? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>N. radialis (yanında a. profunda brachii).</span></p>
-</div>
-<h3>✋ Kol ve önkol arterleri</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. ulnaris'in dalları? (interossea communis, carpalis palmaris, carpalis dorsalis, collateralis ulnaris superior, princeps pollicis) <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Interossea communis, ramus carpalis palmaris, ramus carpalis dorsalis.</span></p>
-<p class="w">Collateralis ulnaris superior <strong>brachialis</strong>'in dalı, princeps pollicis <strong>radialis</strong>'in dalı. Adında "ulnaris" geçmesi tuzak.</p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. ulnaris'in dalı olmayan? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. princeps pollicis.</span></p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. radialis'in dalı olmayan?</p>
-<p class="a"><span class="ok">✅</span><span>A. interossea communis.</span></p>
-<p class="w">Bir önceki sorunun aynası.</p>
-</div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. princeps pollicis için yanlış olan?</p>
-<p class="a"><span class="ok">✅</span><span>"A. brachialis'in dalıdır." Doğrusu radialis.</span></p>
-</div>
-<h3>🩸 Venler</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Fascia clavipectoralis'i delip v. axillaris'e dökülen ven? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>V. cephalica.</span></p>
-<p class="w">Omuz ile göğüs kası arasındaki oluktan çıkar ve fasyayı deler.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. intercostalis anterior'un orijinini oluşturan damarlar? <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı arter üçüncü kez, bu sefer dallarından soruldu.</p>
+<p class="a"><span class="ok">✅</span><span>I- a. thoracica interna, III- a. musculophrenica.</span></p>
+<p class="w">Slayt: <strong>ilk 6</strong> ön interkostal doğrudan thoracica interna'dan, <strong>7–9.</strong> a. musculophrenica'dan çıkar.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Thoracica interna'nın iki uç dalı: <strong>a. musculophrenica</strong> ve <strong>a. epigastrica superior</strong>.</li>
+<li>"Koroner by-pass'ta kullanılan arter" → a. thoracica interna.</li>
+</ul></div>
 </div>
 <h3>🫁 Göğüs duvarı venleri</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Sol ön interkostal venler nereye dökülür?</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sol tarafta bulunan v. intercostalis anterior'ların drene olduğu ven? <span class="src">2023 · D2</span></p>
+<p class="opt right">a) V. thoracica interna <span class=tick>✓</span></p>
+<p class="opt">b) V. subclavia</p>
+<p class="opt">c) V. hemiazygos</p>
+<p class="opt">d) V. azygos</p>
+<p class="opt">e) V. cava inferior</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Sağ tarafta bulunan v. intercostalis posterior'ların drene olduğu ven? <span class="src">2025 · D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı beş şık, iki kelime değişti: <strong>sol → sağ</strong>, <strong>anterior → posterior</strong>. Doğru şık a'dan D'ye kaydı.</p>
+<p class="opt">A) V. thoracica interna</p>
+<p class="opt">B) V. subclavia</p>
+<p class="opt">C) V. hemiazygos</p>
+<p class="opt right">D) V. azygos <span class=tick>✓</span></p>
+<p class="opt">E) V. cava inferior</p>
+<p class="w"><strong>Ön</strong> interkostal venler (iki tarafta da) → v. thoracica interna. <strong>Arka</strong> interkostaller: <strong>sağ</strong> → v. azygos, <strong>sol</strong> → v. hemiazygos.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Sol v. intercostalis posterior" sorulursa → <strong>v. hemiazygos</strong> (üsttekiler v. hemiazygos accessoria). Bu kombinasyon henüz sorulmadı, sıradaki aday bu.</li>
+</ul></div>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>V. epigastrica superior'un drene olduğu ven? <span class="src">2024</span></p>
 <p class="a"><span class="ok">✅</span><span>V. thoracica interna.</span></p>
+<p class="w">Kayıtta "v. musculophrenica" yazıyor ama yanlış. Musculophrenica onun kardeşi, ikisi birleşip v. thoracica interna'yı yapar.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Sağ arka interkostal venler nereye dökülür? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>V. azygos.</span></p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Ön = thoracica interna, arka sağ = azygos, arka sol = hemiazygos.</strong> "Azygos sağda tek başına (a-zygos = eşsiz)."</p></div>
+<h3>🔲 A. axillaris ve koltuk altı aralıkları</h3>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>A. axillaris dalları "Screw The Lawyer Save A Patient":</strong> <strong>S</strong>uperior thoracic (1. bölüm) · <strong>T</strong>horacoacromial, <strong>L</strong>ateral thoracic (2. bölüm) · <strong>S</strong>ubscapular, <strong>A</strong>nterior circumflex humeral, <strong>P</strong>osterior circumflex humeral (3. bölüm). M. pectoralis minor arteri üç bölüme ayırır: <strong>1-2-3 dal.</strong></p></div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Spatium axillare laterale (quadrangulare)'den geçen? <span class="src">2023 · D2</span></p>
+<p class="opt">a) A. circumflexa humeri anterior</p>
+<p class="opt">b) A. circumflexa scapulae</p>
+<p class="opt">c) N. radialis</p>
+<p class="opt right">d) N. axillaris <span class=tick>✓</span></p>
+<p class="opt">e) N. dorsalis scapulae</p>
+<p class="w">Dörtgen aralıktan <strong>n. axillaris</strong> ve <strong>a. circumflexa humeri posterior</strong> geçer. Şıktaki "anterior" tuzak. Circumflexa scapulae <strong>üçgen aralıktan</strong>, n. radialis <strong>triseps açıklığından</strong> geçer. N. dorsalis scapulae hiçbir aralıktan geçmez.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>V. epigastrica superior nereye dökülür?</p>
-<p class="a"><span class="ok">✅</span><span>V. thoracica interna.</span></p>
-<p class="w">Kayıtta "v. musculophrenica" yazıyor ama yanlış. Musculophrenica onun kardeşi, ikisi de thoracica interna'ya açılır.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Spatium triangulare inferior'dan geçen? <span class="src">2024 · D2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aralık değişti, şıklar karıştırıldı. Bu kez doğru cevap n. radialis.</p>
+<p class="opt">A) N. dorsalis scapulae</p>
+<p class="opt">B) A. circumflexa humeri posterior</p>
+<p class="opt">C) N. axillaris</p>
+<p class="opt">D) A. circumflexa scapulae</p>
+<p class="opt right">E) N. radialis <span class=tick>✓</span></p>
+<p class="w">Triseps açıklığından (spatium triangulare inferior) <strong>n. radialis</strong> ve <strong>a. profunda brachii</strong> geçer.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Üçüncü varyant henüz sorulmadı: "<strong>spatium axillare mediale (triangulare superior)</strong>'dan geçen" → <strong>a. circumflexa scapulae</strong>.</li>
+<li>Şıklara "a. profunda brachii" gelirse → triseps açıklığı. "A. circumflexa humeri posterior" → dörtgen aralık.</li>
+</ul></div>
 </div>
-<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Ön interkostal → <strong>thoracica interna</strong>, sağ arka → <strong>azygos</strong>, sol arka → <strong>hemiazygos</strong>. Başparmak (pollicis) = <strong>radialis</strong>. Dörtgen aralık = <strong>axillaris</strong>, üçgen yarık = <strong>radialis</strong>.</p></div>
+<p>2025 kaydındaki "arteria vertebralis'ten geçer → n. axillaris" sorusu bozuk hatırlanmış, aslı dörtgen aralık sorusu.</p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Üç aralık, üç çift:</strong> Üçgen (üst/medial) → <strong>circumflexa scapulae</strong> (tek başına). Dörtgen (lateral) → <strong>axillaris + circumflexa humeri posterior</strong>. Triseps açıklığı (alt) → <strong>radialis + profunda brachii</strong>. "<strong>Dört</strong>gen = <strong>ax</strong>illaris, iki kelime de 'a' sesiyle; <strong>alt</strong>taki = <strong>r</strong>adialis."</p></div>
+<h3>✋ Kol, önkol ve el arterleri</h3>
+<p>A. brachialis dalları: <strong>a. profunda brachii</strong> (n. radialis ile), <strong>a. collateralis ulnaris superior</strong> (n. ulnaris ile), <strong>a. collateralis ulnaris inferior</strong>, sonra <strong>a. radialis</strong> ve <strong>a. ulnaris</strong> olarak ikiye ayrılır.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. ulnaris'in dallarından oluşan seçenek? <span class="src">2023 · D2</span></p>
+<p class="rom">I- a. interossea communis · II- r. carpalis palmaris · III- r. carpalis dorsalis · IV- a. collateralis ulnaris superior · V- a. princeps pollicis</p>
+<p class="opt right">a) I, II, III <span class=tick>✓</span></p>
+<p class="opt">b) I, II, V</p>
+<p class="opt">c) II, III, V</p>
+<p class="opt">d) II, IV, V</p>
+<p class="opt">e) III, IV, V</p>
+<p class="w">Collateralis ulnaris superior <strong>brachialis</strong>'in dalı (adında "ulnaris" geçtiği için tuzak). Princeps pollicis <strong>radialis</strong>'in dalı. Rr. carpales palmaris ve dorsalis ikisinde de var, o yüzden ulnaris için de doğru.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. ulnaris'in dalı değildir? <span class="src">D2 ×2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Roma rakamlıdan tek şıklıya döndü.</p>
+<p class="opt">A) A. interossea communis</p>
+<p class="opt">B) R. carpalis palmaris</p>
+<p class="opt">C) R. carpalis dorsalis</p>
+<p class="opt">D) A. recurrens ulnaris anterior</p>
+<p class="opt right">E) A. princeps pollicis <span class=tick>✓</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. radialis'in dalı değildir? <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Bu kez taraf değişti: radialis soruldu, cevap ulnaris'in dalı oldu.</p>
+<p class="a"><span class="ok">✅</span><span>A. interossea communis.</span></p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. princeps pollicis için doğru olmayan? <span class="src">2025</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Dördüncü varyant: tek bir dal üzerinden soruldu.</p>
+<p class="a"><span class="ok">✅</span><span>"A. brachialis (humeralis)'in dalıdır." Doğrusu a. radialis.</span></p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li><strong>Sadece radialis'te olanlar:</strong> a. recurrens radialis, <strong>a. princeps pollicis</strong>, <strong>a. radialis indicis</strong>, aa. metacarpales dorsales, <strong>arcus palmaris profundus</strong>.</li>
+<li><strong>Sadece ulnaris'te olanlar:</strong> <strong>a. interossea communis</strong> (anterior, posterior, recurrens), <strong>a. recurrens ulnaris anterior ve posterior</strong>, <strong>arcus palmaris superficialis</strong>.</li>
+<li><strong>İkisinde de olanlar</strong> (her iki soruda doğru): r. carpalis palmaris, r. carpalis dorsalis, a. nutricia.</li>
+<li>Anastomozlar (slayt): recurrens ulnaris <strong>anterior</strong> ↔ collateralis ulnaris <strong>inferior</strong>; recurrens ulnaris <strong>posterior</strong> ↔ collateralis ulnaris <strong>superior</strong>; recurrens radialis ↔ collateralis radialis.</li>
+<li>Arcus palmaris <strong>superficialis</strong> = a. ulnaris + r. palmaris superficialis (radialis). Arcus palmaris <strong>profundus</strong> = a. radialis + r. palmaris profundus (ulnaris).</li>
+</ul></div>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>"Başparmak radyoda, kemik arası ulnada."</strong> Pollicis (başparmak) ve indicis (işaret) → <strong>radialis</strong> (başparmak tarafı). Interossea (kemik arası) → <strong>ulnaris</strong>. Kemer kuralı: <strong>yüzeyel kemer ulnaris'in, derin kemer radialis'in</strong> ("U-Y, R-D").</p></div>
+<h3>🩸 Üst ekstremite venleri</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Fascia clavipectoralis'i delerek v. axillaris'e drene olan ven? <span class="src">2025 · D2</span></p>
+<p class="opt">A) V. basilica</p>
+<p class="opt right">B) V. cephalica <span class=tick>✓</span></p>
+<p class="opt">C) V. brachialis</p>
+<p class="opt">D) V. mediana antebrachii</p>
+<p class="opt">E) V. thoracica interna</p>
+<p class="w">V. cephalica kolun <strong>dış (başparmak)</strong> yanında çıkar, deltoid ile pectoralis major arasındaki oluktan geçer, fascia clavipectoralis'i deler ve v. axillaris'e açılır. V. basilica kolun <strong>iç</strong> yanında derine girer, <strong>v. brachialis</strong>'e katılır.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"V. basilica nereye drene olur" → v. brachialis (slayttaki ifade).</li>
+<li>Kan alma için kullanılan → v. mediana cubiti.</li>
+<li><strong>V. thoracoepigastrica:</strong> v. thoracica lateralis (VCS'ye) ile v. epigastrica superficialis (VCI'ya) arasında <strong>kava-kaval anastomoz</strong>.</li>
+<li>Toplayıcı sıra: v. axillaris → v. subclavia → v. brachiocephalica → VCS.</li>
+</ul></div>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Cephalica = Cephe, dış taraf, başparmak tarafı, yukarıda deler.</strong> <strong>Basilica = Bas(ık), iç taraf, erkenden derine dalar.</strong></p></div>
+<h3>🧲 Üst ekstremite lenfatikleri (henüz sorulmadı, sıradaki aday)</h3>
+<p>Alt ekstremitedeki "ayak parmağı → hangi düğüm" sorusunun üst ekstremite versiyonu çıkabilir. Kural aynı: <strong>lenf yüzeyel veni takip eder.</strong></p>
+<ul>
+<li>Dış taraf (v. cephalica boyunca, başparmak tarafı) → <strong>n.l. infraclaviculares (deltopectorales)</strong>.</li>
+<li>İç taraf (v. basilica boyunca, serçe parmak tarafı) → <strong>n.l. cubitales (supratrochleares)</strong>.</li>
+<li>Orta (v. mediana antebrachii boyunca) → <strong>n.l. cubitales</strong>.</li>
+<li>Aksiller lenf grupları: lateralis (humeral), posterior (subscapular), anterior (pectoral), centralis, apicalis.</li>
+<li><strong>Rotter düğümleri (interpectoral):</strong> m. pectoralis major ile minor arasında.</li>
+<li>Sağ taraf → ductus lymphaticus dexter, sol taraf → ductus thoracicus, ikisi de angulus venosus'a.</li>
+</ul>
 </section>
 <section class="sec c-purple" id="anat-5-alt-ekstremite-damarlari-ve-lenfatikle">
-<h2>5. Alt ekstremite damarları ve lenfatikleri</h2><span class="pill">11 soru</span>
-<p>Yukarıdan aşağı gidiyoruz: kalça, uyluk, diz, bacak, ayak ve en son lenf.</p>
-<h3>🍑 Kalça</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen infrapiriforme'den geçenler? (n. obturatorius, a. glutea superior, a. glutea inferior, n. ischiadicus, n. cutaneus femoris posterior) <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. glutea inferior, n. ischiadicus, n. cutaneus femoris posterior.</span></p>
-<p class="w">Adında "superior" olan <strong>suprapiriforme</strong>'den geçer. N. obturatorius kalçaya hiç uğramaz, canalis obturatorius'tan uyluğa iner.</p>
+<h2>5. Alt ekstremite damarları ve lenfatikleri</h2><span class="pill">11 soru, 20 kez</span>
+<p>Yukarıdan aşağı: kalça (foramen infrapiriforme) → a. iliaca externa → a. femoralis → a. poplitea → bacak ve ayak → venler → lenf.</p>
+<h3>🍑 Gluteal bölge</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen infrapiriforme'den geçen damar ve sinirler için doğru seçenek? <span class="src">2023 · D2</span></p>
+<p class="rom">I- n. obturatorius · II- a. glutea superior · III- a. glutea inferior · IV- n. ischiadicus · V- n. cutaneus femoris posterior</p>
+<p class="opt">a) I, II, IV</p>
+<p class="opt">b) I, III, V</p>
+<p class="opt">c) II, IV, V</p>
+<p class="opt">d) II, III, IV</p>
+<p class="opt right">e) III, IV, V <span class=tick>✓</span></p>
+<p class="w">Adında <strong>superior</strong> geçen <strong>suprapiriforme</strong>'den geçer (a., v., n. gluteus superior). N. obturatorius kalçaya hiç uğramaz, canalis obturatorius'tan uyluğa iner.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen infrapiriforme'den geçmeyen? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. obturatoria.</span></p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen infrapiriforme'den geçmeyen? <span class="src">D2 ×2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Roma rakamlıdan "geçmez" köklü tek şıklıya döndü. Yeni şık olarak <strong>a. pudenda interna</strong> eklendi (o da geçer).</p>
+<p class="opt">a) A. glutea inferior</p>
+<p class="opt">b) N. cutaneus femoris posterior</p>
+<p class="opt">c) N. sciaticus (ischiadicus)</p>
+<p class="opt">d) A. pudenda interna</p>
+<p class="opt right">e) A. obturatoria <span class=tick>✓</span></p>
+<p class="w">A. obturatoria a. iliaca interna'dan çıkar ve canalis obturatorius'tan geçer.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Geçmeyen" olarak gelebilecek diğer şıklar: <strong>a./n. glutea superior</strong>, <strong>n. obturatorius</strong>, n. femoralis.</li>
+<li>"Geçen" olarak gelebilecek diğer şıklar: <strong>n. pudendus</strong>, v. pudenda interna, n. musculi obturatorii interni, n. musculi quadrati femoris.</li>
+</ul></div>
 </div>
-<h3>🦵 Uyluk</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. femoralis'in dalı olmayan?</p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>İnfrapiriforme = "POPS IQ":</strong> <strong>P</strong>udendal nerve, <strong>O</strong>bturator internus nerve, <strong>P</strong>osterior femoral cutaneous, <strong>S</strong>ciatic, <strong>I</strong>nferior gluteal (a/v/n), <strong>Q</strong>uadratus femoris nerve (+ internal pudendal damarlar). <strong>Supra = sadece "superior gluteal" üçlüsü.</strong></p></div>
+<h3>🦵 A. iliaca externa ve a. femoralis</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. femoralis'e ait olmayan dal? <span class="src">D2</span></p>
 <p class="a"><span class="ok">✅</span><span>A. epigastrica inferior.</span></p>
-<p class="w">Epigastrica inferior iliaca externa'dan çıkar. Femoralis'in dalları: epigastrica superficialis, circumflexa ilium superficialis, pudendae externae, profunda femoris, descendens genus.</p>
+<p class="w">Epigastrica inferior ve circumflexa iliaca <strong>profunda</strong>, <strong>a. iliaca externa</strong>'nın dallarıdır (lig. inguinale'nin üstünde ayrılır).</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Femoralis'in dalları (slayt): <strong>epigastrica superficialis</strong>, <strong>circumflexa ilium superficialis</strong>, <strong>pudenda externa superficialis ve profunda</strong>, <strong>profunda femoris</strong> (circumflexa femoris medialis, lateralis, perforantes), <strong>descendens genu</strong>.</li>
+<li>"Dalı değil" olarak gelebilecek diğerleri: <strong>a. circumflexa iliaca profunda</strong> (iliaca externa), <strong>a. obturatoria</strong> ve a. glutea (iliaca interna).</li>
+</ul></div>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Uyluğun medial kompartmanını besleyen arter? <span class="times">🔁 2 kez</span></p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Superficialis'ler femoralis'ten, profunda/inferior iliaca externa'dan.</strong> Epigastrica *superficialis* → femoralis, *inferior* → iliaca externa, *superior* → thoracica interna. "Yüzeyde olan uyluktan, derinde olan karından."</p></div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Uyluğun medial kompartmanını kanlandıran arter? <span class="src">D2 · 2025</span></p>
 <p class="a"><span class="ok">✅</span><span>A. obturatoria.</span></p>
+<p class="w">Medial (addüktör) kompartmanın arteri a. obturatoria, siniri n. obturatorius. Ön kompartman a. femoralis, arka kompartman aa. perforantes (profunda femoris).</p>
 </div>
-<h3>🦴 Diz</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. poplitea'nın dalı olmayan? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. descendens genus.</span></p>
-<p class="w">Adında "genus" (diz) geçtiği için poplitea sanılıyor, ama femoralis'in dalı.</p>
+<p>2025 kaydındaki "orbitanın medial kompartmanı → a. ophthalmica" ve "foramen infraorbital'den geçmeyen → a. ophthalmica" soruları bozuk hatırlanmış. Asılları uyluğun medial kompartmanı ve foramen infrapiriforme, ikisinin de cevabı a. obturatoria.</p>
+<h3>🦴 A. poplitea ve diz</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. poplitea'ya ait olmayan dal? <span class="src">D2 · 2025</span></p>
+<p class="opt right">a) A. descendens genus <span class=tick>✓</span></p>
+<p class="opt">b) A. superior lateralis genus</p>
+<p class="opt">c) A. media genus</p>
+<p class="opt">d) Aa. surales</p>
+<p class="opt">e) A. inferior lateralis genus</p>
+<p class="w">Adında "genu" geçtiği için poplitea sanılır, ama <strong>a. femoralis</strong>'in canalis adductorius'taki dalıdır.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Diz anastomozuna katılanlar? (circumflexa femoris medialis, circumflexa femoris lateralis, tibialis anterior, tibialis posterior, fibularis) <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Circumflexa femoris lateralis, tibialis anterior, fibularis.</span></p>
-<p class="w">Lateral circumflexa'nın inen dalı yukarıdan, tibialis anterior'un geri dönen dalları aşağıdan katılır. Medial circumflexa kalçayı besler, dize inmez.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Diz ekleminin kanlanmasında a. poplitea dallarıyla anastomoz yapan arterler? <span class="src">D2 ×2</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>"Poplitea'nın dalı değil" sorusu "dize dışarıdan kim katılır" sorusuna dönüştü.</p>
+<p class="rom">I- a. circumflexa femoris medialis · II- a. circumflexa femoris lateralis · III- a. tibialis anterior · IV- a. tibialis posterior · V- a. fibularis</p>
+<p class="opt">A) I, II, III</p>
+<p class="opt">B) I, III, V</p>
+<p class="opt">C) II, III, IV</p>
+<p class="opt right">D) II, III, V <span class=tick>✓</span></p>
+<p class="opt">E) III, IV, V</p>
+<p class="w">Slayttaki anastomozlar: superior lateralis genus ↔ <strong>circumflexa femoris lateralis'in r. descendens'i</strong>; inferior lateralis genus ↔ <strong>a. fibularis</strong>; inferior medialis genus ↔ <strong>descendens genu</strong> ve <strong>tibialis anterior</strong> (recurrens tibialis anterior). Medial circumflexa kalçayı besler, dize inmez.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"Dize katılır" diye doğru gelebilecek bir diğer arter: <strong>a. descendens genu</strong>.</li>
+</ul></div>
 </div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Poplitea'nın dalları "5 genu + surales + 2 tibial":</strong> superior lateralis/medialis, media, inferior lateralis/medialis genus, aa. surales, tibialis anterior, tibialis posterior. <strong>Descendens genu yukarıdan (femoralis), dalı değil.</strong></p></div>
 <h3>🦶 Bacak ve ayak</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. fibularis nereden çıkar? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>A. tibialis posterior.</span></p>
-<p class="w">Adı fibularis ama arka bölmede, tibialis posterior'dan ayrılır.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. fibularis'in orijin aldığı damar? <span class="src">2023 · D2</span></p>
+<p class="opt">a) A. tibialis anterior</p>
+<p class="opt right">b) A. tibialis posterior <span class=tick>✓</span></p>
+<p class="opt">c) A. poplitea</p>
+<p class="opt">d) Aa. surales</p>
+<p class="opt">e) A. dorsalis pedis</p>
+<p class="w">Fibularis adını lateral kompartmandan alır ama <strong>arka kompartmanda</strong>, tibialis posterior'dan ayrılır.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>A. dorsalis pedis nereden çıkar?</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. dorsalis pedis'in orijin aldığı damar? <span class="src">2024</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı soru, bu kez ayağın sırt arteri. Şıklar muhtemelen aynı beşli.</p>
 <p class="a"><span class="ok">✅</span><span>A. tibialis anterior.</span></p>
+<p class="w">Tibialis anterior ayak bileğinde retinaculum extensorum'un altından geçince adı dorsalis pedis olur.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>"A. plantaris medialis/lateralis'in çıktığı" → a. tibialis posterior.</li>
+<li>"Arcus plantaris profundus" → a. plantaris lateralis + a. plantaris profunda (dorsalis pedis).</li>
+<li>"A. tibialis posterior'dan nabız alınan yer" (slayttaki TUS sorusu) → <strong>malleolus medialis'in arkası</strong>. Dorsalis pedis nabzı ayak sırtında.</li>
+</ul></div>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>N. peroneus communis en çok nerede yaralanır?</p>
-<p class="a"><span class="ok">✅</span><span>Caput fibulae (fibula başı).</span></p>
-<p class="w">Burada kemiğe ve deriye çok yakın. Hasarı düşük ayak yapar.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>N. peroneus communis'in yüzeyel seyri nedeniyle hasarlanma riski taşıdığı yer? <span class="src">2024</span></p>
+<p class="a"><span class="ok">✅</span><span>Caput (collum) fibulae.</span></p>
+<p class="w">Hasarı <strong>düşük ayak</strong> yapar.</p>
 </div>
-<h3>💧 Lenf</h3>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>5. ayak parmağından gelen lenf nereye gider?</p>
-<p class="a"><span class="ok">✅</span><span>Popliteal lenf düğümleri.</span></p>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>"Ön-ön, arka-arka":</strong> tibialis <strong>anterior</strong> → ayağın <strong>sırtı</strong> (dorsalis pedis). Tibialis <strong>posterior</strong> → <strong>taban</strong> (plantares) + <strong>fibularis</strong>.</p></div>
+<h3>🩸 Alt ekstremite venleri</h3>
+<ul>
+<li><strong>V. saphena magna:</strong> ayağın <strong>medial</strong> kenarından, medial malleolün <strong>önünden</strong> çıkar, hiatus saphenus'tan <strong>v. femoralis</strong>'e dökülür. Yanında <strong>n. saphenus</strong> var (by-pass alınırken hasar riski). By-pass'ta kullanılır.</li>
+<li><strong>V. saphena parva:</strong> ayağın <strong>lateral</strong> kenarından, lateral malleolün <strong>arkasından</strong>, <strong>v. poplitea</strong>'ya dökülür.</li>
+<li>Saphena magna'ya dökülenler: v. circumflexa ilium superficialis, v. epigastrica superficialis, vv. pudendae externae, v. saphena accessoria.</li>
+<li>V. poplitea'ya dökülenler: vv. tibiales anteriores ve posteriores, vv. fibulares, vv. geniculares, vv. surales, v. saphena parva.</li>
+</ul>
+<h3>🧲 Alt ekstremite lenfatikleri</h3>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Ayak başparmağı çevresinden gelen lenfatiklerin drene olduğu lenf düğümü? <span class="src">D2</span></p>
+<p class="opt">A) Nodi lymphatici femoralis</p>
+<p class="opt right">B) Nodi lymphatici inguinales <span class=tick>✓</span></p>
+<p class="opt">C) Nodi lymphatici poplitei</p>
+<p class="opt">D) Nodi lymphatici iliaci externi</p>
+<p class="opt">E) Nodi lymphatici iliaci interni</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Ayak başparmağından gelen lenf nereye gider?</p>
-<p class="a"><span class="ok">✅</span><span>Yüzeyel inguinal lenf düğümleri.</span></p>
-<p class="w">İkisi tek kural: lenf yüzeyel veni takip eder. İç taraf <strong>v. saphena magna</strong> ile kasığa, dış taraf <strong>v. saphena parva</strong> ile diz arkasına.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>5. ayak parmağı aralığından gelen lenf hangi düğüme drene olur? <span class="src">2025</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Parmak değişti: başparmak (medial) yerine 5. parmak (lateral) soruldu. Cevap inguinal'den popliteal'e kaydı.</p>
+<p class="a"><span class="ok">✅</span><span>Nodi lymphatici poplitei.</span></p>
+<p class="w">Slayt: <strong>ayağın medialinden</strong> gelen lenfatikler <strong>v. saphena magna</strong>'ya eşlik eder → <strong>n.l. inguinales</strong>. <strong>Ayağın lateralinden</strong> gelenler <strong>v. saphena parva</strong>'ya eşlik eder → <strong>n.l. poplitei</strong>.</p>
+<div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
+<li>Bir sonraki olası varyantlar: "medial malleol / bacağın iç yüzü / dizin iç yanı" → inguinal. "Lateral malleol / topuğun dışı / baldır arkası" → popliteal.</li>
+<li>Iliaci externi ve interni sonraki duraklardır, ilk drenaj yeri değil. Femoralis diye ayrı bir düğüm grubu şıkkı da çeldirici.</li>
+</ul></div>
 </div>
-<div class="tip"><span class="tip-h">💡 Dikkat</span><p>"Genus" geçen descendens genus = <strong>femoralis</strong>. "Fibularis" geçen a. fibularis = <strong>tibialis posterior</strong>. Başparmak lenfi <strong>kasık</strong>, küçük parmak <strong>diz arkası</strong>.</p></div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Lenf veni takip eder:</strong> <strong>Magna = Medial = Kasık (inguinal).</strong> <strong>Parva = Lateral = Diz arkası (popliteal).</strong> "Büyük ven uzun yol gider (kasığa), küçük ven kısa yol (diz arkasına)."</p></div>
 </section>
 <section class="sec c-ink" id="anat-sinav-sabahi-tek-sayfa">
 <h2>🎯 Sınav sabahı: tek sayfa</h2>
 <h3>👶 Fetal</h3>
 <ul>
-<li>Ductus arteriosus: truncus pulmonalis → aorta, kalıntı <strong>lig. arteriosum (Botallo)</strong>.</li>
-<li>Ductus venosus: v. porta → VCI, kalıntı <strong>lig. venosum</strong>.</li>
-<li>V. umbilicalis → lig. teres hepatis. A. umbilicalis → lig. umbilicale mediale.</li>
+<li>DA: truncus pulmonalis → aorta → <strong>lig. arteriosum (Botallo)</strong>. DV: v. porta → VCI → <strong>lig. venosum (Arantius)</strong>.</li>
+<li>V. umbilicalis → lig. teres hepatis. A. umbilicalis → lig. umbilicale mediale (erişkinde var). Foramen ovale → fossa ovalis.</li>
 </ul>
-<h3>🫀 Kalp</h3>
+<h3>❤️ Kalp</h3>
 <ul>
-<li>Sinus transversus kılıfların <strong>arası</strong>, obliquus venöz kılıfın <strong>altı</strong>.</li>
-<li>Apex sol 5. ICS.</li>
-<li>SA → crista terminalis, AV → Koch üçgeni, sağ dal → trabecula septomarginalis, Purkinje → ventrikül.</li>
-<li>Chorda → triküspit ve mitral.</li>
-<li>V. cordis magna LAD'ye eşlik eder.</li>
+<li>Apex: sol 5. ICS, midklaviküler. Önde sağ ventrikül, arkada sol atriyum.</li>
+<li><strong>Transversus = iki kılıfın arası</strong>, <strong>obliquus = venöz kılıfın altı</strong>.</li>
+<li>Crista terminalis → <strong>SA</strong>. Koch üçgeni → <strong>AV</strong>. Sağ dal → <strong>trabecula septomarginalis</strong>. Purkinje → <strong>ventrikül</strong> subendokardı.</li>
+<li>Chorda → <strong>triküspit + mitral</strong>.</li>
+<li>Sol koroner ve sağ koroner → <strong>aorta ascendens</strong>. LAD sol koronerden, arka interventriküler sağ koronerden (%70).</li>
+<li>Magna ↔ LAD, media ↔ arka interventriküler, parva ↔ sağ marjinal. Thebesian ve ön kardiyak venler doğrudan sağ atriyuma.</li>
 </ul>
 <h3>🧠 Baş-boyun</h3>
 <ul>
-<li>ECA dalı <strong>değil</strong>: ophthalmica (ICA), thyroidea inferior ve vertebralis (subclavia).</li>
-<li>Meningea media → maxillaris.</li>
-<li>Burun: ethmoidalis anterior ICA'dan, sphenopalatina ve infraorbitalis maxillaris'ten.</li>
-<li>V. angularis → v. ophthalmica superior → sinus cavernosus.</li>
+<li>ECA <strong>değil</strong>: ophthalmica (ICA), thyroidea <strong>inferior</strong>, vertebralis (subclavia).</li>
+<li>Meningea media → <strong>maxillaris</strong>.</li>
+<li>Burun: ethmoidalis anterior → <strong>ICA</strong>. Sphenopalatina + infraorbitalis → <strong>maxillaris</strong>.</li>
+<li>V. angularis → v. ophthalmica superior → <strong>sinus cavernosus</strong>.</li>
+<li>Derin lenf: pretracheal, paratracheal, prelaryngeal, retropharyngeal, jugulo- zinciri.</li>
 </ul>
 <h3>💪 Üst ekstremite</h3>
 <ul>
-<li>Thoracica interna subclavia dalı, özofagusu beslemez.</li>
-<li>Dörtgen aralık → n. axillaris. Üçgen yarık → n. radialis.</li>
-<li>Princeps pollicis → radialis. Interossea communis → ulnaris.</li>
-<li>V. cephalica fascia clavipectoralis'i deler.</li>
-<li>Ön interkostal ven → thoracica interna, sağ arka → azygos.</li>
+<li>Thoracica interna = <strong>subclavia</strong> dalı. Özofagusu <strong>beslemez</strong>. Ön interkostal 1–6 doğrudan, 7–9 musculophrenica'dan.</li>
+<li>Ön interkostal ven → thoracica interna. Arka sağ → <strong>azygos</strong>, arka sol → <strong>hemiazygos</strong>.</li>
+<li>Dörtgen → <strong>n. axillaris + circumflexa humeri posterior</strong>. Triseps açıklığı → <strong>n. radialis + profunda brachii</strong>. Üçgen → circumflexa scapulae.</li>
+<li>Princeps pollicis, radialis indicis → <strong>radialis</strong>. Interossea communis, recurrens ulnaris → <strong>ulnaris</strong>. Collateralis ulnaris sup. → <strong>brachialis</strong>.</li>
+<li>Cephalica → fascia clavipectoralis → <strong>v. axillaris</strong>. Basilica → v. brachialis.</li>
+<li>Lenf: dış → infraclavicular, iç → cubital (supratrochlear).</li>
 </ul>
 <h3>🦵 Alt ekstremite</h3>
 <ul>
-<li>İnfrapiriforme: glutea inferior, ischiadicus, cutaneus femoris posterior. A. obturatoria geçmez.</li>
-<li>Femoralis dalı değil: epigastrica inferior. Uyluk iç bölme: a. obturatoria.</li>
-<li>Poplitea dalı değil: descendens genus.</li>
-<li>Fibularis ← tibialis posterior. Dorsalis pedis ← tibialis anterior.</li>
-<li>Peroneus communis → fibula başı.</li>
-<li>Başparmak lenfi → kasık, 5. parmak → diz arkası.</li>
+<li>İnfrapiriforme: glutea inferior, ischiadicus, cutaneus femoris posterior, pudenda interna. <strong>Obturatoria ve glutea superior geçmez.</strong></li>
+<li>Femoralis dalı <strong>değil</strong>: epigastrica <strong>inferior</strong>. Uyluk iç bölme: <strong>a. obturatoria</strong>.</li>
+<li>Poplitea dalı <strong>değil</strong>: <strong>descendens genu</strong>. Dize katılan: circumflexa femoris <strong>lateralis</strong>, tibialis anterior, fibularis.</li>
+<li>Fibularis ← tibialis <strong>posterior</strong>. Dorsalis pedis ← tibialis <strong>anterior</strong>.</li>
+<li>Başparmak → <strong>inguinal</strong>, 5. parmak → <strong>popliteal</strong>.</li>
 </ul>
 </section></div><div role="tabpanel" id="panel-histo" aria-labelledby="tab-histo" hidden><nav class="toc"><a class="c-ink" href="#histo-bu-not-nasil-okunur">Bu not nasıl okunur</a><a class="c-red" href="#histo-1-kalbin-gelisimi">1. Kalbin gelişimi</a><a class="c-orange" href="#histo-2-fetal-dolasim-kalintilari">2. Fetal dolaşım kalıntıları</a><a class="c-rose" href="#histo-3-kalp-duvari-ve-ileti-hucreleri">3. Kalp duvarı ve ileti hücreleri</a><a class="c-blue" href="#histo-4-damar-duvari">4. Damar duvarı</a><a class="c-teal" href="#histo-5-kapiller-tipleri">5. Kapiller tipleri</a><a class="c-ink" href="#histo-sinav-sabahi">🎯 Sınav sabahı</a></nav><section class="sec c-ink" id="histo-bu-not-nasil-okunur">
 <h2>Bu not nasıl okunur</h2>
