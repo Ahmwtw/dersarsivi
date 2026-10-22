@@ -284,7 +284,7 @@ body:not(.student) #scontrols, body:not(.student) #console, body:not(.student) .
 @media (prefers-color-scheme:dark){.ds-bar{--ds-bg:#12151c;--ds-fg:#e6e9f0;--ds-line:#2a303c;--ds-on:#e6e9f0;--ds-onfg:#12151c}}
 .ds-bar a{text-decoration:none;color:var(--ds-fg)}
 .ds-home{font-weight:600;margin-right:auto}
-.ds-sw{display:flex;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
+.ds-sw{display:flex;flex-wrap:wrap;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
 .ds-sw a{padding:6px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
 .ds-sw a[aria-current="page"]{background:var(--ds-on);color:var(--ds-onfg)}
 .ds-sw a:focus-visible,.ds-home:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
@@ -292,9 +292,10 @@ body:not(.student) #scontrols, body:not(.student) #console, body:not(.student) .
 <nav class="ds-bar" aria-label="Sayfalar">
   <a class="ds-home" href="../">🏠 Ders Arşivi</a>
   <div class="ds-sw">
-    <a href="../notlar/" >📚 Spot Notlar</a>
+    <a href="../notlar/">📚 Notlar</a>
+    <a href="../banka/">🗂️ Çıkmışlar</a>
     <a href="../simulasyon/" aria-current="page">🩺 Simülasyon</a>
-    <a href="../damar/" >🩸 Damar Yolculuğu</a>
+    <a href="../damar/">🩸 Damar</a>
   </div>
 </nav>
 <style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));margin-top:-12px;margin-bottom:12px}</style>

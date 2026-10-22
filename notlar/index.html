@@ -126,7 +126,7 @@ li::marker { color: var(--c); }
 @media (prefers-color-scheme:dark){.ds-bar{--ds-bg:#12151c;--ds-fg:#e6e9f0;--ds-line:#2a303c;--ds-on:#e6e9f0;--ds-onfg:#12151c}}
 .ds-bar a{text-decoration:none;color:var(--ds-fg)}
 .ds-home{font-weight:600;margin-right:auto}
-.ds-sw{display:flex;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
+.ds-sw{display:flex;flex-wrap:wrap;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
 .ds-sw a{padding:6px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
 .ds-sw a[aria-current="page"]{background:var(--ds-on);color:var(--ds-onfg)}
 .ds-sw a:focus-visible,.ds-home:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
@@ -134,12 +134,14 @@ li::marker { color: var(--c); }
 <nav class="ds-bar" aria-label="Sayfalar">
   <a class="ds-home" href="../">🏠 Ders Arşivi</a>
   <div class="ds-sw">
-    <a href="../notlar/" aria-current="page">📚 Spot Notlar</a>
-    <a href="../simulasyon/" >🩺 Simülasyon</a>
-    <a href="../damar/" >🩸 Damar Yolculuğu</a>
+    <a href="../notlar/" aria-current="page">📚 Notlar</a>
+    <a href="../banka/">🗂️ Çıkmışlar</a>
+    <a href="../simulasyon/">🩺 Simülasyon</a>
+    <a href="../damar/">🩸 Damar</a>
   </div>
 </nav>
 <style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
+
 <div class="wrap">
 <header class="top"><h1>Dolaşım Kurulu Spot Notları</h1><p>Fizyoloji, anatomi, histoloji, biyokimya ve biyofizik. Çıkmış sorulardan, sade ve kısa. Sınav 23 Ekim. 🍀</p></header>
 <div class="tabs" role="tablist"><button type="button" role="tab" id="tab-fizyo" aria-controls="panel-fizyo" aria-selected="true" data-tab="fizyo">🫀 Fizyoloji</button><button type="button" role="tab" id="tab-anat" aria-controls="panel-anat" aria-selected="false" data-tab="anat">🦴 Anatomi</button><button type="button" role="tab" id="tab-histo" aria-controls="panel-histo" aria-selected="false" data-tab="histo">🔬 Histoloji</button><button type="button" role="tab" id="tab-biyokim" aria-controls="panel-biyokim" aria-selected="false" data-tab="biyokim">🧪 Biyokimya</button><button type="button" role="tab" id="tab-biyofiz" aria-controls="panel-biyofiz" aria-selected="false" data-tab="biyofiz">⚡ Biyofizik</button></div>
@@ -452,7 +454,8 @@ li::marker { color: var(--c); }
 <p class="a"><span class="ok">✅</span><span>S3.</span></p>
 </div>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>Aort yetmezliğinde üfürüm?</p>
-<p class="a"><span class="ok">✅</span><span>Diyastolde, sol 2. ICS–sternum kenarı.</span></p>
+<p class="a"><span class="ok">✅</span><span>Diyastolde, sağ 2. ICS–sternum kenarı (aort odağı).</span></p>
+<p class="w">Kesin olan <strong>diyastol</strong>. Sol 2. ICS pulmoner odak, çeldirici. Slayt ayrıca Erb noktasını (sol 3–4) söylüyor ama şıklarda yok.</p>
 </div>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>Aort stenozunda üfürüm?</p>
 <p class="a"><span class="ok">✅</span><span>Sistolde, sağ 2. ICS–sternum kenarı.</span></p>
@@ -621,9 +624,9 @@ li::marker { color: var(--c); }
 <p class="a"><span class="ok">✅</span><span>5 mmHg filtrasyon.</span></p>
 <p class="w">(30 + 2) − (25 + 2) = +5. Artı işareti dışarı doğru demek.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>İskelet kası: arteriyel uç 35, venöz uç 14, kolloid 25, interstisyel 0. Arteriyel uçta net kuvvet?</p>
-<p class="a"><span class="ok">✅</span><span>+10 mmHg, dışarı doğru.</span></p>
-<p class="w">Kayıtta "11, kapillere doğru" yazıyor, ama o venöz ucun değeri (14 − 25 = −11). Soruda hangi uç soruluyor, dikkatli oku.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Arteriyel uç: Pc 35, Pif 0, πc 25, πif 1. Net sıvı hareketi? (2K1, şıklı)</p>
+<p class="a"><span class="ok">✅</span><span>Filtrasyon, 11 mmHg.</span></p>
+<p class="w">(35 − 0) − (25 − 1) = +11, dışarı doğru. Derlemedeki "kapillere doğru 11" kaydının aslı bu soru; yön yanlış hatırlanmış.</p>
 </div>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>Hareketsiz ayakta durmada ödem mekanizması?</p>
 <p class="a"><span class="ok">✅</span><span>Kapiller hidrostatik basınç artışı.</span></p>
@@ -1110,8 +1113,23 @@ li::marker { color: var(--c); }
 <p class="opt">D) A. circumflexa scapulae</p>
 <p class="opt right">E) N. radialis <span class=tick>✓</span></p>
 <p class="w">Triseps açıklığından (spatium triangulare inferior) <strong>n. radialis</strong> ve <strong>a. profunda brachii</strong> geçer.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Spatium axillare mediale (triangulare superior)'dan geçen? <span class="src">2K1</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Üçüncü aralık da soruldu, şıklar aynı beşli. Bu kez cevap a. circumflexa scapulae.</p>
+<p class="opt">a) N. axillaris</p>
+<p class="opt">b) A. circumflexa humeri anterior</p>
+<p class="opt right">c) A. circumflexa scapulae <span class=tick>✓</span></p>
+<p class="opt">d) N. radialis</p>
+<p class="opt">e) N. dorsalis scapulae</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Fossa axillaris için doğru değildir? <span class="src">2K1</span></p>
+<p class="opt">a) Plica axillaris anterior'u m. pectoralis major oluşturur.</p>
+<p class="opt">b) Plica axillaris posterior'u m. latissimus dorsi oluşturur.</p>
+<p class="opt">c) Posterior duvarında m. subscapularis yer alır.</p>
+<p class="opt">d) Lateral duvarında humerus bulunur.</p>
+<p class="opt right">e) Anterior duvarında m. serratus anterior bulunur. <span class=tick>✓</span></p>
+<p class="w">Serratus anterior <strong>medial</strong> duvardır. Ön duvar pectoralis major ve minor, arka duvar subscapularis–teres major–latissimus, lateral duvar humerus (sulcus intertubercularis).</p>
 <div class="var"><span class="var-h">🎯 Başka nasıl sorulabilir?</span><ul>
-<li>Üçüncü varyant henüz sorulmadı: "<strong>spatium axillare mediale (triangulare superior)</strong>'dan geçen" → <strong>a. circumflexa scapulae</strong>.</li>
 <li>Şıklara "a. profunda brachii" gelirse → triseps açıklığı. "A. circumflexa humeri posterior" → dörtgen aralık.</li>
 </ul></div>
 </div>
@@ -1205,6 +1223,14 @@ li::marker { color: var(--c); }
 <li>"Geçen" olarak gelebilecek diğer şıklar: <strong>n. pudendus</strong>, v. pudenda interna, n. musculi obturatorii interni, n. musculi quadrati femoris.</li>
 </ul></div>
 </div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Foramen suprapiriforme'den geçen sinirin sıkışması sonucunda hangi hareket yapılamaz? <span class="src">2K1</span></p>
+<p class="opt">a) Art. coxae'da addüksiyon</p>
+<p class="opt right">b) Art. coxae'da abdüksiyon <span class=tick>✓</span></p>
+<p class="opt">c) Art. genu'da fleksiyon</p>
+<p class="opt">d) Art. genu'da iç rotasyon</p>
+<p class="opt">e) Art. coxae'da dış rotasyon</p>
+<p class="w">Suprapiriforme'den <strong>n. gluteus superior</strong> geçer → gluteus medius, minimus ve TFL → kalçada <strong>abdüksiyon</strong> (ve iç rotasyon). Felcinde Trendelenburg belirtisi.</p>
+</div>
 <div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>İnfrapiriforme = "POPS IQ":</strong> <strong>P</strong>udendal nerve, <strong>O</strong>bturator internus nerve, <strong>P</strong>osterior femoral cutaneous, <strong>S</strong>ciatic, <strong>I</strong>nferior gluteal (a/v/n), <strong>Q</strong>uadratus femoris nerve (+ internal pudendal damarlar). <strong>Supra = sadece "superior gluteal" üçlüsü.</strong></p></div>
 <h3>🦵 A. iliaca externa ve a. femoralis</h3>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>A. femoralis'e ait olmayan dal? <span class="src">D2</span></p>
@@ -1229,6 +1255,14 @@ li::marker { color: var(--c); }
 <p class="opt">d) Aa. surales</p>
 <p class="opt">e) A. inferior lateralis genus</p>
 <p class="w">Adında "genu" geçtiği için poplitea sanılır, ama <strong>a. femoralis</strong>'in canalis adductorius'taki dalıdır.</p>
+</div>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>A. poplitea'nın dalı değildir? (2K1 şıkları) <span class="src">2K1</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Doğru cevap değiştirildi: bu kez <strong>a. fibularis</strong> (a. tibialis posterior'un dalı). Genus arterleri bu sefer "medialis" yazılmış.</p>
+<p class="opt right">a) A. fibularis <span class=tick>✓</span></p>
+<p class="opt">b) A. superior medialis genus</p>
+<p class="opt">c) A. media genus</p>
+<p class="opt">d) Aa. surales</p>
+<p class="opt">e) A. inferior medialis genus</p>
 </div>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>Diz ekleminin kanlanmasında a. poplitea dallarıyla anastomoz yapan arterler? <span class="src">D2 ×2</span></p>
 <p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>"Poplitea'nın dalı değil" sorusu "dize dışarıdan kim katılır" sorusuna dönüştü.</p>
@@ -1493,13 +1527,13 @@ li::marker { color: var(--c); }
 <p class="a"><span class="ok">✅</span><span>Sürekli (kesintisiz) kapiller.</span></p>
 <p class="w">Timusta kan–timus bariyeri var, bu yüzden kapiller sıkı.</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Kemik iliğinin kapiller sistemi?</p>
-<p class="a"><span class="ok">✅</span><span>Kesintili (sinüzoid).</span></p>
-<p class="w">Bir derlemede anahtar "endotel ve bazal membran kesintisiz" diye işaretlenmiş. Ders kitaplarında kemik iliği sinüzoiddir, kesintilidir. Soru kökünü dikkatle oku.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>KEMİK kapiller sistemini doğru tanımlayan? (Online, anahtarlı)</p>
+<p class="a"><span class="ok">✅</span><span>Endotel ve bazal membran kesintisiz (sürekli kapiller).</span></p>
+<p class="w">Soru kemik <strong>dokusu</strong>. Resmi anahtar bu. Kemik <strong>iliği</strong> sorulursa cevap sinüzoid (kesintili).</p>
 </div>
-<div class="qa"><p class="q"><span class="lbl">Soru</span>Hangisi lenfoid organ değildir?</p>
-<p class="a"><span class="ok">✅</span><span>Kayıtta "kemik iliği" yazıyor.</span></p>
-<p class="w">Bu kayıt şüpheli: kemik iliği <strong>primer lenfoid organdır</strong>. Şıklarda başka bir lenfoid olmayan organ varsa onu seç.</p>
+<div class="qa"><p class="q"><span class="lbl">Soru</span>Biyopside lenfatik kapiller yok. Doku nereden alınmış olabilir? (2K1)</p>
+<p class="a"><span class="ok">✅</span><span>Kemik iliği.</span></p>
+<p class="w">2025'teki "lenfoid organ değildir → kemik iliği" kaydının aslı bu soru. Şıklar: kemik iliği, karaciğer, böbrek, lenf nodu, akciğer.</p>
 </div>
 <div class="tip"><span class="tip-h">💡 Dikkat</span><p>Sinüzoid = <strong>karaciğer, dalak, kemik iliği</strong>. Timus ve akciğer <strong>sürekli</strong>.</p></div>
 </section>
@@ -1618,18 +1652,18 @@ li::marker { color: var(--c); }
 <h3>📌 Akılda kalsın</h3>
 <ul>
 <li>Bilirubin suda çözünmez. <strong>Kanda albümine</strong> bağlı taşınır.</li>
-<li>Albüminde bilirubin için iki bağlanma yeri var (biri yüksek, biri düşük ilgili). Bu yüzden "<strong>A alt birimine 2 molekül bilirubin bağlanır</strong>" cümlesi albümin için.</li>
+<li>"<strong>A alt birimine 2 molekül bilirubin bağlanır</strong>" sorusunda iki derlemede de <strong>ligandin</strong> işaretli. Albüminin alt birimi yok; ligandin alt birimli bir enzim.</li>
 <li>Karaciğer hücresine girince <strong>ligandin</strong> (Z proteini ailesinden) taşır.</li>
 </ul>
 <h3>📝 Çıkmış sorular</h3>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>Hangisinin A alt birimine 2 molekül bilirubin bağlanır? <span class="times">🔁 2 kez</span></p>
-<p class="a"><span class="ok">✅</span><span>Albümin.</span></p>
-<p class="w">Bir derlemede "ligandin" işaretli. 2023'ün orijinal anahtarı albümin, onu seç.</p>
+<p class="a"><span class="ok">✅</span><span>Ligandin.</span></p>
+<p class="w">Önceki sürümde albümin yazıyordu; iki ayrı derleme de ligandin işaretlemiş, "alt birim" de albümine uymuyor.</p>
 </div>
 <div class="qa"><p class="q"><span class="lbl">Soru</span>Bilirubini hücre içinde taşıyan protein?</p>
 <p class="a"><span class="ok">✅</span><span>Ligandin.</span></p>
 </div>
-<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Kanda albümin</strong>, <strong>hücre içinde ligandin</strong>.</p></div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Kanda albümin</strong>, <strong>hücre içinde ligandin</strong>. "Alt birim" geçiyorsa ligandin.</p></div>
 </section>
 <section class="sec c-ink" id="biyokim-sinav-sabahi">
 <h2>🎯 Sınav sabahı</h2>
@@ -1754,5 +1788,6 @@ li::marker { color: var(--c); }
   if (start && document.getElementById('panel-' + start)) show(start, false);
 })();
 </script>
+
 </body>
 </html>
