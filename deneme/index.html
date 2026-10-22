@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kurul Deneme Sınavı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap">
+<style>
+:root{--bg:#fbfcfe;--fg:#1f2633;--muted:#5d6779;--line:#e3e7ef;--card:#fff;--soft:#f2f4f9;
+ --ok:#1f8a4c;--ok-soft:#e8f6ee;--no:#c8323c;--no-soft:#fdeeee;--sel:#2a5bd7;--sel-soft:#ebf0fd;
+ --A:#0f7f7a;--A-soft:#e4f5f4;--D:#a86b00;--D-soft:#fdf5e0;--Y:#8a37b8;--Y-soft:#f5ecfa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--fg:#e6e9f0;--muted:#a2abbb;--line:#2a303c;--card:#181c25;--soft:#1f2430;
+ --ok:#6fd69a;--ok-soft:#16301f;--no:#ff8a8f;--no-soft:#3a1d21;--sel:#8eaeff;--sel-soft:#1a2440;
+ --A:#5fd3cb;--A-soft:#122f2e;--D:#f5c45a;--D-soft:#352b14;--Y:#d29af2;--Y-soft:#2f1f3a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--fg:#e6e9f0;--muted:#a2abbb;--line:#2a303c;--card:#181c25;--soft:#1f2430;
+ --ok:#6fd69a;--ok-soft:#16301f;--no:#ff8a8f;--no-soft:#3a1d21;--sel:#8eaeff;--sel-soft:#1a2440;
+ --A:#5fd3cb;--A-soft:#122f2e;--D:#f5c45a;--D-soft:#352b14;--Y:#d29af2;--Y-soft:#2f1f3a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Lexend","Segoe UI",system-ui,sans-serif;font-weight:300;font-size:17px;line-height:1.65;
+ padding:0 max(16px,env(safe-area-inset-right,0px)) 120px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:720px;margin:0 auto}
+header{padding-block:44px 8px}
+h1{font-size:1.9rem;font-weight:600;line-height:1.25;margin:0 0 8px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 14px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:.85rem}
+.tag{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.78rem;font-weight:500;white-space:nowrap}
+.tag.A{background:var(--A-soft);color:var(--A)} .tag.D{background:var(--D-soft);color:var(--D)} .tag.Y{background:var(--Y-soft);color:var(--Y)}
+h2{font-size:1.4rem;font-weight:600;margin:48px 0 4px}
+.dsub{color:var(--muted);font-size:.9rem;margin:0 0 8px}
+.q{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 18px 14px;margin:14px 0}
+.qh{display:flex;gap:8px;align-items:baseline;margin-bottom:8px}
+.num{font-weight:600;color:var(--muted);font-size:.9rem;min-width:2ch}
+.stem{font-weight:400;margin:0}
+.opts{display:grid;gap:6px;margin-top:10px}
+.opt{font:inherit;font-size:.96rem;text-align:left;line-height:1.45;background:var(--soft);color:var(--fg);border:1.5px solid transparent;border-radius:12px;padding:9px 12px;cursor:pointer;display:flex;gap:10px}
+.opt b{font-weight:600;min-width:1.2em}
+.opt:hover{border-color:var(--line)}
+.opt:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.opt[aria-pressed="true"]{background:var(--sel-soft);border-color:var(--sel)}
+.done .opt{cursor:default}
+.done .opt.right{background:var(--ok-soft);border-color:var(--ok);color:var(--fg)}
+.done .opt.wrong{background:var(--no-soft);border-color:var(--no)}
+.fb{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:.93rem}
+.done .fb{display:block}
+.fb .res{font-weight:600;margin-right:6px}
+.fb .res.ok{color:var(--ok)} .fb .res.no{color:var(--no)} .fb .res.skip{color:var(--muted)}
+.fb .src{color:var(--muted);font-size:.85rem;margin:6px 0}
+.fb p{margin:6px 0 0} .fb strong{font-weight:600}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);
+ padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:5}
+.bar .in{max-width:720px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .cnt{color:var(--muted);font-size:.9rem;margin-right:auto}
+.btn{font:inherit;font-weight:500;font-size:.95rem;border-radius:999px;padding:9px 18px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.score{display:none;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:24px 0}
+.score.show{display:block}
+.big{font-size:2.2rem;font-weight:600;line-height:1.1}
+.rows{display:grid;gap:8px;margin-top:14px}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;font-size:.95rem}
+.meter{grid-column:1/-1;height:8px;border-radius:999px;background:var(--soft);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok);border-radius:999px}
+.note{color:var(--muted);font-size:.88rem;margin:14px 0 0}
+.filter{display:none;gap:8px;flex-wrap:wrap;margin-top:14px}
+.score.show .filter{display:flex}
+.btn.sm{padding:5px 12px;font-size:.85rem}
+.btn[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.q[hidden]{display:none}
+@media (max-width:480px){body{font-size:16px}h1{font-size:1.55rem}.q{padding:14px}}
+</style></head><body><style>
+.ds-bar{--ds-bg:#ffffff;--ds-fg:#1f2633;--ds-line:#e3e7ef;--ds-on:#1f2633;--ds-onfg:#ffffff;
+  background:var(--ds-bg);border-bottom:1px solid var(--ds-line);font-family:"Lexend","Segoe UI",system-ui,sans-serif;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;line-height:1.4}
+@media (prefers-color-scheme:dark){.ds-bar{--ds-bg:#12151c;--ds-fg:#e6e9f0;--ds-line:#2a303c;--ds-on:#e6e9f0;--ds-onfg:#12151c}}
+.ds-bar a{text-decoration:none;color:var(--ds-fg)}
+.ds-home{font-weight:600;margin-right:auto}
+.ds-sw{display:flex;flex-wrap:wrap;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
+.ds-sw a{padding:6px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.ds-sw a[aria-current="page"]{background:var(--ds-on);color:var(--ds-onfg)}
+.ds-sw a:focus-visible,.ds-home:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
+</style>
+<nav class="ds-bar" aria-label="Sayfalar">
+  <a class="ds-home" href="../">🏠 Ders Arşivi</a>
+  <div class="ds-sw">
+    <a href="../notlar/">📚 Notlar</a>
+    <a href="../banka/">🗂️ Çıkmışlar</a>
+    <a href="../deneme/" aria-current="page">📝 Deneme</a>
+    <a href="../simulasyon/">🩺 Simülasyon</a>
+    <a href="../damar/">🩸 Damar</a>
+  </div>
+</nav>
+<style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
+<div class="wrap">
+<header>
+<h1>Dolaşım Kurulu · Deneme Sınavı</h1>
+<p class="sub">45 soru, bu yılın dağılımıyla: histoloji 7, anatomi 8, biyokimya 8, fizyoloji 22. Çıkmış oranı ve değiştirme oranı geçmiş sınavlardaki gibi: soruların yaklaşık %60'ı çıkmış (yarısı aynen, yarısı değiştirilmiş), kalanı slaytlardan potansiyel sorular. Etiketler sınavı bitirince görünür.</p>
+<div class="legend"><span class="tag A">Aynen çıkmış · 14</span><span class="tag D">Değiştirilmiş çıkmış · 14</span><span class="tag Y">Yeni, slayttan · 17</span></div>
+</header>
+<section class="score" id="score" aria-live="polite"></section>
+<main id="qs"></main>
+</div>
+<div class="bar"><div class="in"><span class="cnt" id="cnt"></span><button class="btn" id="reset" type="button">Sıfırla</button><button class="btn pri" id="finish" type="button">Bitir ve puanla</button></div></div>
+<script>
+var DATA = [{"d": "Histoloji", "t": "A", "src": "Online · 2025", "q": "Foramen ovale hangi yapı üzerinde yer alır?", "o": ["Septum primum", "Septum secundum", "Septum spurium", "Müsküler interventriküler septum", "Membranöz interventriküler septum"], "a": 1, "e": "Foramen ovale kalın, kaslı <strong>septum secundum</strong>'daki açıklıktır. İsim tuzağı: foramen <strong>secundum</strong> ise septum <strong>primum</strong>'dadır."}, {"d": "Histoloji", "t": "D", "src": "Asıl soru: \"Koroner sinüs neden gelişir?\" (2K1 · 2025) + \"Sol boynuzdan ne gelişir?\" (2024)", "q": "Sol sinüs boynuzundan erişkinde geriye kalan yapılar hangileridir?", "o": ["Koroner sinüs ve sol atriyumun oblik veni", "Sinüs venarum ve crista terminalis", "VCI'nın hepatik segmenti ve portal ven", "Septum spurium ve fossa ovalis", "Sol pulmoner venler ve sol kulakçık"], "a": 0, "e": "Sol umbilikal, sol vitellin ve sonra sol ana kardinal ven tıkanınca sol boynuzdan yalnızca <strong>koroner sinüs</strong> ve <strong>sol atriyumun oblik veni</strong> kalır. Sinüs venarum ve crista terminalis <strong>sağ</strong> boynuzla ilgilidir."}, {"d": "Histoloji", "t": "D", "src": "Asıl soru: \"Lenfatik kapiller olmayan doku → kemik iliği\" (2K1); burada tersine çevrildi", "q": "Aşağıdaki dokulardan hangisinde lenfatik kapiller BULUNUR?", "o": ["Kıkırdak", "Merkezi sinir sistemi", "Plasenta", "Kemik iliği", "Deri dermisi"], "a": 4, "e": "Slayt: lenfatik kapillerler dokuların çoğunda var, ama <strong>kıkırdak, kemik, epitel, MSS, kemik iliği ve plasentada yoktur</strong>. Dermis gevşek bağ dokusudur, lenfatikten zengindir."}, {"d": "Histoloji", "t": "A", "src": "2K1 · 2024", "q": "Kalp doku kesitinde Purkinje lifleri nerede gözlenebilir?", "o": ["İnteratriyal septum subendokardiyumunda", "İnterventriküler septum subendokardiyumunda", "Sol atriyum miyokardiyumunda", "Sağ atriyum miyokardiyumunda", "Kalbin fibröz iskeleti boyunca"], "a": 1, "e": "Purkinje lifleri <strong>subendokardiyal</strong> bağ dokuda, interventriküler septum boyunca ventriküllere dağılır. Çizgilidirler ve tipik olmayan interkalar disklerle bağlanırlar."}, {"d": "Histoloji", "t": "D", "src": "Asıl soru: \"Fetal damarlar ve doğum sonrası karşılıkları\" (2023); şıklar slayttaki akıbet tablosundan yenilendi", "q": "Fetal damarlar ve doğum sonrası karşılıkları hangi şıkta doğru eşleştirilmiştir?", "o": ["Ductus venosus – Lig. teres hepatis", "Umbilikal arterin distal parçası – Lig. umbilicale mediale", "Ductus arteriosus – Lig. venosum", "Vitellin arter – A. vertebralis", "Sol vitellin ven – Vena cava inferior"], "a": 1, "e": "Umbilikal arterin <strong>distali → lig. umbilicale mediale</strong>, proksimali → a. iliaca interna ve a. vesicalis superior. Ductus venosus → lig. venosum, ductus arteriosus → lig. arteriosum, vitellin arterler → çölyak/SMA/IMA, sol vitellin ven → portal ven."}, {"d": "Histoloji", "t": "Y", "src": "Slayt: Aortik arklar (yıldızlı, hiç sorulmamış)", "q": "Sol 6. aortik arktan aşağıdakilerden hangisi gelişir?", "o": ["Arcus aortae", "Sağ a. subclavia'nın proksimali", "A. carotis communis", "Ductus arteriosus", "A. maxillaris"], "a": 3, "e": "6. ark: sağda sağ pulmoner arter, <strong>solda sol pulmoner arter ve ductus arteriosus</strong>. Sol 4. ark arcus aortae, sağ 4. ark sağ subclavia proksimali, 3. ark carotis communis, 1. ark maksiller arter."}, {"d": "Histoloji", "t": "Y", "src": "Slayt: Kan doku, çalışma sorusu 4", "q": "Pıhtılaşmış kanın sıvı kısmı olan serumu plazmadan ayıran temel özellik hangisidir?", "o": ["Albümin içermemesi", "Fibrinojen içermemesi", "Glukoz içermemesi", "İmmünglobulin içermemesi", "Elektrolit içermemesi"], "a": 1, "e": "Antikoagülan yokken fibrinojen pıhtıya katılır; geriye kalan sıvı <strong>serum</strong>dur ve <strong>fibrinojen içermez</strong>."}, {"d": "Anatomi", "t": "A", "src": "2023 · 2025", "q": "Aşağıdakilerden hangisi \"sinus transversus pericardii\"nin geçiş yeridir?", "o": ["Aorta ve truncus pulmonalis arasından", "Vena cava superior ve inferior arasından", "Vagina serosum venosum'un altından", "Vagina caroticum'un altından", "Vagina serosum venosum ve vagina serosum arteriosum arasından"], "a": 4, "e": "Transversus = arteriyel ve venöz seröz kılıfların <strong>arasından</strong> geçen kanal. \"Venosum'un altından\" sinus <strong>obliquus</strong>'tur. Aorta–truncus \"arasından\" değil, <strong>arkasından</strong>."}, {"d": "Anatomi", "t": "A", "src": "2K1 · 2024", "q": "Aşağıdaki seçeneklerden hangisi tamamı arteria carotis externa'nın dallarından oluşur? I- A. vertebralis · II- A. maxillaris · III- A. pharyngea ascendens · IV- A. thyroidea inferior · V- A. thyroidea superior", "o": ["I, II, III", "I, III, IV", "II, III, V", "II, IV, V", "III, IV, V"], "a": 2, "e": "Vertebralis ve thyroidea inferior <strong>a. subclavia</strong> sistemindendir (truncus thyrocervicalis). Kalanlar ECA: maxillaris, pharyngea ascendens, thyroidea superior."}, {"d": "Anatomi", "t": "D", "src": "Asıl soru: sağ v. intercostalis posterior (Online · 2025) ve sol anterior (2023 · 2K1); şıklar aynı", "q": "Aşağıdakilerden hangisi sol tarafta bulunan vena intercostalis posterior'ların drene olduğu vendir?", "o": ["Vena thoracica interna", "Vena subclavia", "Vena hemiazygos", "Vena azygos", "Vena cava inferior"], "a": 2, "e": "Arka sağ → <strong>azygos</strong>, arka sol → <strong>hemiazygos</strong> (oradan azygos'a). Ön interkostal venler iki tarafta da → <strong>v. thoracica interna</strong>."}, {"d": "Anatomi", "t": "A", "src": "2F1 · 2025", "q": "Aşağıdakilerden hangisi arteria thoracica interna tarafından kanlandırılmaz?", "o": ["Thymus", "Sternum", "Diaphragma thoracoabdominalis", "Oesophagus", "Pericardium fibrosum"], "a": 3, "e": "Özofagusun boyun kısmını <strong>a. thyroidea inferior</strong>, torakal kısmını aortanın özofageal dalları besler."}, {"d": "Anatomi", "t": "D", "src": "Asıl soru: üç aksiller aralık (2023 · 2F1 · 2K1); bu kez arter soruluyor", "q": "Aşağıdaki arterlerden hangisi spatium triangulare inferior (triseps açıklığı)'dan geçer?", "o": ["A. circumflexa humeri anterior", "A. circumflexa humeri posterior", "A. circumflexa scapulae", "A. profunda brachii", "A. thoracodorsalis"], "a": 3, "e": "Triseps açıklığı: <strong>n. radialis + a. profunda brachii</strong>. Dörtgen: n. axillaris + a. circumflexa humeri posterior. Üst üçgen: a. circumflexa scapulae."}, {"d": "Anatomi", "t": "A", "src": "2F1 · Derleme", "q": "Aşağıdaki nörovasküler yapılardan hangisi foramen infrapiriforme'den geçmez?", "o": ["Arteria glutea inferior", "Nervus cutaneus femoris posterior", "Nervus ischiadicus", "Arteria pudenda interna", "Arteria obturatoria"], "a": 4, "e": "A. obturatoria <strong>canalis obturatorius</strong>'tan uyluğun medial kompartmanına gider. İnfrapiriforme = POPS IQ."}, {"d": "Anatomi", "t": "D", "src": "Asıl soru: diafram \"doğru değil\" (2023 · Online · 2K1 · 2025); doğru eşleştirme olarak çevrildi", "q": "Diafram açıklıkları ile ilgili hangi eşleştirme doğrudur?", "o": ["Foramen venae cavae – T10", "Hiatus oesophageus – T12", "Hiatus aorticus – T12 – ductus thoracicus", "Hiatus aorticus – T10 – n. vagus", "Foramen venae cavae – T12 – n. phrenicus dexter"], "a": 2, "e": "<strong>T8 VCI, T10 özofagus (+ vagus), T12 aorta (+ ductus thoracicus, v. azygos).</strong>"}, {"d": "Anatomi", "t": "Y", "src": "Slayt: a. femoralis dalları (çıkmışlarda dal listeleri hep soruluyor)", "q": "Aşağıdakilerden hangisi arteria profunda femoris'in dalı DEĞİLDİR?", "o": ["A. circumflexa femoris medialis", "A. circumflexa femoris lateralis", "Aa. perforantes", "A. descendens genus", "R. descendens (a. circumflexa femoris lateralis)"], "a": 3, "e": "A. descendens genus doğrudan <strong>a. femoralis</strong>'ten, canalis adductorius'ta çıkar. \"Poplitea'ya ait değil\" sorusunun da cevabıydı."}, {"d": "Biyokimya", "t": "A", "src": "2023", "q": "Aşağıdakilerden hangisi ksenobiyotik metabolizmasının faz 2 reaksiyonlarındandır?", "o": ["Aromatik hidroksilasyon", "O-dealkilasyon", "Alifatik oksidasyon", "Glukuronidasyon", "Hidroliz"], "a": 3, "e": "Faz II = konjugasyon: glukuronidasyon, asetilasyon, metilasyon, sülfatasyon, glutatyon. Diğerleri faz I."}, {"d": "Biyokimya", "t": "A", "src": "2K1", "q": "Hem yıkımındaki hız kısıtlayıcı basamağı katalizleyen enzim hangisidir?", "o": ["ALA sentaz", "Biliverdin redüktaz", "Ferroşelataz", "Hem oksijenaz", "UDP-glukuroniltransferaz"], "a": 3, "e": "Yıkımda <strong>hem oksijenaz</strong>, sentezde <strong>ALA sentaz</strong> hız kısıtlayıcıdır."}, {"d": "Biyokimya", "t": "D", "src": "Asıl soru: \"Monomerik, O₂ depolayan hem proteini\" (Online) ve \"kuarterner yapı\" (2K1)", "q": "Oksijen bağlama (satürasyon) eğrisi hiperbolik olan hemoprotein hangisidir?", "o": ["Hemoglobin A", "Miyoglobin", "Hemoglobin F", "Katalaz", "Sitokrom c"], "a": 1, "e": "<strong>Miyoglobin</strong> monomerdir, kooperatif bağlanma yok → <strong>hiperbolik</strong> eğri. Hemoglobin tetramerdir, kooperatiflik → <strong>sigmoid</strong>."}, {"d": "Biyokimya", "t": "D", "src": "Asıl soru: \"Bilirubini HÜCRE İÇİNDE taşıyan protein → ligandin\" (Online); şıklar aynı, yer değişti", "q": "Hem yıkım ürünü bilirubini KANDA (plazmada) taşıyan protein hangisidir?", "o": ["Albümin", "Adrenodoksin", "Globin", "Ligandin", "UDP"], "a": 0, "e": "Kanda <strong>albümin</strong>, hepatosit içinde <strong>ligandin</strong>. Albüminden ayrılan bilirubin hepatosite girer."}, {"d": "Biyokimya", "t": "Y", "src": "Slayt konusu: hem sentezi (2024'te \"ortama ne eklenmeli\" soruldu)", "q": "Hem sentezinin ilk basamağını katalizleyen ALA sentaz için gerekli koenzim hangisidir?", "o": ["Tiamin pirofosfat", "Biotin", "Piridoksal fosfat", "FAD", "Koenzim A"], "a": 2, "e": "Glisin + süksinil-CoA → ALA; enzim <strong>ALA sentaz</strong>, koenzimi <strong>piridoksal fosfat (B6)</strong>. Mitokondride olur."}, {"d": "Biyokimya", "t": "Y", "src": "Slayt konusu: bilirubin metabolizması", "q": "Bilirubinin hepatositte konjugasyonunu katalizleyen enzim hangisidir?", "o": ["Biliverdin redüktaz", "Hem oksijenaz", "UDP-glukuroniltransferaz", "β-glukuronidaz", "Ferroşelataz"], "a": 2, "e": "<strong>UDP-glukuroniltransferaz</strong> bilirubine iki glukuronik asit ekler (bilirubin diglukuronid). Faz II glukuronidasyonun bilirubin örneği."}, {"d": "Biyokimya", "t": "Y", "src": "Slayt konusu: sitokrom P450", "q": "Sitokrom P450 enzimleri temel olarak hangi tip reaksiyonu katalizler?", "o": ["Dioksijenaz", "Monooksijenaz (karma fonksiyonlu oksidaz)", "Hidrolaz", "Transferaz", "Liyaz"], "a": 1, "e": "P450: O₂'nin bir atomu substrata (R-OH), diğeri suya gider → <strong>monooksijenaz</strong>. NADPH ve P450 redüktaz gerekir."}, {"d": "Biyokimya", "t": "Y", "src": "Slayt konusu: hem yıkımı", "q": "Hem oksijenaz reaksiyonu sırasında açığa çıkan gaz hangisidir?", "o": ["CO₂", "Karbon monoksit (CO)", "Nitrik oksit (NO)", "H₂S", "O₂"], "a": 1, "e": "Hem → biliverdin + <strong>Fe²⁺</strong> + <strong>CO</strong>. Vücutta endojen CO'nun ana kaynağıdır."}, {"d": "Fizyoloji", "t": "A", "src": "2023 · Online · 2K1 · Derleme", "q": "Kalpte pacemaker hücrelerinde stabil olmayan dinlenim potansiyeli, hücrelerin kendi kendine eşik değeri aşarak depolarize olmasını sağlar. Yavaşça artan bu potansiyelin adı nedir, temel nedeni hangi kanal açılımıdır?", "o": ["Yavaş cevap aksiyon potansiyeli, transient kalsiyum kanalları", "Spontan diyastolik depolarizasyon, potasyum kanalları", "Pace-maker potansiyel, K⁺ kanalları", "Spontan diyastolik depolarizasyon, funny Na⁺ kanalları", "Yavaş cevap aksiyon potansiyeli, uzun süreli açık kalan kalsiyum kanalları"], "a": 3, "e": "Faz 4'teki yavaş yükseliş = <strong>spontan diyastolik depolarizasyon</strong>, sorumlusu <strong>funny (If) Na⁺</strong> akımı. Dört sınavda kelimesi kelimesine aynı."}, {"d": "Fizyoloji", "t": "A", "src": "2023 · Online · 2K1", "q": "Aşağıdakilerden hangisi kan basıncının akut dönemde regülasyonunda görev almaz?", "o": ["MSS'nin iskemik yanıtı", "Böbreklerin kan basıncını düzenleyici etkisi", "Kardiyopulmoner reseptörler", "Kemoreseptör refleksler", "Baroreseptör refleksler"], "a": 1, "e": "Böbrek–vücut sıvısı sistemi <strong>uzun dönem</strong> kontroldür (saatler–günler). Diğerleri saniyeler içinde çalışan sinirsel reflekslerdir."}, {"d": "Fizyoloji", "t": "A", "src": "2023 · 2K1", "q": "RR intervali 15 mm, kâğıt hızı 25 mm/s. Hastanın kalp hızı ne kadardır?", "o": ["90 atım/dk", "80 atım/dk", "75 atım/dk", "100 atım/dk", "120 atım/dk"], "a": 3, "e": "<strong>1500 ÷ 15 = 100.</strong> (15 × 0,04 s = 0,6 s; 60 ÷ 0,6 = 100.)"}, {"d": "Fizyoloji", "t": "A", "src": "2023 · Derleme", "q": "Kalbe ait hacim–basınç döngüsünde mitral kapağın açılması ile kardiyak döngünün hangi fazı başlar?", "o": ["İzovolümetrik kasılma", "Hızlı ejeksiyon", "Yavaş ejeksiyon", "İzovolümetrik gevşeme", "Doluş fazı"], "a": 4, "e": "Mitral açılır → <strong>hızlı doluş</strong> (S3 bu sırada). Mitral kapanır → izovolümetrik kasılma (S1)."}, {"d": "Fizyoloji", "t": "A", "src": "2F1 · 2024", "q": "Dolaşımın humoral düzenlenmesinde aşağıdakilerden hangisi vazokonstriktör etkiye sahip bir etkendir?", "o": ["CO₂ artışı", "Adenozin varlığı", "Nitrik oksit miktarındaki artış", "Asiditenin artışı", "Endotelin-1"], "a": 4, "e": "CO₂, adenozin, NO, H⁺ lokal <strong>dilatatörlerdir</strong>. Endotelin-1 en güçlü vazokonstriktörlerden."}, {"d": "Fizyoloji", "t": "A", "src": "2F1 · 2024 · Derleme", "q": "Kalp kasında fizyolojik durumda tetani görülmemesinin nedeni hangisidir?", "o": ["Refrakter periyod süresinin uzunluğu", "Sinsisyum özelliği", "İnterkale disklerin varlığı", "Diad yapısı", "İyon kanallarının yapısı"], "a": 0, "e": "Refrakter periyot (~250 ms) kasılma süresi kadar uzun; yeni uyarı kasılma bitmeden toplanamaz."}, {"d": "Fizyoloji", "t": "D", "src": "Asıl soru: -tropi çiftleri (2023 · Online · 2K1 · 2024); bu kez yeni çift", "q": "\"−İnotropi\" ve \"+Batmotropi\" sırasıyla ne anlama gelmektedir?", "o": ["Kalp hızının azalması ve ileti hızının artması", "Kasılma gücünün azalması ve uyarılabilirliğin artması", "Gevşeme hızının azalması ve kasılma gücünün artması", "Atım hacminin azalması ve kalp hızının artması", "İleti hızının azalması ve uyarılabilirliğin azalması"], "a": 1, "e": "Krono = hız, <strong>ino = kasılma gücü</strong>, dromo = ileti, lusi = gevşeme, <strong>batmo = uyarılabilirlik</strong>."}, {"d": "Fizyoloji", "t": "D", "src": "Asıl soru: Starling hesapları (2F1: filtrasyon 5 · 2K1: filtrasyon 11); bu kez venöz uç", "q": "Bir kapillerin venöz ucunda kapiller hidrostatik basınç 15 mmHg, interstisyel sıvı basıncı 1 mmHg, plazma onkotik basıncı 25 mmHg, interstisyel onkotik basınç 3 mmHg'dır. Sıvı hareketinin yönü ve net gücü nedir?", "o": ["Filtrasyon; 8 mmHg", "Absorbsiyon; 8 mmHg", "Absorbsiyon; 6 mmHg", "Filtrasyon; 4 mmHg", "Net sıvı hareketi yoktur"], "a": 1, "e": "(Pc − Pif) − (πc − πif) = (15 − 1) − (25 − 3) = 14 − 22 = <strong>−8 → absorbsiyon</strong>."}, {"d": "Fizyoloji", "t": "D", "src": "Asıl soru: EKG aks tanımı (2F1 · 2K1 · Derleme); şıklar aynı, şekil değişti", "q": "Bir hastanın EKG'sinde DI derivasyonunda QRS belirgin negatif, aVF'de belirgin pozitiftir. Kardiyak aks için doğru tanım hangisidir?", "o": ["Aks; +90 ve +180 derece arası olup sağ alt kadrana denk gelir (sağ aks sapması)", "Aks; −90 ve −180 derece arasında olup şiddetli aks sapmasını düşündürür", "Aks; −30 ve −90 derece arasında olup sol aks deviasyonunu gösterir", "Aks; 0 ve +90 derece arasında olup normal akstır", "Aks; −30 ve 0 derece arasında olup normal varyanttır"], "a": 0, "e": "DI − / aVF + → <strong>sağ aks</strong> (+90 ile +180). DI + / aVF + normal, DI + / aVF − sol, ikisi de − aşırı sapma."}, {"d": "Fizyoloji", "t": "D", "src": "Asıl soru: EDV (2F1) ve atım hacmi (2K1); şıklar aynı, üçüncü hacim", "q": "Dinlenim halindeki sağlıklı bir erişkinde sol ventrikül sistol sonu hacmi yaklaşık ne kadardır?", "o": ["50 ml", "70 ml", "120 ml", "25 ml", "40 ml"], "a": 0, "e": "<strong>EDV 120 − SV 70 = ESV 50 ml.</strong> EF ≈ %58–60."}, {"d": "Fizyoloji", "t": "D", "src": "Asıl soru: aort yetmezliği üfürümü (2023 · 2K1); 2024'te stenoz olarak soruldu", "q": "Aort stenozunda üfürüm hangi fazda ve göğüs kafesinde hangi lokalizasyonda duyulur?", "o": ["Sistol sırasında, sol ikinci interkostal aralığın sternumla birleşim bölgesinde", "Diyastol sırasında, sol ikinci interkostal aralığın sternumla birleşim bölgesinde", "Sistol sırasında, sağ ikinci interkostal aralığın sternumla birleşim bölgesinde", "Diyastol sırasında, sağ ikinci interkostal aralığın sternumla birleşim bölgesinde", "Sistol sırasında, kalbin apeks bölgesinde"], "a": 2, "e": "Stenoz = kapak <strong>açıkken</strong> zorlanır; aort sistolde açık → <strong>sistolik</strong>. Yer: <strong>aort odağı, sağ 2. ICS</strong>. Sol 2. ICS pulmoner odaktır."}, {"d": "Fizyoloji", "t": "D", "src": "Asıl soru: \"S1'in EKG'deki zamanlaması → QRS hemen sonrası\" (2023 · Derleme); şıklar aynı, S2 soruldu", "q": "İkinci kalp sesinin zamanlaması EKG kaydında hangi döneme denk gelir?", "o": ["P dalgası sonu", "PR aralığı sonrası", "QRS dalgası hemen sonrası", "T dalgasının başı", "T dalgasının sonu"], "a": 4, "e": "T dalgası ventrikül repolarizasyonu; bitişinde ventrikül gevşer, basınç aortun altına düşer, <strong>aort kapağı kapanır → S2</strong>."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: kalp döngüsü ve kalp hızı", "q": "Kalp hızı arttığında kardiyak döngünün en çok kısalan bölümü hangisidir?", "o": ["İzovolümetrik kasılma", "Hızlı ejeksiyon", "Diyastol (özellikle diyastazis)", "Atriyal sistol", "Aksiyon potansiyelinin faz 0'ı"], "a": 2, "e": "Taşikardide sistol de kısalır ama asıl kısalan <strong>diyastol</strong>dur; önce diyastazis kaybolur. Bu yüzden çok yüksek hızda doluş ve koroner akım bozulur."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: elektrolitlerin EKG'ye etkisi (2025'te hipokalemi–QT soruldu)", "q": "Hiperkalemide EKG'de ilk görülen tipik bulgu hangisidir?", "o": ["U dalgası belirginleşmesi", "Sivri, uzun T dalgası", "ST depresyonu", "QT uzaması", "P dalgasının büyümesi"], "a": 1, "e": "Hiperkalemi → <strong>sivri T</strong>, sonra P kaybı ve QRS genişlemesi. Hipokalemi → düz T, <strong>belirgin U</strong>, QT(U) uzaması."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: kalp debisi", "q": "Kalp hızı 75/dk ve atım hacmi 80 ml olan bir kişinin kalp debisi yaklaşık ne kadardır?", "o": ["4,0 L/dk", "5,0 L/dk", "6,0 L/dk", "7,5 L/dk", "8,0 L/dk"], "a": 2, "e": "Debi = KH × SV = 75 × 80 = 6000 ml/dk = <strong>6 L/dk</strong>."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: ortalama arter basıncı (derlemede 120/90 soruldu)", "q": "Kan basıncı 120/80 mmHg olan bir kişinin ortalama arter basıncı yaklaşık kaç mmHg'dır?", "o": ["80", "93", "100", "105", "110"], "a": 1, "e": "OAB ≈ diyastolik + nabız basıncı/3 = 80 + 40/3 ≈ <strong>93 mmHg</strong>."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: Laplace yasası", "q": "Laplace yasasına göre, aynı iç basınçta yarıçapı artmış (dilate) bir ventrikülde duvar gerimi nasıl değişir?", "o": ["Azalır", "Artar", "Değişmez", "Önce artar sonra azalır", "Duvar kalınlığından bağımsız olarak sıfırlanır"], "a": 1, "e": "T = P × r / (2h). Yarıçap artınca <strong>duvar gerimi artar</strong>; dilate kalp aynı basıncı üretmek için daha çok enerji harcar."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: venöz dönüş", "q": "Aşağıdakilerden hangisi venöz dönüşü ARTIRMAZ?", "o": ["İskelet kası pompası", "İnspirasyon", "Venokonstriksiyon", "Kan hacminin artması", "Sağ atriyum basıncının artması"], "a": 4, "e": "Venöz dönüş, ortalama sistemik dolum basıncı ile <strong>sağ atriyum basıncı arasındaki farka</strong> bağlıdır. Sağ atriyum basıncı artarsa fark azalır, dönüş azalır."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: baroreseptör refleksi (sıralı soru 2023 · 2024)", "q": "Karotid sinüse masaj (dıştan bası) uygulanan bir kişide beklenen yanıt hangisidir?", "o": ["Taşikardi ve kan basıncında artış", "Bradikardi ve kan basıncında düşme", "Periferik vazokonstriksiyon", "Renin salınımında artış", "Solunum sayısında belirgin artış"], "a": 1, "e": "Bası baroreseptörü \"basınç yüksek\" diye uyarır → vazomotor merkez baskılanır, vagal tonus artar → <strong>bradikardi ve KB düşüşü</strong> (histoloji slaytında da: \"bası uygulanınca senkop\")."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: akım hızı ve kesit alanı (2K1'de \"kapillerde en yavaş\" soruldu)", "q": "Kan akımı sabitken damarların toplam kesit alanı iki katına çıkarsa kan akım hızı nasıl değişir?", "o": ["İki katına çıkar", "Dört katına çıkar", "Değişmez", "Yarıya iner", "Dörtte birine iner"], "a": 3, "e": "v = Q / A. Akım sabit, alan 2 kat → <strong>hız yarıya iner</strong>. Bu yüzden toplam kesit alanı en büyük olan kapillerlerde akım en yavaş."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: kan hacminin dağılımı (Derleme'de venöz kompliyans soruldu)", "q": "Dinlenimde toplam kan hacminin en büyük bölümü nerede bulunur?", "o": ["Sistemik arterler", "Kapillerler", "Sistemik venler", "Pulmoner dolaşım", "Kalp boşlukları"], "a": 2, "e": "Kanın yaklaşık <strong>%64'ü sistemik venlerde</strong>: venler yüksek kompliyanslı <strong>depo damarları</strong>dır."}, {"d": "Fizyoloji", "t": "Y", "src": "Slayt: lenf akımı ve ödem", "q": "Aşağıdakilerden hangisi lenf akımını en çok artırır?", "o": ["İnterstisyel sıvı basıncının artması", "Plazma onkotik basıncının artması", "Kapiller hidrostatik basıncın azalması", "Kapiller geçirgenliğin azalması", "İskelet kası aktivitesinin durması"], "a": 0, "e": "İnterstisyel basınç yükseldikçe (yaklaşık 0 mmHg'ye kadar) lenf akımı <strong>katlanarak</strong> artar. Kas aktivitesi de lenfi pompalar."}];
+var TN = {A:'Aynen çıkmış', D:'Değiştirilmiş çıkmış', Y:'Yeni, slayttan'};
+var L = 'abcde';
+var st = {ans:{}, done:false};
+try { var s = JSON.parse(localStorage.getItem('deneme-v1') || 'null'); if (s) st = s; } catch (e) {}
+function save(){ try { localStorage.setItem('deneme-v1', JSON.stringify(st)); } catch (e) {} }
+var qs = document.getElementById('qs'), cur = null, n = 0;
+DATA.forEach(function (q, i) {
+  if (q.d !== cur) { cur = q.d; var h = document.createElement('h2'); h.textContent = q.d; qs.appendChild(h);
+    var c = DATA.filter(function (x) { return x.d === q.d; }).length; var p = document.createElement('p'); p.className = 'dsub'; p.textContent = c + ' soru'; qs.appendChild(p); }
+  var el = document.createElement('article'); el.className = 'q'; el.id = 'q' + i;
+  var h = '<div class="qh"><span class="num">' + (i + 1) + '.</span><p class="stem">' + q.q + '</p></div><div class="opts">';
+  q.o.forEach(function (o, j) { h += '<button type="button" class="opt" data-j="' + j + '" aria-pressed="false"><b>' + L[j] + ')</b><span>' + o + '</span></button>'; });
+  h += '</div><div class="fb"><span class="res"></span><span class="tag ' + q.t + '">' + TN[q.t] + '</span><div class="src">' + q.src + '</div><p>' + q.e + '</p></div>';
+  el.innerHTML = h; qs.appendChild(el);
+  el.querySelectorAll('.opt').forEach(function (b) { b.addEventListener('click', function () {
+    if (st.done) return; var j = +b.dataset.j; st.ans[i] = st.ans[i] === j ? undefined : j; save(); paint(); }); });
+});
+function paint() {
+  var answered = 0;
+  DATA.forEach(function (q, i) {
+    var el = document.getElementById('q' + i), a = st.ans[i];
+    if (a !== undefined && a !== null) answered++;
+    el.classList.toggle('done', st.done);
+    el.querySelectorAll('.opt').forEach(function (b) {
+      var j = +b.dataset.j;
+      b.setAttribute('aria-pressed', a === j && !st.done ? 'true' : 'false');
+      b.classList.toggle('right', st.done && j === q.a);
+      b.classList.toggle('wrong', st.done && a === j && j !== q.a);
+      b.disabled = st.done;
+    });
+    var r = el.querySelector('.res');
+    if (st.done) { if (a === undefined || a === null) { r.className = 'res skip'; r.textContent = 'Boş · doğru: ' + L[q.a] + ')'; }
+      else if (a === q.a) { r.className = 'res ok'; r.textContent = '✓ Doğru'; }
+      else { r.className = 'res no'; r.textContent = '✗ Yanlış · doğru: ' + L[q.a] + ')'; } }
+  });
+  document.getElementById('cnt').textContent = st.done ? 'Puanlandı' : answered + ' / ' + DATA.length + ' işaretlendi';
+  document.getElementById('finish').hidden = st.done;
+  scoreBox();
+}
+function grp(key) { var g = {}; DATA.forEach(function (q, i) { var k = q[key]; g[k] = g[k] || [0, 0]; g[k][1]++; if (st.ans[i] === q.a) g[k][0]++; }); return g; }
+function scoreBox() {
+  var box = document.getElementById('score');
+  if (!st.done) { box.classList.remove('show'); box.innerHTML = ''; return; }
+  var ok = 0; DATA.forEach(function (q, i) { if (st.ans[i] === q.a) ok++; });
+  var h = '<div class="big">' + ok + ' / ' + DATA.length + '</div><div class="rows">';
+  var d = grp('d'); ['Histoloji', 'Anatomi', 'Biyokimya', 'Fizyoloji'].forEach(function (k) { var v = d[k];
+    h += '<div class="row"><span>' + k + '</span><span>' + v[0] + ' / ' + v[1] + '</span><span class="meter"><i style="width:' + Math.round(100 * v[0] / v[1]) + '%"></i></span></div>'; });
+  h += '</div><div class="rows">';
+  var t = grp('t'); ['A', 'D', 'Y'].forEach(function (k) { var v = t[k];
+    h += '<div class="row"><span><span class="tag ' + k + '">' + TN[k] + '</span></span><span>' + v[0] + ' / ' + v[1] + '</span></div>'; });
+  h += '</div><p class="note">Aynen çıkmışlarda kaçırdığın varsa önce onları kapat: en ucuz puan orada. Değiştirilmişlerde yanlış yaptıysan bankada o sorunun bütün hâllerine bak.</p>';
+  h += '<div class="filter"><button class="btn sm" type="button" data-f="all" aria-pressed="true">Hepsi</button><button class="btn sm" type="button" data-f="wrong" aria-pressed="false">Sadece yanlış ve boşlar</button></div>';
+  box.innerHTML = h; box.classList.add('show');
+  box.querySelectorAll('.filter .btn').forEach(function (b) { b.addEventListener('click', function () {
+    box.querySelectorAll('.filter .btn').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    DATA.forEach(function (q, i) { document.getElementById('q' + i).hidden = b.dataset.f === 'wrong' && st.ans[i] === q.a; });
+  }); });
+}
+document.getElementById('finish').addEventListener('click', function () {
+  var un = DATA.filter(function (q, i) { return st.ans[i] === undefined || st.ans[i] === null; }).length;
+  if (un && !this.dataset.confirm) { this.dataset.confirm = '1'; this.textContent = un + ' boş var, yine de bitir'; return; }
+  st.done = true; save(); paint(); window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.getElementById('reset').addEventListener('click', function () {
+  st = { ans: {}, done: false }; save(); var f = document.getElementById('finish'); f.textContent = 'Bitir ve puanla'; delete f.dataset.confirm;
+  DATA.forEach(function (q, i) { document.getElementById('q' + i).hidden = false; }); paint(); window.scrollTo({ top: 0 });
+});
+paint();
+</script></body></html>
