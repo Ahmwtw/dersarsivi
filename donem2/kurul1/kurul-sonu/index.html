@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kurul Sonu Hazırlık Planı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap">
+<style>
+/* Okuma sayfası: tek dar sütun, bol boşluk, her konu kendi rengiyle */
+:root {
+  --bg: #fbfcfe; --fg: #1f2633; --muted: #5d6779; --line: #e3e7ef; --card: #ffffff;
+  --hl: #fff2a8;
+  --f-body: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --ink: #2b3a55; --ink-soft: #eef1f7;
+  --red: #c8323c; --red-soft: #fdeeee;
+  --orange: #c55a11; --orange-soft: #fdf1e7;
+  --amber: #a86b00; --amber-soft: #fdf5e0;
+  --green: #1f8a4c; --green-soft: #e8f6ee;
+  --teal: #0f7f7a; --teal-soft: #e4f5f4;
+  --cyan: #0b72a8; --cyan-soft: #e6f3fa;
+  --blue: #2a5bd7; --blue-soft: #ebf0fd;
+  --indigo: #5140c8; --indigo-soft: #efedfc;
+  --purple: #8a37b8; --purple-soft: #f5ecfa;
+  --rose: #c02e74; --rose-soft: #fcebf3;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12151c; --fg: #e6e9f0; --muted: #a2abbb; --line: #2a303c; --card: #181c25; --hl: #5a4d12;
+    --ink: #c9d3e6; --ink-soft: #1f2533;
+    --red: #ff8a8f; --red-soft: #3a1d21;
+    --orange: #ffad73; --orange-soft: #3a2618;
+    --amber: #f5c45a; --amber-soft: #352b14;
+    --green: #6fd69a; --green-soft: #16301f;
+    --teal: #5fd3cb; --teal-soft: #122f2e;
+    --cyan: #6cc4f0; --cyan-soft: #122a38;
+    --blue: #8eaeff; --blue-soft: #1a2440;
+    --indigo: #a99dff; --indigo-soft: #231f3f;
+    --purple: #d29af2; --purple-soft: #2f1f3a;
+    --rose: #ff8fc2; --rose-soft: #3a1b2b;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12151c; --fg: #e6e9f0; --muted: #a2abbb; --line: #2a303c; --card: #181c25; --hl: #5a4d12;
+    --ink: #c9d3e6; --ink-soft: #1f2533;
+    --red: #ff8a8f; --red-soft: #3a1d21;
+    --orange: #ffad73; --orange-soft: #3a2618;
+    --amber: #f5c45a; --amber-soft: #352b14;
+    --green: #6fd69a; --green-soft: #16301f;
+    --teal: #5fd3cb; --teal-soft: #122f2e;
+    --cyan: #6cc4f0; --cyan-soft: #122a38;
+    --blue: #8eaeff; --blue-soft: #1a2440;
+    --indigo: #a99dff; --indigo-soft: #231f3f;
+    --purple: #d29af2; --purple-soft: #2f1f3a;
+    --rose: #ff8fc2; --rose-soft: #3a1b2b;
+  color-scheme: dark; }
+.c-ink { --c: var(--ink); --soft: var(--ink-soft); }
+.c-red { --c: var(--red); --soft: var(--red-soft); }
+.c-orange { --c: var(--orange); --soft: var(--orange-soft); }
+.c-amber { --c: var(--amber); --soft: var(--amber-soft); }
+.c-green { --c: var(--green); --soft: var(--green-soft); }
+.c-teal { --c: var(--teal); --soft: var(--teal-soft); }
+.c-cyan { --c: var(--cyan); --soft: var(--cyan-soft); }
+.c-blue { --c: var(--blue); --soft: var(--blue-soft); }
+.c-indigo { --c: var(--indigo); --soft: var(--indigo-soft); }
+.c-purple { --c: var(--purple); --soft: var(--purple-soft); }
+.c-rose { --c: var(--rose); --soft: var(--rose-soft); }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 17px; line-height: 1.8; font-weight: 300;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 96px; }
+.wrap { max-width: 700px; margin: 0 auto; }
+header.top { padding-block: 48px 8px; }
+header.top h1 { font-size: 2rem; line-height: 1.25; font-weight: 600; margin: 0 0 8px; text-wrap: balance; }
+header.top p { color: var(--muted); margin: 0; }
+.tabs { flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 8px; padding-block: 16px 12px; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.tabs button { font: inherit; font-weight: 500; font-size: 1rem; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 8px 18px; border-radius: 999px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button:focus-visible, .toc a:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 24px 8px; }
+.toc a { text-decoration: none; font-size: 0.85rem; font-weight: 400; color: var(--c); background: var(--soft); padding: 4px 12px; border-radius: 999px; line-height: 1.6; }
+.sec { padding-block: 56px 8px; scroll-margin-top: 80px; }
+.sec h2 { color: var(--c); font-size: 1.6rem; line-height: 1.3; font-weight: 600; margin: 0; text-wrap: balance; display: inline; }
+.pill { display: inline-block; margin-left: 10px; vertical-align: 4px; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.02em; color: var(--c); background: var(--soft); padding: 2px 10px; border-radius: 999px; }
+.sec > p:first-of-type { margin-top: 16px; }
+h3 { font-size: 1.12rem; font-weight: 600; margin: 40px 0 12px; color: var(--fg); }
+p { margin: 0 0 14px; }
+strong { color: var(--c); font-weight: 600; }
+ul { margin: 0 0 8px; padding-left: 1.2em; display: grid; gap: 10px; }
+li::marker { color: var(--c); }
+.qa { background: var(--soft); border-radius: 16px; padding: 18px 20px; margin: 14px 0; display: grid; gap: 8px; }
+.qa p { margin: 0; }
+.q { font-weight: 400; }
+.lbl { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); margin-right: 8px; }
+.times { font-size: 0.8rem; color: var(--muted); white-space: nowrap; margin-left: 4px; }
+.a { display: flex; gap: 8px; font-weight: 500; color: var(--c); }
+.a strong { font-weight: 700; }
+.w { color: var(--muted); font-size: 0.95rem; line-height: 1.7; }
+.w strong { color: var(--fg); }
+.tip { margin: 28px 0 0; padding: 18px 20px; border-radius: 16px; border: 1.5px dashed var(--c); }
+.tip-h { display: block; font-weight: 600; margin-bottom: 4px; }
+.tip p { margin: 0; }
+.rom { font-size: 0.93rem; color: var(--fg); padding-left: 4px; }
+.opt { font-size: 0.95rem; line-height: 1.5; padding: 3px 10px; border-radius: 10px; }
+.opt.right { background: var(--card); font-weight: 600; color: var(--c); }
+.tick { font-weight: 700; }
+.src { display: inline-block; font-size: 0.75rem; color: var(--muted); border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 0 8px; margin-left: 4px; white-space: nowrap; }
+.chg { background: var(--hl); color: var(--fg); border-radius: 10px; padding: 8px 12px; font-size: 0.93rem; }
+.chg-h { display: block; font-weight: 600; }
+.var { background: var(--card); border-radius: 12px; padding: 10px 14px; font-size: 0.93rem; }
+.var-h { display: block; font-weight: 600; margin-bottom: 4px; color: var(--c); }
+.var ul { gap: 4px; margin: 0; }
+.mn { margin: 18px 0; padding: 16px 20px; border-radius: 16px; background: var(--soft); }
+.mn-h { display: block; font-weight: 600; color: var(--c); margin-bottom: 4px; }
+.mn p { margin: 0; }
+.foot { color: var(--muted); font-size: 0.85rem; padding-block: 48px 0; }
+@media (max-width: 480px) { body { font-size: 16px; } .tabs button { padding: 6px 12px; font-size: 0.9rem; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<style>
+.ds-bar{--ds-bg:#ffffff;--ds-fg:#1f2633;--ds-line:#e3e7ef;--ds-on:#1f2633;--ds-onfg:#ffffff;
+  background:var(--ds-bg);border-bottom:1px solid var(--ds-line);font-family:"Lexend","Segoe UI",system-ui,sans-serif;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;line-height:1.4}
+@media (prefers-color-scheme:dark){.ds-bar{--ds-bg:#12151c;--ds-fg:#e6e9f0;--ds-line:#2a303c;--ds-on:#e6e9f0;--ds-onfg:#12151c}}
+.ds-bar a{text-decoration:none;color:var(--ds-fg)}
+.ds-home{font-weight:600;margin-right:auto}
+.ds-sw{display:flex;flex-wrap:wrap;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
+.ds-sw a{padding:6px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.ds-sw a[aria-current="page"]{background:var(--ds-on);color:var(--ds-onfg)}
+.ds-sw a:focus-visible,.ds-home:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
+</style>
+<nav class="ds-bar" aria-label="Konum"><span class="ds-home"><a href="../../../">🏠</a> › <a href="../../">Dönem 2</a> › <a href="../">Kurul 1</a> › Kurul Sonu</span></nav>
+<style>.ds-home a{color:inherit}.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
+
+<div class="wrap">
+<header class="top"><h1>Kurul 1 Sonu · Hazırlık Planı</h1><p>26 Ekim – 27 Kasım. Kan ve solunum dersleri ders programına göre, her dersin öncesinde akşam ön hazırlık; formatif konuları da sınava taşınıyor. Anatomi lab sınavı 24 Kasım, teorik sınav 27 Kasım. 🫁🩸</p></header>
+<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-takvim" aria-controls="panel-takvim" aria-selected="true" data-tab="takvim">📅 Gün gün plan</button><button type="button" role="tab" id="tab-oncelik" aria-controls="panel-oncelik" aria-selected="false" data-tab="oncelik">🎯 Öncelikler</button><button type="button" role="tab" id="tab-tekrar" aria-controls="panel-tekrar" aria-selected="false" data-tab="tekrar">🔁 Sürekli tekrar</button></div>
+<div role="tabpanel" id="panel-takvim" aria-labelledby="tab-takvim"><nav class="toc"><a class="c-ink" href="#takvim-nasil-kullanilir">Nasıl kullanılır</a><a class="c-red" href="#takvim-1-hafta-26-30-ekim-kan-basliyor">1. hafta · 26–30 Ekim: kan başlıyor</a><a class="c-orange" href="#takvim-2-hafta-2-6-kasim-alt-solunum-anatomisi-">2. hafta · 2–6 Kasım: alt solunum anatomisi, solunum histolojisi, lökositler</a><a class="c-amber" href="#takvim-3-hafta-9-13-kasim-pihtilasma-biyokimyas">3. hafta · 9–13 Kasım: pıhtılaşma biyokimyası, solunum embriyolojisi, kök hücre</a><a class="c-green" href="#takvim-4-hafta-16-20-kasim-solunum-fizyolojisi-">4. hafta · 16–20 Kasım: solunum fizyolojisi (en yoğun hafta)</a><a class="c-purple" href="#takvim-5-hafta-23-27-kasim-kontrol-lab-sinavi-f">5. hafta · 23–27 Kasım: kontrol, lab sınavı, final</a></nav><section class="sec c-ink" id="takvim-nasil-kullanilir">
+<h2>Nasıl kullanılır</h2>
+<p>Kurul sonu teorik sınavı <strong>27 Kasım Cuma 10:30</strong>. <strong>Anatomi laboratuvar sınavı ayrı ve daha önce: 24 Kasım Salı.</strong> Sınav, formatifteki bütün konuları (dolaşım) ve bundan sonra işlenecek <strong>kan</strong> ve <strong>solunum</strong> konularını kapsıyor.</p>
+<p>Her gün için iki satır var: <strong>🌙 Akşam ön hazırlık</strong> (ertesi günün dersi için, 30–45 dk) ve <strong>🔁 Tekrar</strong> (aynı gün 15–20 dk). Ön hazırlıkta slaytı bir kez gözden geçir, <strong>çalışma sorularını</strong> oku ve o konunun çıkmışlarına bak. Derste bunların cevabını dinlemeye gidiyorsun.</p>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p><strong>Günlük sabit:</strong> her gün 20 dk Anki (anatomi şıklı deste + geçitler + yeni eklenecek solunum destesi). Atlanan gün birikiyor; Anki'yi asla son haftaya bırakma.</p></div>
+</section>
+<section class="sec c-red" id="takvim-1-hafta-26-30-ekim-kan-basliyor">
+<h2>1. hafta · 26–30 Ekim: kan başlıyor</h2>
+<h3>Pzt 26 Eki · Anatomi üst solunum yolları · Fizyoloji eritrositler</h3>
+<ul>
+<li>🌙 <strong>Bu akşam (Paz 25):</strong> burun, paranazal sinüsler, larinks kıkırdakları. Çıkmışlardan <strong>paranazal (5 kez!)</strong>, <strong>plica vocalis kıkırdakları (3 kez)</strong>, <strong>burnu besleyen arterler</strong> kartlarını oku.</li>
+<li>🌙 Eritrositler için: eritropoez, eritropoietin (böbrek, hipoksi), retikülosit, ömür 120 gün, B12/folat/demir. Histolojideki kan doku slaytı zaten bu konunun yarısı.</li>
+<li>🔁 Akşam: paranazal sinüslerin açıldığı meatuslar tablosunu ezbere yaz.</li>
+</ul>
+<h3>Sal 27 Eki · Anatomi lab (dolaşım, grup 3–4)</h3>
+<ul>
+<li>🌙 Pzt akşamı: <strong>Hb ve demir metabolizması + kan grupları</strong> ön hazırlığı (Çar dersleri). Biyokimyadaki Hb yapısı, 2,3-BPG, HbF notlarını yanına al: aynı konu iki dersten soruluyor.</li>
+<li>🔁 Formatif tekrarı başlat: <strong>anatomi şıklı desteyi</strong> bir tur bitir.</li>
+</ul>
+<h3>Çar 28 Eki · Fizyoloji kan grupları, Hb ve demir metabolizması</h3>
+<ul>
+<li>🌙 Sal akşamı: ABO, Rh, eritroblastozis fetalis (histolojide anti-D ve IgM/IgG geçti), transferrin, ferritin, hepsidin.</li>
+<li>🔁 Akşam: <strong>oksihemoglobin disosiasyon eğrisi</strong>: sağa/sola kaydıranlar listesi. Formatifte kaybedilen soru bu; kart olarak yaz.</li>
+</ul>
+<h3>Per 29 Eki · Cumhuriyet Bayramı · büyük tekrar günü</h3>
+<ul>
+<li>⏱️ 3 saat: formatif konularının <strong>ilk büyük tekrarı</strong>. Unutma eğrisi en çok ilk haftalarda düşer; bugün yapılan tekrar 27 Kasım'da en çok getiren tekrardır.</li>
+<li>Fizyoloji kalıpları (1500 ÷ RR, aks, basınç–hacim harfleri, Starling, baroreseptör sırası), biyokimya (hem sentezi/yıkımı, P450, faz I–II), histoloji (embriyoloji akıbet tabloları).</li>
+<li>🌙 Akşam: <strong>trombositler ve hemostaz</strong> ön hazırlığı.</li>
+</ul>
+<h3>Cum 30 Eki · Fizyoloji trombositler ve hemostaz · Klinik yaklaşım EKG</h3>
+<ul>
+<li>🌙 Per akşamı: primer/sekonder hemostaz, pıhtılaşma kaskadı (intrinsik/ekstrinsik/ortak yol), vWF, K vitamini faktörleri (II, VII, IX, X). <strong>9 Kasım'da biyokimya pıhtılaşma dersi aynı konu</strong>; şimdi tek bir şema çiz, ikisinde de kullan.</li>
+<li>🌙 EKG klinik yaklaşım için: çıkmışlarda <strong>inferior MI (DII-DIII-aVF), AF, atriyal flutter, sağ dal bloğu, total AV blok, patolojik Q</strong> hep var.</li>
+<li>🔁 Hafta sonu (31 Eki–1 Kas): 1. haftanın kan konularını tek sayfada özetle. Anki. <strong>Anatomi alt solunum</strong> ön hazırlığı.</li>
+</ul>
+</section>
+<section class="sec c-orange" id="takvim-2-hafta-2-6-kasim-alt-solunum-anatomisi-">
+<h2>2. hafta · 2–6 Kasım: alt solunum anatomisi, solunum histolojisi, lökositler</h2>
+<h3>Pzt 2 Kas · Anatomi alt solunum yolları · Histoloji solunum yolları</h3>
+<ul>
+<li>🌙 Paz akşamı: trachea, carina, bronş ağacı, akciğer lobları, hilus, plevra, <strong>mediastinum ve diafram</strong>. Çıkmışlar: <strong>akciğer komşuluğu → özofagus (4 kez)</strong>, <strong>mediastinum sup + post (3 kez)</strong>, <strong>carina (2 kez)</strong>, <strong>ekspirasyon kası (2 kez)</strong>, <strong>gaz değişimi bölgesi (2 kez)</strong>, <strong>diafram seviyeleri (4 kez)</strong>.</li>
+<li>🌙 Histoloji için: <strong>solunum epiteli</strong>, <strong>gerçek/yalancı ses telleri epiteli (3 kez)</strong>, <strong>glottis</strong>, <strong>Clara hücresi terminal bronşiyolde</strong>, <strong>tip I/II pnömosit</strong>, <strong>kan–gaz bariyeri (2 kez; tip II hücre bariyerde yok)</strong>, akciğer kapilleri sürekli.</li>
+</ul>
+<h3>Sal 3 Kas · Anatomi lab solunum (grup 1–2) · Beceri EKG</h3>
+<ul>
+<li>🌙 Lab için: maket üzerinde larinks kıkırdakları, bronş segmentleri, akciğer kenarları. Lab sınavında bunlar sorulacak.</li>
+<li>🔁 Akşam: lökositler ön hazırlığı.</li>
+</ul>
+<h3>Çar 4 Kas · Fizyoloji lökositler</h3>
+<ul>
+<li>🌙 Sal akşamı: granülositler/agranülositler, oranlar (nötrofil %50–70), ömürler, monosit → makrofaj, eozinofil parazit/alerji, bazofil histamin/heparin. Histolojideki kan doku slaytı neredeyse aynı.</li>
+</ul>
+<h3>Per 5 – Cum 6 Kas · Fizyoloji lab: serum/plazma, hematokrit, sedimentasyon, kan grubu</h3>
+<ul>
+<li>🌙 Lab öncesi: <strong>serum fibrinojen içermez</strong>, hematokrit ~%45, sedimentasyonu artıranlar (fibrinojen, globulin, anemi), kan grubu tayininde aglütinasyon.</li>
+<li>🔁 Hafta sonu (7–8 Kas): <strong>ikinci büyük tekrar</strong>. Formatif bankasında Fizyoloji ve Histoloji sekmeleri bir tur. Anki. Pazartesi derslerinin ön hazırlığı.</li>
+</ul>
+</section>
+<section class="sec c-amber" id="takvim-3-hafta-9-13-kasim-pihtilasma-biyokimyas">
+<h2>3. hafta · 9–13 Kasım: pıhtılaşma biyokimyası, solunum embriyolojisi, kök hücre</h2>
+<h3>Pzt 9 Kas · Biyokimya pıhtılaşma · Klinik yaklaşım anemiler · Biyoloji hücre yenilenmesi</h3>
+<ul>
+<li>🌙 Paz akşamı: 30 Ekim'de çizdiğin kaskad şemasını aç; biyokimya açısından <strong>γ-karboksilasyon (K vitamini)</strong>, <strong>antitrombin, protein C/S</strong>, <strong>fibrinoliz (plazmin, tPA)</strong> ekle.</li>
+<li>🌙 Anemiler: mikrositer (demir eksikliği, talasemi), makrositer (B12, folat), normositer. Eritrositler dersini buna bağla.</li>
+<li>🌙 Biyoloji: <strong>rejenerasyon, kök hücre nişi</strong>. Formatifte kaybedilen soru: <strong>totipotent plasentayı da yapar, pluripotent yapamaz</strong>. Totipotent → pluripotent → multipotent → unipotent sıralamasını örnekleriyle yaz.</li>
+</ul>
+<h3>Sal 10 Kas · Anatomi lab solunum (grup 3–4) · Beceri EKG</h3>
+<ul>
+<li>🔁 Akşam: solunum embriyolojisi ön hazırlığı.</li>
+</ul>
+<h3>Çar 11 Kas · Histoloji solunum embriyolojisi · Biyoloji kök hücre olgu tartışması</h3>
+<ul>
+<li>🌙 Sal akşamı: <strong>akciğer gelişim evreleri ve haftaları</strong> (embriyonik, psödoglandüler 5/6–16, kanaliküler 16–26, sakküler 26–doğum, alveoler: sekonder septum), <strong>solunum divertikülü 4. hafta ön bağırsağın ventralinde</strong>, <strong>TEF tipleri (4 kez! en sık: proksimal özofagus atrezisi + distal fistül)</strong>, <strong>viseral plevra splanknik, paryetal plevra somatik mezodermden</strong>, surfaktan ve prematürite.</li>
+</ul>
+<h3>Per 12 – Cum 13 Kas · Fizyoloji lab periferik yayma · Kliniğe giriş</h3>
+<ul>
+<li>🌙 Lab öncesi: lökosit morfolojisi (çekirdek lob sayıları, granül renkleri).</li>
+<li>🔁 Hafta sonu (14–15 Kas): <strong>kan bölümünü kapat.</strong> Kan fizyolojisinin tamamını (eritrosit, Hb-demir, kan grubu, hemostaz, lökosit) tek sayfaya indir. Pazartesiden itibaren solunum fizyolojisi başlıyor ve tempo artıyor.</li>
+</ul>
+</section>
+<section class="sec c-green" id="takvim-4-hafta-16-20-kasim-solunum-fizyolojisi-">
+<h2>4. hafta · 16–20 Kasım: solunum fizyolojisi (en yoğun hafta)</h2>
+<p>Solunum fizyolojisi eski sınavlarda fizyoloji sorularının <strong>yarıya yakını</strong>. Bu hafta her akşam ön hazırlık şart; çıkmışların çoğu doğrudan bu derslerden.</p>
+<h3>Pzt 16 Kas · Solunum fizyolojisine giriş · Klinik yaklaşım solunum muayenesi</h3>
+<ul>
+<li>🌙 Paz akşamı: ventilasyon, ölü boşluk, <strong>alveoler ventilasyon = (VT − VD) × f</strong>. Çıkmışlar: <strong>alveoler ventilasyon 4200 mL/dk</strong>, <strong>ölü boşluk ventilasyonu 1800 mL/dk</strong>, istirahat ventilasyonu 6–7,5 L/dk.</li>
+<li>🌙 Klinik yaklaşım: <strong>ortopne/platipne/takipne/apne tanımları</strong>, <strong>vibrasyon torasik palpasyonla</strong> değerlendirilir, inspeksiyonla solunum sayısı ve derinliği. Bu sorular <strong>her yıl</strong> geliyor.</li>
+</ul>
+<h3>Sal 17 Kas · Solunum mekaniği</h3>
+<ul>
+<li>🌙 Pzt akşamı (<strong>en önemli akşam</strong>): <strong>plevral, alveoler, transpulmoner, transmural basınçlar</strong> ve inspirasyon/ekspirasyondaki değerleri (plevral −5 → −7,5; alveoler −1/+1), <strong>kompliyans = ΔV/ΔP (hesap sorusu: 200 mL/cmH₂O)</strong>, <strong>surfaktan</strong> (tip II, yüzey gerilimini azaltır, kompliyansı artırır, Laplace), <strong>histerezis</strong>, <strong>FRC = akciğer ve göğüs duvarının dengede olduğu hacim</strong>.</li>
+<li>Çıkmış sayısı: kompliyans–surfaktan ~10, basınçlar ~10. <strong>En yüksek getirili iki konu.</strong></li>
+</ul>
+<h3>Çar 18 Kas · Pulmoner dolaşım, ventilasyon–perfüzyon</h3>
+<ul>
+<li>🌙 Sal akşamı: <strong>V/Q oranı</strong>: emboli → V/Q ↑ (ölü boşluk, alveol PO₂ inspire edilen havaya eşit), obstrüksiyon → V/Q ↓ (şant), <strong>apeks V/Q ≈ 3,3</strong>, <strong>hipoksik pulmoner vazokonstriksiyon</strong>, fizyolojik şant. ~7 çıkmış.</li>
+</ul>
+<h3>Per 19 Kas · Gaz değişimi · Klinik yaklaşım akciğer volüm ve kapasiteleri</h3>
+<ul>
+<li>🌙 Çar akşamı: arteriyel PO₂ 95, venöz PO₂ 40, venöz PCO₂ 45, difüzyon, Fick. Volüm/kapasiteler: <strong>inspirasyon kapasitesi</strong>, <strong>FRC</strong>, <strong>FEV1/FVC &lt; %70 obstrüksiyon (astım, amfizem)</strong>, <strong>fibroziste FEV1 düşük ve kompliyans düşük</strong>.</li>
+</ul>
+<h3>Cum 20 Kas · Gazların taşınımı</h3>
+<ul>
+<li>🌙 Per akşamı: <strong>O₂–Hb disosiasyon eğrisi</strong> (sigmoid, plato %7 artış, dik kısım 10–60 mmHg), <strong>P50</strong>, <strong>sağa kaydıranlar: CO₂↑, H⁺↑ (pH↓), ısı↑, 2,3-BPG↑ · sola: HbF, alkaloz, hipotermi, 2,3-BPG↓, CO</strong>, venöz satürasyon ~%75, <strong>CO₂'nin bikarbonat olarak taşınma basamakları</strong>. ~7 çıkmış; biyokimya ile ortak.</li>
+<li>🔁 Hafta sonu (21–22 Kas): <strong>anatomi lab sınavı hazırlığı</strong> (24 Kas). Maket ve atlas: kalp, baş-boyun, üst ve alt ekstremite damarları, solunum yolları. Pazar akşamı solunum kontrolü ön hazırlığı.</li>
+</ul>
+</section>
+<section class="sec c-purple" id="takvim-5-hafta-23-27-kasim-kontrol-lab-sinavi-f">
+<h2>5. hafta · 23–27 Kasım: kontrol, lab sınavı, final</h2>
+<h3>Pzt 23 Kas · Solunumun düzenlenmesi · Panel: toplum kökenli pnömoniler</h3>
+<ul>
+<li>🌙 Paz akşamı: <strong>solunum merkezleri</strong> (DRG inspirasyon, VRG, <strong>pre-Bötzinger ritim/pacemaker</strong>, pnömotaksik, apnöstik), <strong>santral kemoreseptör → arteriyel PCO₂ / BOS pH</strong>, <strong>glomus hücresi: hipoksi → K⁺ kanalları kapanır → depolarizasyon → Ca²⁺ girişi → nörotransmitter</strong>, karotis cisimciği n. IX, Hering–Breuer, C lifleri. <strong>~12 çıkmış: solunumun en çok sorulan konusu.</strong></li>
+<li>🌙 Panel: atipik pnömoni, PA grafisi etken patojeni göstermez, çocukta yatış endikasyonu (SpO₂ &lt; %90), takipne en duyarlı bulgu.</li>
+<li>🔁 Akşam: lab sınavı son tekrarı.</li>
+</ul>
+<h3>Sal 24 Kas · ANATOMİ LABORATUVAR SINAVI</h3>
+<ul>
+<li>🔁 Akşam: dinlen, sonra 1 saat formatif çıkmış bankası (anatomi hariç).</li>
+</ul>
+<h3>Çar 25 – Per 26 Kas · Serbest gün (bağımsız öğrenme)</h3>
+<ul>
+<li>⏱️ Çar sabah: <strong>deneme 1</strong> (dolaşım + solunum + kan karışık). Öğleden sonra yanlış analizi ve slayta dönüş.</li>
+<li>⏱️ Çar akşam: solunum çıkmışlarının tamamı bir tur.</li>
+<li>⏱️ Per sabah: <strong>deneme 2</strong>. Öğleden sonra: kavram çiftleri listesi ve formüller.</li>
+<li>⏱️ Per akşam: sadece Anki ve tek sayfalık özetler. Yeni konu açma, erken uyu.</li>
+</ul>
+<h3>Cum 27 Kas · KURUL SONU TEORİK SINAVI 10:30</h3>
+</section></div><div role="tabpanel" id="panel-oncelik" aria-labelledby="tab-oncelik" hidden><nav class="toc"><a class="c-ink" href="#oncelik-sinavda-ne-bekleniyor">Sınavda ne bekleniyor</a><a class="c-red" href="#oncelik-solunum-cikmislarda-kac-kez-soruldu">Solunum: çıkmışlarda kaç kez soruldu</a><a class="c-orange" href="#oncelik-kan-cikmisi-olmayan-yeni-bolum">Kan: çıkmışı olmayan yeni bölüm</a><a class="c-amber" href="#oncelik-formatiften-tasinan-konular">Formatiften taşınan konular</a></nav><section class="sec c-ink" id="oncelik-sinavda-ne-bekleniyor">
+<h2>Sınavda ne bekleniyor</h2>
+<p>Eski kurul sonu sınavları (2023 kitapçığı, 2K1, online sınav) <strong>dolaşım + solunum birlikte</strong> ve <strong>100 soru</strong>. 2023'te dağılım: fizyoloji 37, anatomi 17, histoloji 10, biyokimya 4 (+ immünoloji, farmakoloji, patoloji, klinik yaklaşım, panel). Bu yıl immünoloji ve farmakoloji bu kurulda değil; formatifteki oran (fizyoloji 22 · anatomi 8 · biyokimya 8 · histoloji 7 · biyofizik 3 · biyoloji 2 / 50) 100'e ölçeklenirse kabaca <strong>fizyoloji ~44, anatomi ~16, biyokimya ~16, histoloji ~14, biyofizik ~6, biyoloji ~4</strong> bekle. Klinik yaklaşım ve panel soruları da gelebilir.</p>
+<p>Formatifte gördüğün tablo kurul sonunda da geçerli: <strong>anatomi ve biyofizik çıkmıştan</strong>, <strong>fizyoloji değiştirilmiş çıkmış + yeni</strong>, <strong>biyokimya ve histolojide slayt ayrıntısı</strong>.</p>
+</section>
+<section class="sec c-red" id="oncelik-solunum-cikmislarda-kac-kez-soruldu">
+<h2>Solunum: çıkmışlarda kaç kez soruldu</h2>
+<h3>Fizyoloji (en yüksek getiri, sırayla)</h3>
+<ul>
+<li><strong>Solunum kontrolü ~12:</strong> pre-Bötzinger (pacemaker), DRG (inspirasyon), santral kemoreseptör (PCO₂/pH), glomus hücresi (K⁺ kanalı → depolarizasyon → Ca²⁺), beyin sapı kesi seviyeleri.</li>
+<li><strong>Kompliyans ve surfaktan ~10:</strong> kompliyans eğrileri (S &gt; T &gt; U), hesap (ΔV/ΔP), prematüre bebek (yüzey gerilimi ↑, kompliyans ↓), surfaktan tip II, histerezis, Laplace.</li>
+<li><strong>Basınçlar ~10:</strong> plevral −5 → −7,5; alveoler −1/+1; transpulmoner inspirasyon sonunda en yüksek; transmural; hangi grafiğin hangi basınç olduğu.</li>
+<li><strong>Volüm–kapasite, spirometri ~8:</strong> FRC (her yıl!), inspirasyon kapasitesi, FEV1/FVC (obstrüktif: astım, amfizem), fibrozis.</li>
+<li><strong>V/Q ve pulmoner dolaşım ~7:</strong> emboli → V/Q ↑, apeks 3,3, hipoksik vazokonstriksiyon, fizyolojik şant.</li>
+<li><strong>O₂ taşınması, disosiasyon eğrisi, P50 ~7:</strong> hatalı ifade soruları, kaydıran faktörler, venöz satürasyon %75.</li>
+<li><strong>Gaz değerleri ~6:</strong> arteriyel PO₂ 95, venöz PO₂ 40, venöz PCO₂ 45.</li>
+<li><strong>Ventilasyon hesapları ~5:</strong> alveoler ventilasyon 4200, ölü boşluk 1800, istirahat ventilasyonu 6–7,5 L/dk.</li>
+</ul>
+<h3>Histoloji ve embriyoloji</h3>
+<ul>
+<li><strong>TEF ~4:</strong> en sık tip proksimal özofagus atrezisi + distal fistül.</li>
+<li><strong>Akciğer gelişim evreleri ~3:</strong> psödoglandüler 6–16. hafta, alveoler evrede sekonder septum.</li>
+<li><strong>Ses telleri ~3:</strong> gerçek ses teli çok katlı yassı, yalancı ses teli solunum epiteli.</li>
+<li><strong>Kan–gaz bariyeri ~2</strong>, <strong>plevra kökeni ~2</strong>, Clara hücresi, tip I pnömosit, bronş dallanma sayısı, terminal bronşiyolde kıkırdak ve bez yok.</li>
+</ul>
+<h3>Anatomi</h3>
+<ul>
+<li><strong>Paranazal sinüsler ~5</strong> (her yıl değişen "doğru olan": frontal + maxillar + ön etmoid → meatus medius; sfenoid → recessus sphenoethmoidalis; en büyük maxillaris).</li>
+<li><strong>Akciğerlere komşu özofagus ~4</strong>, <strong>diafram ~4</strong>, <strong>mediastinum ~3</strong>, <strong>plica vocalis kıkırdakları (thyroidea + arytenoidea) ~3</strong>, <strong>carina ~2</strong>, <strong>ekspirasyon kası (intercostalis internus/intimus) ~2</strong>, <strong>gaz değişimi bölgeleri ~2</strong>, trachea U şekli (yutma).</li>
+</ul>
+<h3>Klinik yaklaşım (her yıl 3–4 soru)</h3>
+<ul>
+<li>Anormal solunum tipleri, muayene (vibrasyon torasik palpasyonla), PA grafisi patojeni göstermez, pnömoni sınıflaması (atipik pnömoni tedavi sınıflamasında yok), çocukta yatış endikasyonları, EKG ritimleri.</li>
+</ul>
+</section>
+<section class="sec c-orange" id="oncelik-kan-cikmisi-olmayan-yeni-bolum">
+<h2>Kan: çıkmışı olmayan yeni bölüm</h2>
+<p>Kan fizyolojisi (eritrosit, Hb-demir, kan grupları, hemostaz, lökositler) ve <strong>pıhtılaşmanın biyokimyası</strong> eski kurul sınavlarında yoktu. Yani buradan gelecek soruların neredeyse tamamı <strong>slayttan yeni soru</strong> olacak, çıkmış ezberi işe yaramaz. Strateji:</p>
+<ul>
+<li>Her dersin <strong>öğrenim hedefleri ve çalışma soruları</strong>: hoca soruyu buradan yazıyor.</li>
+<li><strong>Sayılar:</strong> eritrosit 4,3–5,7 milyon, ömür 120 gün, retikülosit %1–2, Hct %45, trombosit 150–400 bin (spontan kanama &lt; 20 bin), lökosit oranları.</li>
+<li><strong>Kavram çiftleri:</strong> serum/plazma, intrinsik/ekstrinsik yol, primer/sekonder hemostaz, mikrositer/makrositer, IgM/IgG (plasentadan geçer mi), transferrin/ferritin.</li>
+<li>Histolojideki <strong>kan doku</strong> slaytı ile fizyolojinin <strong>kan</strong> dersleri ve biyokimyanın <strong>Hb ve pıhtılaşma</strong> dersleri aynı konuyu üç açıdan anlatıyor; tek bir özet sayfasında birleştir.</li>
+</ul>
+</section>
+<section class="sec c-amber" id="oncelik-formatiften-tasinan-konular">
+<h2>Formatiften taşınan konular</h2>
+<p>Formatif konuları kurul sonunda <strong>yine</strong> sorulacak ve eski kurul sonu sınavlarında dolaşım soruları formatifle aynı havuzdan. Formatif sitesindeki bankayı ve 4 denemeyi kullan; yeni bir şey üretmene gerek yok, <strong>tekrar</strong> yeterli.</p>
+<ul>
+<li><strong>Biyokimya</strong>: serbest radikaller ve antioksidanlar (7 Ekim dersi, çıkmışı yok, slayttan çalış), Hb yapısı, O₂ bağlanmasını etkileyen faktörler, hem sentezi, ksenobiyotikler (<strong>merkaptürik asit = glutatyon konjugasyonu</strong>).</li>
+<li><strong>Biyoloji:</strong> kök hücre (formatifte soruldu) + hücre yenilenmesi + kök hücre olgu. Toplam 6 saat ders → muhtemelen 3–4 soru.</li>
+<li><strong>Biyofizik:</strong> dolaşım biyomekaniği ve ergonomi. Her yıl aynı 4 soru (kuvvet–moment, yatarken 100 mmHg, Ostwald, 0 dB).</li>
+</ul>
+</section></div><div role="tabpanel" id="panel-tekrar" aria-labelledby="tab-tekrar" hidden><nav class="toc"><a class="c-red" href="#tekrar-son-gune-kalmamasi-gerekenler">Son güne kalmaması gerekenler</a><a class="c-green" href="#tekrar-her-gun-20-30-dk">Her gün (20–30 dk)</a><a class="c-blue" href="#tekrar-her-hafta-sonu-2-3-saat">Her hafta sonu (2–3 saat)</a><a class="c-purple" href="#tekrar-kavram-ciftleri-listesi">Kavram çiftleri listesi</a><a class="c-ink" href="#tekrar-formatiften-cikarilan-ders">Formatiften çıkarılan ders</a></nav><section class="sec c-red" id="tekrar-son-gune-kalmamasi-gerekenler">
+<h2>Son güne kalmaması gerekenler</h2>
+<p>Bunların ortak özelliği: <strong>tek gecede oturmazlar.</strong> Ya hesap pratiği, ya ezber listesi, ya da iki dersin birleşmesi gerekiyor.</p>
+<ul>
+<li><strong>Anatomi lab sınavı (24 Kas):</strong> teorik sınavdan 3 gün önce ve ayrı bir sınav. Maket çalışması haftalara yayılmalı; her lab dersinden sonra aynı akşam 20 dk.</li>
+<li><strong>Solunum fizyolojisi hesapları:</strong> kompliyans, alveoler ventilasyon, ölü boşluk, V/Q. Her hesabı en az 3 farklı sayıyla çöz.</li>
+<li><strong>Disosiasyon eğrisi kaydıran faktörler</strong> (fizyoloji + biyokimya ortak): formatifte kaybedilen tip soru.</li>
+<li><strong>Solunum kontrolü ve glomus hücresi sırası.</strong></li>
+<li><strong>Pıhtılaşma kaskadı</strong> (fizyoloji 30 Eki + biyokimya 9 Kas): tek şema, iki ders.</li>
+<li><strong>Embriyoloji akıbet tabloları ve evre haftaları</strong> (dolaşım + solunum): fetal damar akıbetleri, aortik arklar, akciğer gelişim evreleri.</li>
+<li><strong>Formatif konularının tekrarı:</strong> 29 Ekim, 7–8 Kasım ve 25 Kasım. Bu üç tekrar yapılmazsa dolaşım bilgisinin yarısı sınava kadar silinir.</li>
+</ul>
+</section>
+<section class="sec c-green" id="tekrar-her-gun-20-30-dk">
+<h2>Her gün (20–30 dk)</h2>
+<ul>
+<li><strong>Anki:</strong> anatomi şıklı deste + geçitler destesi; solunum dersleri başladıkça yeni kartlar. Günlük tekrar sayısını sıfırlamadan yatma.</li>
+<li><strong>O günün dersinin 3 cümlelik özeti:</strong> derste hocanın vurguladığı cümleyi aynen yaz. Formatifte "hocanın söylediği" sorular vardı.</li>
+</ul>
+</section>
+<section class="sec c-blue" id="tekrar-her-hafta-sonu-2-3-saat">
+<h2>Her hafta sonu (2–3 saat)</h2>
+<ul>
+<li>Haftanın konularını tek sayfaya indir.</li>
+<li>Formatif bankasından bir sekme (sırayla: fizyoloji, histoloji, biyokimya, anatomi).</li>
+<li><strong>Kavram çiftleri listesine</strong> ekleme yap.</li>
+</ul>
+</section>
+<section class="sec c-purple" id="tekrar-kavram-ciftleri-listesi">
+<h2>Kavram çiftleri listesi</h2>
+<p>Formatifteki yanlışların ikisi de kavram karışıklığıydı. Bu listeyi kurul boyunca büyüt ve haftada bir oku:</p>
+<ul>
+<li>Totipotent (plasentayı da yapar) / pluripotent (yapamaz) / multipotent</li>
+<li>Glukuronidasyon (bilirubin, ilaçlar) / glutatyon konjugasyonu (<strong>merkaptürik asit</strong>) / sülfatasyon / asetilasyon</li>
+<li>Sola kaydıran (HbF, alkaloz, 2,3-BPG↓, hipotermi, CO) / sağa kaydıran (CO₂↑, H⁺↑, ısı↑, 2,3-BPG↑)</li>
+<li>Lenfatik içeren (testis, deri, mukozalar) / içermeyen (kıkırdak, kemik, epitel, MSS, kemik iliği, plasenta) — <strong>kökü oku: "içeren" mi "içermeyen" mi?</strong></li>
+<li>Serum (fibrinojen yok) / plazma</li>
+<li>Primer hemostaz (trombosit tıkacı, vWF) / sekonder hemostaz (fibrin, doku faktörü)</li>
+<li>Obstrüktif (FEV1/FVC ↓) / restriktif (FEV1/FVC normal, volümler ↓)</li>
+<li>Ölü boşluk (V/Q ↑, emboli) / şant (V/Q ↓, atelektazi)</li>
+<li>Gerçek ses teli (çok katlı yassı) / yalancı ses teli (solunum epiteli)</li>
+<li>Viseral plevra (splanknik) / paryetal plevra (somatik)</li>
+<li>Santral kemoreseptör (PCO₂, BOS pH) / periferik (PO₂, karotis IX, aort X)</li>
+</ul>
+</section>
+<section class="sec c-ink" id="tekrar-formatiften-cikarilan-ders">
+<h2>Formatiften çıkarılan ders</h2>
+<ul>
+<li>Anatomi ve biyofizik <strong>tamamen çıkmıştan</strong> geldi: bu ikisi için çıkmış + Anki yeterli.</li>
+<li>Fizyolojide çıkmışlar <strong>değiştirilerek</strong> geldi: mekanizma ve hesap bilmeden çözülmüyor.</li>
+<li>Kaybedilen sorular slaytın <strong>kavram ayrımlarıydı</strong> ve kökü yanlış okumaktan geldi. Her soruda kökteki "değildir / içeren / içermeyen / hatalı" kelimesinin altını çiz.</li>
+</ul>
+</section></div>
+<p class="foot">Kaynaklar: Dönem 2 güz ders programı, 2023 kurul kitapçığı, online kurul sınavı, 2F1 ve 2K1 sınavları, 2024 ve 2025 hatırlamaları, D2 ve final derlemeleri, formatif sınav deneyimi.</p>
+</div>
+<script>
+(function () {
+  var btns = document.querySelectorAll('.tabs button');
+  function show(id, scroll) {
+    btns.forEach(function (b) { var on = b.dataset.tab === id; b.setAttribute('aria-selected', on ? 'true' : 'false'); document.getElementById('panel-' + b.dataset.tab).hidden = !on; });
+    try { localStorage.setItem('plan-tab', id); } catch (e) {}
+    if (scroll) window.scrollTo({ top: 0 });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab, true); }); });
+  var s = null; try { s = localStorage.getItem('plan-tab'); } catch (e) {}
+  if (s && document.getElementById('panel-' + s)) show(s, false);
+})();
+</script>
+
+</body>
+</html>

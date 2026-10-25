@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Çıkmış Soru Bankası</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap">
+<style>
+/* Okuma sayfası: tek dar sütun, bol boşluk, her konu kendi rengiyle */
+:root {
+  --bg: #fbfcfe; --fg: #1f2633; --muted: #5d6779; --line: #e3e7ef; --card: #ffffff;
+  --hl: #fff2a8;
+  --f-body: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --ink: #2b3a55; --ink-soft: #eef1f7;
+  --red: #c8323c; --red-soft: #fdeeee;
+  --orange: #c55a11; --orange-soft: #fdf1e7;
+  --amber: #a86b00; --amber-soft: #fdf5e0;
+  --green: #1f8a4c; --green-soft: #e8f6ee;
+  --teal: #0f7f7a; --teal-soft: #e4f5f4;
+  --cyan: #0b72a8; --cyan-soft: #e6f3fa;
+  --blue: #2a5bd7; --blue-soft: #ebf0fd;
+  --indigo: #5140c8; --indigo-soft: #efedfc;
+  --purple: #8a37b8; --purple-soft: #f5ecfa;
+  --rose: #c02e74; --rose-soft: #fcebf3;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12151c; --fg: #e6e9f0; --muted: #a2abbb; --line: #2a303c; --card: #181c25; --hl: #5a4d12;
+    --ink: #c9d3e6; --ink-soft: #1f2533;
+    --red: #ff8a8f; --red-soft: #3a1d21;
+    --orange: #ffad73; --orange-soft: #3a2618;
+    --amber: #f5c45a; --amber-soft: #352b14;
+    --green: #6fd69a; --green-soft: #16301f;
+    --teal: #5fd3cb; --teal-soft: #122f2e;
+    --cyan: #6cc4f0; --cyan-soft: #122a38;
+    --blue: #8eaeff; --blue-soft: #1a2440;
+    --indigo: #a99dff; --indigo-soft: #231f3f;
+    --purple: #d29af2; --purple-soft: #2f1f3a;
+    --rose: #ff8fc2; --rose-soft: #3a1b2b;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12151c; --fg: #e6e9f0; --muted: #a2abbb; --line: #2a303c; --card: #181c25; --hl: #5a4d12;
+    --ink: #c9d3e6; --ink-soft: #1f2533;
+    --red: #ff8a8f; --red-soft: #3a1d21;
+    --orange: #ffad73; --orange-soft: #3a2618;
+    --amber: #f5c45a; --amber-soft: #352b14;
+    --green: #6fd69a; --green-soft: #16301f;
+    --teal: #5fd3cb; --teal-soft: #122f2e;
+    --cyan: #6cc4f0; --cyan-soft: #122a38;
+    --blue: #8eaeff; --blue-soft: #1a2440;
+    --indigo: #a99dff; --indigo-soft: #231f3f;
+    --purple: #d29af2; --purple-soft: #2f1f3a;
+    --rose: #ff8fc2; --rose-soft: #3a1b2b;
+  color-scheme: dark; }
+.c-ink { --c: var(--ink); --soft: var(--ink-soft); }
+.c-red { --c: var(--red); --soft: var(--red-soft); }
+.c-orange { --c: var(--orange); --soft: var(--orange-soft); }
+.c-amber { --c: var(--amber); --soft: var(--amber-soft); }
+.c-green { --c: var(--green); --soft: var(--green-soft); }
+.c-teal { --c: var(--teal); --soft: var(--teal-soft); }
+.c-cyan { --c: var(--cyan); --soft: var(--cyan-soft); }
+.c-blue { --c: var(--blue); --soft: var(--blue-soft); }
+.c-indigo { --c: var(--indigo); --soft: var(--indigo-soft); }
+.c-purple { --c: var(--purple); --soft: var(--purple-soft); }
+.c-rose { --c: var(--rose); --soft: var(--rose-soft); }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 17px; line-height: 1.8; font-weight: 300;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 96px; }
+.wrap { max-width: 720px; margin: 0 auto; }
+header.top { padding-block: 48px 8px; }
+header.top h1 { font-size: 2rem; line-height: 1.25; font-weight: 600; margin: 0 0 8px; text-wrap: balance; }
+header.top p { color: var(--muted); margin: 0; }
+.tabs { flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 8px; padding-block: 16px 12px; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.tabs button { font: inherit; font-weight: 500; font-size: 1rem; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 8px 18px; border-radius: 999px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button:focus-visible, .toc a:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 24px 8px; }
+.toc a { text-decoration: none; font-size: 0.85rem; font-weight: 400; color: var(--c); background: var(--soft); padding: 4px 12px; border-radius: 999px; line-height: 1.6; }
+.sec { padding-block: 56px 8px; scroll-margin-top: 80px; }
+.sec h2 { color: var(--c); font-size: 1.6rem; line-height: 1.3; font-weight: 600; margin: 0; text-wrap: balance; display: inline; }
+.pill { display: inline-block; margin-left: 10px; vertical-align: 4px; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.02em; color: var(--c); background: var(--soft); padding: 2px 10px; border-radius: 999px; }
+.sec > p:first-of-type { margin-top: 16px; }
+h3 { font-size: 1.12rem; font-weight: 600; margin: 40px 0 12px; color: var(--fg); }
+p { margin: 0 0 14px; }
+strong { color: var(--c); font-weight: 600; }
+ul { margin: 0 0 8px; padding-left: 1.2em; display: grid; gap: 10px; }
+li::marker { color: var(--c); }
+.qa { background: var(--soft); border-radius: 16px; padding: 18px 20px; margin: 14px 0; display: grid; gap: 8px; }
+.qa p { margin: 0; }
+.q { font-weight: 400; }
+.lbl { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); margin-right: 8px; }
+.times { font-size: 0.8rem; color: var(--muted); white-space: nowrap; margin-left: 4px; }
+.a { display: flex; gap: 8px; font-weight: 500; color: var(--c); }
+.a strong { font-weight: 700; }
+.w { color: var(--muted); font-size: 0.95rem; line-height: 1.7; }
+.w strong { color: var(--fg); }
+.tip { margin: 28px 0 0; padding: 18px 20px; border-radius: 16px; border: 1.5px dashed var(--c); }
+.tip-h { display: block; font-weight: 600; margin-bottom: 4px; }
+.tip p { margin: 0; }
+.rom { font-size: 0.93rem; color: var(--fg); padding-left: 4px; }
+.opt { font-size: 0.95rem; line-height: 1.5; padding: 3px 10px; border-radius: 10px; }
+.opt.right { background: var(--card); font-weight: 600; color: var(--c); }
+.tick { font-weight: 700; }
+.src { display: inline-block; font-size: 0.75rem; color: var(--muted); border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 0 8px; margin-left: 4px; white-space: nowrap; }
+.chg { background: var(--hl); color: var(--fg); border-radius: 10px; padding: 8px 12px; font-size: 0.93rem; }
+.chg-h { display: block; font-weight: 600; }
+.var { background: var(--card); border-radius: 12px; padding: 10px 14px; font-size: 0.93rem; }
+.var-h { display: block; font-weight: 600; margin-bottom: 4px; color: var(--c); }
+.var ul { gap: 4px; margin: 0; }
+.mn { margin: 18px 0; padding: 16px 20px; border-radius: 16px; background: var(--soft); }
+.mn-h { display: block; font-weight: 600; color: var(--c); margin-bottom: 4px; }
+.mn p { margin: 0; }
+.foot { color: var(--muted); font-size: 0.85rem; padding-block: 48px 0; }
+@media (max-width: 480px) { body { font-size: 16px; } .tabs button { padding: 6px 12px; font-size: 0.9rem; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+.srcs { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; vertical-align: 1px; }
+.srcs .src { margin: 0; }
+.s-ONL, .s-F1, .s-K1, .s-23 { border-color: var(--c); color: var(--c); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 20px 0; font-size: 0.9rem; color: var(--muted); }
+.filters button { font: inherit; font-size: 0.85rem; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.filters .count { margin-left: auto; }
+.legend { color: var(--muted); font-size: 0.85rem; line-height: 1.6; margin: 12px 0 0; }
+.qa[hidden] { display: none; }
+.sec.empty { display: none; }
+</style>
+</head>
+<body>
+<style>
+.ds-bar{--ds-bg:#ffffff;--ds-fg:#1f2633;--ds-line:#e3e7ef;--ds-on:#1f2633;--ds-onfg:#ffffff;
+  background:var(--ds-bg);border-bottom:1px solid var(--ds-line);font-family:"Lexend","Segoe UI",system-ui,sans-serif;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;line-height:1.4}
+@media (prefers-color-scheme:dark){.ds-bar{--ds-bg:#12151c;--ds-fg:#e6e9f0;--ds-line:#2a303c;--ds-on:#e6e9f0;--ds-onfg:#12151c}}
+.ds-bar a{text-decoration:none;color:var(--ds-fg)}
+.ds-home{font-weight:600;margin-right:auto;white-space:nowrap}.ds-home a{color:inherit}
+.ds-sw{display:flex;flex-wrap:wrap;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
+.ds-sw a{padding:6px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.ds-sw a[aria-current="page"]{background:var(--ds-on);color:var(--ds-onfg)}
+.ds-sw a:focus-visible,.ds-home:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
+</style>
+<nav class="ds-bar" aria-label="Sayfalar">
+  <span class="ds-home"><a href="../../../../">🏠</a> › <a href="../../../">Dönem 2</a> › <a href="../../">Kurul 1</a> › <a href="../">Formatif</a></span>
+  <div class="ds-sw">
+    <a href="../notlar/">📚 Notlar</a>
+    <a href="../banka/" aria-current="page">🗂️ Çıkmışlar</a>
+    <a href="../deneme/">📝 Deneme</a>
+    <a href="../simulasyon/">🩺 Simülasyon</a>
+    <a href="../damar/">🩸 Damar</a>
+  </div>
+</nav>
+<style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
+
+<div class="wrap">
+<header class="top"><h1>Dolaşım Kurulu · Çıkmış Soru Bankası</h1><p>7 kaynaktaki bütün dolaşım soruları, konu sırasıyla ve şıklarıyla. Aynı sorunun farklı yıllardaki hâlleri yan yana. 🗂️</p>
+<p class="legend">Etiketler: <b>Online</b>, <b>2F1</b>, <b>2K1</b>, <b>2023</b> şıklı orijinal sınavlar · <b>2024</b>, <b>2025</b> öğrenci hatırlaması · <b>Derleme</b> yılı belirsiz eski derleme. 🔄 sarı kutu = soru başka bir sınavda değiştirilerek sorulmuş.</p></header>
+<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-analiz" aria-controls="panel-analiz" aria-selected="true" data-tab="analiz">📊 Analiz</button><button type="button" role="tab" id="tab-fizyo" aria-controls="panel-fizyo" aria-selected="false" data-tab="fizyo">💓 Fizyoloji</button><button type="button" role="tab" id="tab-anat" aria-controls="panel-anat" aria-selected="false" data-tab="anat">🫀 Anatomi</button><button type="button" role="tab" id="tab-biyokim" aria-controls="panel-biyokim" aria-selected="false" data-tab="biyokim">🧪 Biyokimya</button><button type="button" role="tab" id="tab-histo" aria-controls="panel-histo" aria-selected="false" data-tab="histo">🔬 Histoloji</button><button type="button" role="tab" id="tab-biyofiz" aria-controls="panel-biyofiz" aria-selected="false" data-tab="biyofiz">⚡ Biyofizik</button></div>
+<div role="tabpanel" id="panel-analiz" aria-labelledby="tab-analiz"><nav class="toc"><a class="c-ink" href="#analiz-kisa-cevap">Kısa cevap</a><a class="c-red" href="#analiz-sorular-nasil-degistiriliyor">Sorular nasıl değiştiriliyor?</a><a class="c-green" href="#analiz-bu-yilin-dagilimina-gore-oncelik">Bu yılın dağılımına göre öncelik</a><a class="c-blue" href="#analiz-kaynaklar-ve-kapsam">Kaynaklar ve kapsam</a><a class="c-orange" href="#analiz-onceki-notlarda-duzelttiklerim">Önceki notlarda düzelttiklerim</a></nav><section class="sec c-ink" id="analiz-kisa-cevap">
+<h2>Kısa cevap</h2>
+<p>Yeni 8 PDF'in 3'ü tam sınav (<strong>Online sınav</strong> cevap anahtarlı, <strong>2F1</strong> 50 soru şıklı, <strong>2K1</strong> 100 soru şıklı), 5'i ders ders derleme. Derlemelerin neredeyse tamamı bu üç sınavla 2023 kitapçığının kopyası; yeni bilgi asıl <strong>şıklar</strong> ve <strong>cevap anahtarı</strong>.</p>
+<p>Eldeki 7 kaynakla (Online, 2F1, 2K1, 2023, 2024, 2025, eski derleme) bakınca tablo net: <strong>hocalar aynı soru havuzunu yıllardır döndürüyor.</strong> Anatomi ve biyofizikte soruların neredeyse hepsi daha önce sorulmuş. Fizyolojide eski sınavlar çok tekrarlı, son iki yılda yeni soru oranı artmış.</p>
+<ul>
+<li><strong>Anatomi:</strong> bir sınavdaki soruların ~%85'i başka bir sınavda aynen ya da şıkkı oynanmış hâliyle var.</li>
+<li><strong>Biyofizik:</strong> 4 soru her yıl geliyor (kuvvet–moment, yatarken 100 mmHg, Ostwald, 0 dB). ~%100.</li>
+<li><strong>Histoloji:</strong> ~%65. Kalp embriyolojisi ve kapiller tipleri hep var.</li>
+<li><strong>Biyokimya:</strong> birebir tekrar ~%45, ama <strong>konu tekrarı %100</strong>: hem sentezi/yıkımı, hemoproteinler, ksenobiyotik faz I/II–P450, bilirubin. Başka konu hiç sorulmamış.</li>
+<li><strong>Fizyoloji:</strong> Online, 2F1, 2K1 ve 2023'te ~%65–85 tekrar. 2024'te ~%50, 2025'te ~%30 (hatırlama kayıtları bozuk olduğu için gerçek oran biraz daha yüksek olabilir). Bu yılın slaytları da yeni; <strong>fizyolojide çıkmış tek başına yetmez, kalıp ve kavram gerekir.</strong></li>
+</ul>
+</section>
+<section class="sec c-red" id="analiz-sorular-nasil-degistiriliyor">
+<h2>Sorular nasıl değiştiriliyor?</h2>
+<p>Tekrar eden soruların kabaca <strong>yarısı kelimesi kelimesine aynı</strong>, yarısı küçük bir oynamayla gelmiş. Oynamalar hep şu yedi kalıptan biri:</p>
+<ul>
+<li><strong>Aynı şıklar, sorulan şey değişir.</strong> Ductus arteriosus ↔ venosus · sinus transversus ↔ obliquus · başparmak ↔ 5. parmak · a. ulnaris ↔ a. radialis · EDV ↔ atım hacmi · foramen ovale ↔ secundum · üç aksiller aralık aynı beş şıkla.</li>
+<li><strong>Doğru ↔ doğru değil, geçen ↔ geçmeyen.</strong> İleti sistemi · foramen infrapiriforme · faz I ↔ faz II · hem sentezi ↔ hem yıkımı.</li>
+<li><strong>Yanlış şık kaydırılır.</strong> Diafram: üç sınavda üç ayrı açıklığın vertebrası bozulmuş. Frank–Starling'de ise yanlış şık hep aynı ("ard yük").</li>
+<li><strong>Sadece sayı değişir.</strong> RR 15/20/25 mm · Starling basınçları (5 ve 11 mmHg) · EF ile ESV.</li>
+<li><strong>Şekil değişir, şıklar aynı kalır.</strong> Aks sorusu (−30, sol sapma, normal, aşırı sapma) · iki AP eğrisi · basınç–hacim döngüsünde farklı segment.</li>
+<li><strong>Liste kombinasyonu değişir.</strong> ECA dalları her yıl başka liste; ama çeldirici üçlü sabit: <strong>vertebralis, thyroidea inferior, ophthalmica</strong>.</li>
+<li><strong>Terim çifti değişir.</strong> +inotropi/+lusiyotropi → +kronotropi/−dromotropi → +kronotropi/+inotropi → +inotropi/+dromotropi.</li>
+</ul>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Pratik sonuç: her çıkmışı "cevap şu" diye değil, <strong>"her şık neden doğru/yanlış"</strong> diye çalış. Şıklardaki her yapı bir sonraki yılın sorusu oluyor.</p></div>
+</section>
+<section class="sec c-green" id="analiz-bu-yilin-dagilimina-gore-oncelik">
+<h2>Bu yılın dağılımına göre öncelik</h2>
+<p>Senin verdiğin dağılım: <strong>Fizyoloji 22 · Anatomi 8 · Biyokimya 8 · Histoloji 7 · Biyofizik 3 · Biyoloji 2</strong> (toplam 50). Sıralamayı "bir saatte kaç soru kazandırır" mantığıyla yaptım:</p>
+<ul>
+<li><strong>1. Biyofizik (3 soru, 10 dk).</strong> Dört sabit soruyu ezberle, büyük olasılıkla 3/3.</li>
+<li><strong>2. Anatomi (8 soru, ~1,5 saat).</strong> Havuz küçük (~45 soru) ve %85 tekrar. Bankadaki 🔄 kartlara özellikle bak: aksiller aralıklar, ECA çeldiricileri, ulnaris/radialis, diafram seviyeleri, poplitea.</li>
+<li><strong>3. Fizyoloji kalıpları (~1,5 saat).</strong> 22 sorunun en az 8–10'u şu kalıplardan: 1500 ÷ RR, aks (DI + aVF işaretleri), basınç–hacim harfleri, kapiller filtrasyon formülü, -tropi terimleri, dinleme odakları, kapak açılıp kapanma sırası, baroreseptör sırası, Poiseuille. Hepsi bankada.</li>
+<li><strong>4. Biyokimya (8 soru, ~1 saat).</strong> Bu yıl soru sayısı iki katı, yani yeni soru gelecek; ama hep aynı dört konudan. Çıkmışları bitir, sonra slayttan sadece bu dört konuyu oku.</li>
+<li><strong>5. Histoloji (7 soru, ~45 dk).</strong> Kalp embriyolojisi (sinüs venozus, septumlar), Purkinje, kapiller tipleri, damar duvarı.</li>
+<li><strong>6. Fizyoloji geri kalan (kalan zaman).</strong> Bankanın kalanı ve spot nottaki slayt özetleri. Son iki yılın yeni soruları (CICR, digoksin, QT–hipokalemi, miyojenik, fenilefrin, RAAS) slayttan geliyor.</li>
+<li><strong>Biyoloji (2 soru):</strong> elde çıkmış yok; vakit kalırsa slayt başlıklarına göz at.</li>
+</ul>
+</section>
+<section class="sec c-blue" id="analiz-kaynaklar-ve-kapsam">
+<h2>Kaynaklar ve kapsam</h2>
+<ul>
+<li><strong>Online:</strong> COVID dönemi online kurul sınavı, cevap anahtarlı (fizyoloji 24, anatomi 12, histoloji 7, biyofizik 6, biyokimya 3 puan).</li>
+<li><strong>2F1:</strong> 50 soruluk şıklı sınav (anatomi 9, histoloji 5, fizyoloji 20, biyofizik 1).</li>
+<li><strong>2K1:</strong> 100 soruluk şıklı sınav, anahtarsız (fizyoloji 34, anatomi 14, histoloji 9, biyokimya 4, biyofizik 1).</li>
+<li><strong>2023:</strong> orijinal kitapçık (fizyoloji 37, anatomi 17, histoloji 10, biyokimya 4, biyofizik 1).</li>
+<li><strong>2024, 2025:</strong> öğrenci hatırlamaları; şık yok, metin yer yer bozuk.</li>
+<li><strong>Derleme:</strong> eski D2 derlemesinin, başka sınavlarda olmayan parçaları (yılı belirsiz).</li>
+</ul>
+<p>Eski sınavlar dolaşım + solunum birlikteydi. Bankaya <strong>yalnızca dolaşım</strong> sorularını aldım; solunum fizyolojisi, larinks, paranazal sinüs, carina ve solunum histolojisi dışarıda. Mediastinum ve diafram damar içerdiği ve her sınavda geldiği için anatomide "sınırda" başlığıyla duruyor. Cevap anahtarlı olmayan şıklı sorularda doğru şıkkı derlemedeki işaretten ve slayttan çıkardım.</p>
+</section>
+<section class="sec c-orange" id="analiz-onceki-notlarda-duzelttiklerim">
+<h2>Önceki notlarda düzelttiklerim</h2>
+<ul>
+<li><strong>Kemik kapiller sistemi:</strong> resmi anahtar C, "endotel ve bazal membran kesintisiz". Soru kemik <strong>dokusu</strong>; ben kemik iliği sanıp "şüpheli" demiştim. Yanlıştı.</li>
+<li><strong>"Lenfoid organ değildir → kemik iliği" kaydı:</strong> aslı 2K1'deki "lenfatik kapiller bulunmayan doku → kemik iliği" sorusu.</li>
+<li><strong>Bilirubin "A alt birimine 2 molekül":</strong> iki derlemede de <strong>ligandin</strong>. Önceki notta "albümin seç" demiştim; ligandin'e çevirdim.</li>
+<li><strong>"Kapillere doğru 11 mmHg" kaydı:</strong> aslı 2K1'de 35/0/25/1 verilen soru; cevap <strong>filtrasyon 11 mmHg</strong> (dışarı doğru).</li>
+<li><strong>Aort yetmezliği üfürümü:</strong> şıklar sol 2 / sağ 2 ICS. Kesin olan "diyastol"; yer olarak aort odağı (sağ 2. ICS) işaretli. Önceki notta "sol 2" yazıyordu, düzelttim.</li>
+<li><strong>Yeni anatomi soruları:</strong> spatium axillare mediale → a. circumflexa scapulae · fossa axillaris (serratus ön duvar değil) · suprapiriforme sinir → abdüksiyon · a. poplitea dalı değil → a. fibularis · diafram: foramen v. cavae T10 yanlış.</li>
+<li><strong>Yeni biyokimya:</strong> hem yıkımı → hem oksijenaz · mitokondriyal P450 → kolesterol · kuarterner yapı → hemoglobin · faz I → dealkilasyon.</li>
+</ul>
+</section></div><div role="tabpanel" id="panel-fizyo" aria-labelledby="tab-fizyo" hidden><div class="filters" data-for="fizyo"><button type="button" aria-pressed="true" data-f="all">Hepsi</button><button type="button" aria-pressed="false" data-f="rep">🔁 Aynen tekrar eden</button><button type="button" aria-pressed="false" data-f="chg">🔄 Değiştirilmiş</button><span class="count">118 kart</span></div><nav class="toc"><a class="c-red" href="#fizyo-1-aksiyon-potansiyeli-ve-kalp-kasi">1. Aksiyon potansiyeli ve kalp kası</a><a class="c-orange" href="#fizyo-2-i-leti-otonom-etki-ve-tropi-terimleri">2. İleti, otonom etki ve -tropi terimleri</a><a class="c-amber" href="#fizyo-3-ekg">3. EKG</a><a class="c-green" href="#fizyo-4-kalp-dongusu-basinclar-ve-hacimler">4. Kalp döngüsü, basınçlar ve hacimler</a><a class="c-teal" href="#fizyo-5-kalp-sesleri-ve-ufurumler">5. Kalp sesleri ve üfürümler</a><a class="c-cyan" href="#fizyo-6-debi-on-yuk-frank-starling">6. Debi, ön yük, Frank–Starling</a><a class="c-blue" href="#fizyo-7-hemodinamik-akim-direnc-basinc">7. Hemodinamik: akım, direnç, basınç</a><a class="c-indigo" href="#fizyo-8-mikrodolasim-ve-odem">8. Mikrodolaşım ve ödem</a><a class="c-purple" href="#fizyo-9-kan-basincinin-kontrolu">9. Kan basıncının kontrolü</a></nav><section class="sec c-red" id="fizyo-1-aksiyon-potansiyeli-ve-kalp-kasi">
+<h2>1. Aksiyon potansiyeli ve kalp kası</h2><span class="pill">15 soru</span>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>Pacemaker hücrelerinde stabil olmayan dinlenim potansiyelinin adı ve temel nedeni olan kanal?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="src s-D">Derleme</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="opt">a) Yavaş cevap AP, transient kalsiyum kanalları</p>
+<p class="opt">b) Spontan diyastolik depolarizasyon, potasyum kanalları</p>
+<p class="opt">c) Pace-maker potansiyel, K⁺ kanalları</p>
+<p class="opt right">d) Spontan diyastolik depolarizasyon, funny Na⁺ kanalları <span class=tick>✓</span></p>
+<p class="opt">e) Yavaş cevap AP, uzun süreli açık kalan kalsiyum kanalları</p>
+<p class="w">Kelimesi kelimesine 4 sınavda aynı. 2025'te "SA'da faz 4'ten sorumlu olay → funny akım" diye kısaltılmış.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>SA/AV düğümde gözlenen AP'nin adı ve membran −60 mV olunca açılan kanal?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Yavaş cevap aksiyon potansiyeli, funny Na⁺ kanalları.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>SA düğümde dinlenim membran potansiyeli ve eşik değeri?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) −40 mV, −20 mV</p>
+<p class="opt right">b) −60 mV, −40 mV <span class=tick>✓</span></p>
+<p class="opt">c) −65 mV, −50 mV</p>
+<p class="opt">d) −90 mV, −60 mV</p>
+<p class="opt">e) −90 V, −60 V</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Faz 4 ve faz 0'da yavaş cevap AP oluşumunda kanalların açılma sırası? (I T-Ca, II L-Ca, III f-Na)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) I, II, III</p>
+<p class="opt">b) I, III, II</p>
+<p class="opt right">c) III, I, II <span class=tick>✓</span></p>
+<p class="opt">d) III, II, I</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>SA düğüm AP'sinde depolarizasyon fazından sorumlu kanal?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>L tipi kalsiyum kanalları.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ventrikül kası hücresinde içe doğru doğrultucu K⁺ kanalları hangi fazda aktiftir?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Faz 0</p>
+<p class="opt">b) Faz 1</p>
+<p class="opt">c) Faz 2</p>
+<p class="opt">d) Faz 3</p>
+<p class="opt right">e) Faz 4 <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Şekildeki iki AP eğrisi (soldan sağa) hangi bölgelere ait? (Online şıkları)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Ventrikül kası ve A-V düğüm</p>
+<p class="opt">b) Atriyum kası ve A-V düğüm</p>
+<p class="opt">c) Ventrikül kası ve sinoatrial düğüm</p>
+<p class="opt">d) Sinoatrial düğüm ve A-V düğüm</p>
+<p class="opt right">e) A-V düğüm ve ventrikül kası <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Şekildeki iki AP eğrisi hangi bölgelere ait? (2K1 şıkları, anahtarsız)<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) Ventrikül kası ve Purkinje lifleri</p>
+<p class="opt">b) Atrium kası ve Purkinje lifleri</p>
+<p class="opt">c) Ventrikül kası ve sinoatrial düğüm</p>
+<p class="opt">d) A-V düğüm ve Purkinje lifleri</p>
+<p class="opt">e) A-V düğüm ve sinoatrial düğüm</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Şekil değişince cevap değişir. Kural: <strong>yuvarlak, platosuz, yavaş yükselen = düğüm (SA/AV)</strong>; dik yükselen, platolu = kas/Purkinje. Önce soldakine bak.</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Kalp kasında fizyolojik durumda tetani görülmemesinin nedeni?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-24">2024</span><span class="src s-D">Derleme</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) Refrakter periyod süresinin uzunluğu <span class=tick>✓</span></p>
+<p class="opt">b) Sinsisyum özelliği</p>
+<p class="opt">c) İnterkale disklerin varlığı</p>
+<p class="opt">d) Diad yapısı</p>
+<p class="opt">e) İyon kanallarının yapısı</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp kası ile ilgili hangisi en doğrudur?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Kalp kası T-tübülleri iskelet kasına göre daha az gelişmiştir.</p>
+<p class="opt right">b) Kasılma ve kuvvet, miyositlerin etrafındaki hücre dışı kalsiyum miktarına bağlıdır. <span class=tick>✓</span></p>
+<p class="opt">c) T tübül sistemi terminal sisternalarla "triad" oluşturur.</p>
+<p class="opt">d) İki adet T tübül sistemi Z çizgisi hizasında yer alır.</p>
+<p class="opt">e) DHP yapısı riyanodin kanallarını uyarımla inaktive eder.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp kasında kalsiyumla indüklenen kalsiyum salınımı (CICR) nasıl olur?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>T tübülden (L tipi) giren Ca²⁺ riyanodin reseptörlerini (RyR2) uyarır, SR'dan çok Ca²⁺ salınır.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ca²⁺ kanal blokerinin ventrikül miyokardına etkisi?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Funny kanallarını uyarır.</p>
+<p class="opt">b) Kontraktiliteyi artırır.</p>
+<p class="opt">c) Kalp atım hızını artırır.</p>
+<p class="opt right">d) Ventrikül AP'sinde faz 2'yi azaltır. <span class=tick>✓</span></p>
+<p class="opt">e) Faz 1'in süresini uzatır.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp glikozidleri Na⁺-K⁺ pompasını inhibe edince hücre içinde azalan?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>K⁺.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Digoksinin pozitif inotrop etkisinin mekanizması?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Na⁺/K⁺ ATPaz inhibisyonu → hücre içi Na⁺ artar → Na⁺/Ca²⁺ değiştirici yavaşlar → hücre içi Ca²⁺ artar.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>2024'te "ne azalır (K⁺)", 2025'te "neden kasılma artar (Ca²⁺)". Aynı ilaç, farklı ucundan.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>QT aralığını uzatan elektrolit bozukluğu?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Hipokalemi.</span></p>
+</div>
+</section>
+<section class="sec c-orange" id="fizyo-2-i-leti-otonom-etki-ve-tropi-terimleri">
+<h2>2. İleti, otonom etki ve -tropi terimleri</h2><span class="pill">7 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Normalde SA'dan çıkan uyarı kaç saniye sonra AV düğümde olur?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt right">a) 0,03 <span class=tick>✓</span></p>
+<p class="opt">b) 0,09</p>
+<p class="opt">c) 0,12</p>
+<p class="opt">d) 0,16</p>
+<p class="opt">e) 0,22</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sempatik uyarının kalbe etkisini en doğru açıklayan?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) SA nodda sodyum geçirgenliğini azaltır.</p>
+<p class="opt">b) AV nodda sodyum geçirgenliğini azaltır.</p>
+<p class="opt">c) SA nodda potasyum geçirgenliğini artırır.</p>
+<p class="opt">d) Kalp kasının kalsiyum geçirgenliğini azaltır.</p>
+<p class="opt right">e) SA nod dinlenim membran potansiyelini yukarı doğru çıkarır. <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>SA düğümde hiperpolarizasyon yapıp eşiği artıran ve ritmi düşüren?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Vagal uyarı (ACh → K⁺ geçirgenliği artar).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>"+İnotropi" ve "+Lusiyotropi" sırasıyla ne demek?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Atım hacminin artması ve uyarılabilirliğin artışı</p>
+<p class="opt right">b) Kasılma gücünün artması ve gevşeme hızında artış <span class=tick>✓</span></p>
+<p class="opt">c) İleti hızının artması ve R-R mesafesinin artışı</p>
+<p class="opt">d) Atım hızının artması ve ileti hızının artması</p>
+<p class="opt">e) Kasılma gücünün artması ve uyarılabilirliğin artışı</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>"+Kronotropi" ve "−Dromotropi" sırasıyla ne demek?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Atım hacminin artması ve uyarılabilmenin azalması</p>
+<p class="opt">b) Debinin artması ve kasılma gücünün azalması</p>
+<p class="opt">c) İleti hızının artması ve R-R mesafesinin azalması</p>
+<p class="opt right">d) Kalp atım hızının artması ve ileti hızının azalması <span class=tick>✓</span></p>
+<p class="opt">e) Kasılma gücünün artması ve uyarılabilmenin azalması</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>"+Kronotropi" ve "+İnotropi" sırasıyla ne demek?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) Atım hacminin artması ve uyarılabilmenin artması</p>
+<p class="opt">b) Debinin artması ve kasılma gücünün artması</p>
+<p class="opt">c) İleti hızının artması ve R-R mesafesinin artması</p>
+<p class="opt right">d) Kalp atım hızının artması ve kasılma gücünün artması <span class=tick>✓</span></p>
+<p class="opt">e) Kasılma gücünün artması ve ileti hızının artması</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>"+İnotropi" ve "+Dromotropi" sırasıyla ne demek?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kasılma gücünün artması ve ileti hızının artması.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span><strong>Her sınavda terim çifti değişiyor, şıklar aynı kalıp.</strong> Beş terimi ezberle, soru biter.</p>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Krono = hız, İno = güç, Dromo = ileti, Lusi = gevşeme, Batmo = uyarılabilirlik.</strong> "Kronometre hız ölçer, dromedar (deve) yol alır."</p></div>
+</section>
+<section class="sec c-amber" id="fizyo-3-ekg">
+<h2>3. EKG</h2><span class="pill">20 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hızlı cevap AP'nin faz 0'ı EKG'de neye karşılık gelir?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>QRS kompleksi.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>EKG'de P dalgası kalp döngüsünün hangi anında?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Ventrikül diyastolünün son kısmı.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>PR aralığında normal olarak görülen olay?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Ventrikül kasılmaktadır.</p>
+<p class="opt">b) İkinci kalp sesi duyulur.</p>
+<p class="opt">c) EKG'de hiçbir değişiklik yoktur.</p>
+<p class="opt right">d) Kalp aksiyon potansiyeli AV düğümü üzerinden geçmektedir. <span class=tick>✓</span></p>
+<p class="opt">e) Mitral ve aort kapaklarının her ikisi de kapalıdır.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>PR aralığının optimal süresi? (kardiyoloji)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="a"><span class="ok">✅</span><span>120–200 ms.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ventriküllerin depolarizasyonunun uzaması EKG'de hangi değişikliğe neden olur?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) P dalgasının küçülmesi</p>
+<p class="opt">b) PR aralığının uzaması</p>
+<p class="opt right">c) QRS genişliğinin artması <span class=tick>✓</span></p>
+<p class="opt">d) T dalgasının süresinin artması</p>
+<p class="opt">e) QT intervalinin artması</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sırasıyla bir unipolar ekstremite, bir bipolar ekstremite ve bir prekordiyal derivasyon?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) DII, V1, aVF</p>
+<p class="opt">b) DI, aVL, V4</p>
+<p class="opt">c) aVL, V2, DII</p>
+<p class="opt right">d) aVF, DII, V1 <span class=tick>✓</span></p>
+<p class="opt">e) V3, DIII, aVR</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Uyarının yayılması ve de/repolarizasyon için HATALI ifade?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Ventriküllerde önce septum depolarize olur.</p>
+<p class="opt right">b) Ventrikül depolarizasyonunun başladığı noktadan ventrikül repolarizasyonu başlar. <span class=tick>✓</span></p>
+<p class="opt">c) Depolarizasyonun ortalama yönü sağdan soladır.</p>
+<p class="opt">d) Atriyum depolarizasyonu sağ atriyumda başlar, sola yayılır.</p>
+<p class="opt">e) Atriyum repolarizasyonu ile depolarizasyonu aynı bölgeden başlar.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Atriyum ve ventrikül de/repolarizasyonuyla ilgili hatalı tanım?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>"Ventriküllerde ortalama depolarizasyon yönü soldan sağa doğrudur."</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı kök, yanlış şık değişmiş. Ventrikülde repolarizasyon <strong>epikarttan</strong> başlar (depolarizasyonun tersi); yön <strong>sağdan sola</strong>.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Bir derivasyonda dalganın önce pozitif sonra negatif çıkması neyi gösterir?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Vektörün önce elektroda yaklaşıp sonra uzaklaştığını.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>P ve T dalgalarının genelde pozitif olmasının nedeni?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Ventrikül repolarizasyonu depolarizasyonun tersi yönde (epikarttan endokarda) ilerler; bu yüzden T de pozitif çıkar.</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>RR 15 mm, kâğıt hızı 25 mm/s. Kalp hızı?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) 90</p>
+<p class="opt">b) 80</p>
+<p class="opt">c) 75</p>
+<p class="opt right">d) 100 <span class=tick>✓</span></p>
+<p class="opt">e) 120</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>RR 20 mm, kâğıt hızı 25 mm/s. Kalp hızı?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) 60</p>
+<p class="opt">b) 80</p>
+<p class="opt right">c) 75 <span class=tick>✓</span></p>
+<p class="opt">d) 100</p>
+<p class="opt">e) 120</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>RR 25 küçük kare. Kalp hızı?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>60/dk (normal sinüs ritmi sınırı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Şekilli EKG'ye göre kalp hızı?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>55,6 (RR ≈ 27 mm).</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Sadece mm değişiyor. <strong>Kalp hızı = 1500 ÷ RR (mm).</strong> 15 → 100, 20 → 75, 25 → 60, 27 → 55,6.</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>DI, DII ve DIII kayıtlarına göre kalbin aksı yaklaşık kaç derece?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) −30° <span class=tick>✓</span></p>
+<p class="opt">b) 0°</p>
+<p class="opt">c) +30°</p>
+<p class="opt">d) +60°</p>
+<p class="opt">e) +120°</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>DI, DII, DIII verilmiş; aks kaç derece?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>−15° (şekil farklı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>EKG örneğinde kardiyak aks için doğru tanım? (2F1, DI + / DIII −)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) +90 ile +180 arası, sağ alt kadran (sağ aks sapması)</p>
+<p class="opt">b) −90 ile −180 arası, sol üst kadran</p>
+<p class="opt right">c) −30 ile −90 arası, sol aks deviasyonu <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>EKG örneğinde kardiyak aks için doğru tanım? (derleme, DI + / aVF +)<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>0 ile +90 arası, sol alt kadran (normal aks).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>EKG örneğinde kardiyak aks için doğru tanım? (2K1, DI − / aVF −)<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) +90 ile +180 arası, sağ alt kadran (sağ aks sapması)</p>
+<p class="opt right">b) −90 ile −180 arası, şiddetli aks sapması <span class=tick>✓</span></p>
+<p class="opt">c) −30 ile −90 arası, sağ üst kadrana denk gelir</p>
+<p class="opt">d) +120 derece üzerindedir</p>
+<p class="opt">e) 0 ile +90 arası, sol alt kadran (normal aks)</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Normal aks sınırında olan değer? / DI ve aVF pozitif ise aks?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>−20° normal sınırda. DI ve aVF ikisi de pozitif → yaklaşık +60° (normal).</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span><strong>Aynı beş şık, şekle göre her sınavda farklı cevap.</strong> DI ve aVF'nin işaretine bak: ++ normal, +− sol, −+ sağ, −− aşırı sapma.</p>
+</div>
+</section>
+<section class="sec c-green" id="fizyo-4-kalp-dongusu-basinclar-ve-hacimler">
+<h2>4. Kalp döngüsü, basınçlar ve hacimler</h2><span class="pill">20 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Aorta ve pulmoner arter SİSTOLİK basınçları?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) 25/4 mmHg</p>
+<p class="opt right">b) 120/25 mmHg <span class=tick>✓</span></p>
+<p class="opt">c) 80/10 mmHg</p>
+<p class="opt">d) 120/12 mmHg</p>
+<p class="opt">e) 120/80 mmHg</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Pulmoner arter sistolik ve diyastolik basınçları?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) 120/80 mmHg</p>
+<p class="opt">b) 120/80 cmH₂O</p>
+<p class="opt">c) 8/10 mmHg</p>
+<p class="opt">d) 25/4 mmHg</p>
+<p class="opt right">e) 25/10 mmHg <span class=tick>✓</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Bir yıl "aort ve pulmoner sistolik" (120/25), bir yıl "pulmoner sistolik/diyastolik" (25/10). Şıkları dikkatle oku.</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Kalp döngüsü sırasında en fazla basınç farkı yaşayan bölge?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Sağ atriyum</p>
+<p class="opt">b) Sağ ventrikül</p>
+<p class="opt right">c) Sol ventrikül <span class=tick>✓</span></p>
+<p class="opt">d) Pulmoner arter</p>
+<p class="opt">e) Sol atriyum</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp ve aort arasındaki basınç farkının en az olduğu yer?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt right">a) Sistol sırasında sol ventrikül <span class=tick>✓</span></p>
+<p class="opt">b) Diyastol sırasında sol ventrikül</p>
+<p class="opt">c) Sistol sırasında sağ ventrikül</p>
+<p class="opt">d) Diyastol sırasında sağ ventrikül</p>
+<p class="opt">e) Sistol sırasında sağ atrium</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ventrikül basıncının en yüksek olduğu dönem?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Hızlı ejeksiyon fazı.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sağlıklı bir insanda diyastol sonu hacmi?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) 50 ml</p>
+<p class="opt">b) 70 ml</p>
+<p class="opt right">c) 120 ml <span class=tick>✓</span></p>
+<p class="opt">d) 25 ml</p>
+<p class="opt">e) 40 ml</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Dinlenimde her ventrikülden sistolde fırlatılan kan miktarı?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) 50 ml</p>
+<p class="opt right">b) 70 ml <span class=tick>✓</span></p>
+<p class="opt">c) 120 ml</p>
+<p class="opt">d) 25 ml</p>
+<p class="opt">e) 40 ml</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı şıklar, sorulan hacim değişiyor: <strong>EDV 120, SV 70, ESV 50.</strong></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>EF 0,32 ve EDV 160 ml. ESV yaklaşık?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) 48 ml</p>
+<p class="opt">b) 83 ml</p>
+<p class="opt right">c) 109 ml <span class=tick>✓</span></p>
+<p class="opt">d) 51 ml</p>
+<p class="opt">e) 170 ml</p>
+<p class="w">SV = 0,32 × 160 = 51 (tuzak şık d). ESV = 160 − 51 = 109.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>İzovolümetrik gevşeme fazı için doğru?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Ventrikül hacmi yavaşça artar.</p>
+<p class="opt">b) AV kapaklar kapalı, semilunar kapaklar açıktır.</p>
+<p class="opt">c) Ventrikül hacmi yavaşça azalır.</p>
+<p class="opt">d) AV kapaklar açık, semilunar kapaklar kapalıdır.</p>
+<p class="opt right">e) Hem AV hem semilunar kapaklar kapalıdır. <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Aort kapağı hangi fazın başlangıcında kapanır? / S2 duyulurken başlayan faz?<span class="srcs"><span class="src s-24">2024</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="a"><span class="ok">✅</span><span>İzovolümetrik gevşeme.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sağ ventrikül basıncı pulmoner diyastolik basıncı, sol ventrikül aort diyastolik basıncı aşınca?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) AV kapaklar kapanır.</p>
+<p class="opt">b) AV kapaklar kapanır.</p>
+<p class="opt">c) Kapaklarda değişim olmaz.</p>
+<p class="opt right">d) Semilunar kapaklar açılır. <span class=tick>✓</span></p>
+<p class="opt">e) Semilunar kapaklar kapanır.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Mitral kapağın açılması ile hangi faz başlar?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) İzovolümetrik kasılma</p>
+<p class="opt">b) Hızlı ejeksiyon</p>
+<p class="opt">c) Yavaş ejeksiyon</p>
+<p class="opt">d) İzovolümetrik gevşeme</p>
+<p class="opt right">e) Doluş fazı (hızlı dolma) <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sol ventrikül basınç–hacim diyagramında DE segmenti için doğru?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) D–E arasında sol ventrikül basıncı düşer.</p>
+<p class="opt">b) D noktasında ventrikül basıncı en düşüktür.</p>
+<p class="opt">c) D–E arasında izovolümetrik kasılma olur.</p>
+<p class="opt">d) Hacim artarken basıncın belirgin artmaması inotropiye bağlıdır.</p>
+<p class="opt right">e) Hacimde belirgin azalmanın yaşandığı hızlı ejeksiyon fazını gösterir. <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Basınç–hacim diyagramında CD segmenti hangi faz? / C segmenti?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) İzovolümetrik gevşeme</p>
+<p class="opt">b) Hızlı dolum</p>
+<p class="opt">c) Yavaş doldurma</p>
+<p class="opt right">d) İzovolümetrik kasılma <span class=tick>✓</span></p>
+<p class="opt">e) Ejeksiyon fazı</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Diyagramda en düşük basınç hangi harf ve hangi faz?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) B noktası, izovolümetrik gevşeme</p>
+<p class="opt">b) A noktası, hızlı doluş</p>
+<p class="opt right">c) B noktası, doluş fazı <span class=tick>✓</span></p>
+<p class="opt">d) C noktası, izovolümetrik kasılma</p>
+<p class="opt">e) C noktası, ejeksiyon</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı diyagram, her yıl farklı segment soruluyor. Harfleri ezberle: <strong>A mitral açılır · B en düşük basınç · C mitral kapanır · D aort açılır · E tepe · F aort kapanır.</strong> AB hızlı doluş, CD izovolümetrik kasılma, DE hızlı ejeksiyon, FA izovolümetrik gevşeme.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Atriyum basınç eğrisindeki "a" dalgasını oluşturan olay?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt right">a) Atriyum kontraksiyonu <span class=tick>✓</span></p>
+<p class="opt">b) Ventrikül kontraksiyonu</p>
+<p class="opt">c) A-V kapaklar kapalıyken kanın atriyuma dolması</p>
+<p class="opt">d) Kanın ventrikülden atriyuma kaçışı</p>
+<p class="opt">e) A-V kapakların atriyuma doğru bombelenmesi</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Venöz nabız eğrisi ve EKG ile ilgili HATALI ifade?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) a dalgası diyastol sonunda atriyum kasılması ile oluşur.</p>
+<p class="opt">b) c dalgası izovolümetrik kontraksiyonda kapalı AV kapakların bombelenmesiyle oluşur.</p>
+<p class="opt right">c) x inişi boyunca AV kapaklar açıktır. <span class=tick>✓</span></p>
+<p class="opt">d) Venlerden atriyuma dolumla sağ atrium basıncı artar ve v dalgası oluşur.</p>
+<p class="opt">e) AV kapaklar açılıp kan ventriküle geçince basınç düşer ve y inişi olur.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Nabız eğrisinde sağ atrium gevşemesini gösteren nokta?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>x inişi.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Aortik basınç eğrisinde dikrotik çentiğe neden olan?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Mitral kapağın kapanması</p>
+<p class="opt">b) Triküspit kapağın kapanması</p>
+<p class="opt right">c) Aortik kapağın kapanması <span class=tick>✓</span></p>
+<p class="opt">d) Pulmoner kapağın kapanması</p>
+<p class="opt">e) Sol ventrikülün hızlı doluşu</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ejeksiyon sonundan başlayarak fazların doğru sırası?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>İzovolümetrik gevşeme → hızlı doluş → diyastazis → atriyal sistol → izovolümetrik kasılma → ejeksiyon.</span></p>
+</div>
+</section>
+<section class="sec c-teal" id="fizyo-5-kalp-sesleri-ve-ufurumler">
+<h2>5. Kalp sesleri ve üfürümler</h2><span class="pill">10 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Birinci kalp sesinin EKG'deki zamanlaması?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) P dalgası sonu</p>
+<p class="opt">b) PR aralığı sonrası</p>
+<p class="opt right">c) QRS dalgası hemen sonrası <span class=tick>✓</span></p>
+<p class="opt">d) T dalgası</p>
+<p class="opt">e) T dalgası sonrası</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Soluk alma sırasında S2 çiftleşmesinden sorumlu mekanizma?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Aortik ve pulmoner kapakların kapanması</p>
+<p class="opt">b) Pulmoner kapağın aortik kapaktan önce kapanması</p>
+<p class="opt right">c) Aortik kapağın pulmoner kapaktan önce kapanması <span class=tick>✓</span></p>
+<p class="opt">d) Aortik kapağın triküspit kapaktan önce kapanması</p>
+<p class="opt">e) Pulmoner kapağın mitral kapaktan önce kapanması</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Fizyolojik çiftleşme hangi seste ve hangi nedenle?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) S1, mitral kapanmasında gecikme</p>
+<p class="opt">b) S1, triküspit kapanmasında gecikme</p>
+<p class="opt">c) S2, aort kapağın kapanmasında gecikme</p>
+<p class="opt right">d) S2, pulmoner kapağın kapanmasında gecikme <span class=tick>✓</span></p>
+<p class="opt">e) S3, kanın ventriküllere hızlı doluşu</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>S2 çiftleşmesinin inspirasyonda artmasının nedeni?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt right">a) Pulmoner kapağın kapanması gecikmiştir. <span class=tick>✓</span></p>
+<p class="opt">b) Kalp hızı azalmıştır.</p>
+<p class="opt">c) Sol ventrikül atım hacmi artmıştır.</p>
+<p class="opt">d) Aort kapağının kapanması gecikmiştir.</p>
+<p class="opt">e) Mitral kapağın açılması gecikmiştir.</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Üç farklı kalıp, tek fikir: <strong>inspirasyonda sağa daha çok kan → pulmoner kapak geç kapanır, aort önce kapanır.</strong> "Aort gecikir" hep çeldirici.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ventrikül diyastolünün başında atriyumdan ventriküle akan kanın sesi?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Dördüncü kalp sesi</p>
+<p class="opt right">b) Üçüncü kalp sesi <span class=tick>✓</span></p>
+<p class="opt">c) İkinci kalp sesi</p>
+<p class="opt">d) Presistolik ses</p>
+<p class="opt">e) Birinci kalp sesi</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Aort yetmezliğinde (regürjitasyon) üfürüm hangi fazda ve nerede duyulur?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="src s-D">Derleme</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Sistolde, sol 2. ICS–sternum</p>
+<p class="opt">b) Diyastolde, sol 2. ICS–sternum</p>
+<p class="opt">c) Sistolde, sağ 2. ICS–sternum</p>
+<p class="opt right">d) Diyastolde, sağ 2. ICS–sternum <span class=tick>✓</span></p>
+<p class="opt">e) Sistolde, apeks</p>
+<p class="w"><strong>Kesin olan kısım: DİYASTOL.</strong> Sınav "aort odağı" mantığıyla soruyor (slaytta aort odağı = sağ 2. ICS); sol 2. ICS pulmoner odaktır. Slaytta ayrıca "Erb noktasında (sol 3–4) iyi duyulur" yazıyor ama şıklarda yok. Derlemelerden birinde "sistol, sağ 2" işaretlenmiş; yanlış, sistol stenozdur.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Aort stenozunda üfürüm hangi fazda ve nerede?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sistolde, sağ 2. ICS–sternum birleşimi.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Yetmezlik ↔ stenoz değişiyor. <strong>Stenoz = kapak açıkken (aort için sistol); yetmezlik = kapak kapalıyken (aort için diyastol).</strong></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sol midklaviküler hat ile 5. ICS kesişiminde duyulan DİYASTOLİK üfürüm? (Online şıkları)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt right">a) Mitral kapak stenozu <span class=tick>✓</span></p>
+<p class="opt">b) Mitral kapak yetmezliği</p>
+<p class="opt">c) Aort kapağı stenozu</p>
+<p class="opt">d) Aort kapağı yetmezliği</p>
+<p class="opt">e) Triküspit kapak yetmezliği</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Aynı soru, şıklar karıştırılmış (2F1)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Aort kapak stenozu</p>
+<p class="opt">b) Pulmoner kapak stenozu</p>
+<p class="opt">c) Mitral kapak yetmezliği</p>
+<p class="opt">d) Aort kapak yetmezliği</p>
+<p class="opt right">e) Mitral kapak stenozu <span class=tick>✓</span></p>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p>Odaklar: <strong>Aort sağ 2 · Pulmoner sol 2 · Triküspit sol 5 sternum kenarı · Mitral sol 5 midklaviküler (apeks).</strong> "APTM, 2-2-5-5."</p></div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Akut MI'da t-PA en çok ne zaman yararlı?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) En az bir yıl komplikasyonsuz iyileşmeden sonra</p>
+<p class="opt">b) En az iki ay dinlenmeden sonra</p>
+<p class="opt">c) Tıkanmadan sonra ikinci hafta boyunca</p>
+<p class="opt">d) Tıkanmadan sonra ikinci gün boyunca</p>
+<p class="opt right">e) Tıkanmadan sonra ilk üç saat boyunca <span class=tick>✓</span></p>
+</div>
+</section>
+<section class="sec c-cyan" id="fizyo-6-debi-on-yuk-frank-starling">
+<h2>6. Debi, ön yük, Frank–Starling</h2><span class="pill">7 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ekokardiyogramda önyükü en doğru yansıtan ölçüm?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Sistol sonu hacim</p>
+<p class="opt">b) Ortalama aortik basınç</p>
+<p class="opt right">c) Diyastol sonu hacim <span class=tick>✓</span></p>
+<p class="opt">d) Kalp debisi</p>
+<p class="opt">e) Atım hacmi</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Frank–Starling grafikleri için HATALI tanım? (Online)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt right">a) Kasılma gücünü belirleyen en önemli faktörün ard yük olduğunu belirten yasadır. <span class=tick>✓</span></p>
+<p class="opt">b) A noktası normal fizyolojik durumu yansıtır.</p>
+<p class="opt">c) Kasılma öncesi kas hücrelerinin başlangıç gerimini tarif eder.</p>
+<p class="opt">d) Venöz dönüş artınca kuvvet artar, ek venöz dönüş fırlatılır.</p>
+<p class="opt">e) B durumunda azalmış atım hacmi söz konusudur.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Frank–Starling grafikleri için HATALI tanım? (2K1)<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt right">a) Kasılma gücünü belirleyen en önemli faktörün ard yük olduğunu belirten yasadır. <span class=tick>✓</span></p>
+<p class="opt">b) A noktası normal fizyolojik durumu yansıtır.</p>
+<p class="opt">c) Kasılma enerjisi kas hücrelerinin başlangıç uzunluğu ile orantılıdır.</p>
+<p class="opt">d) Venöz dönüş artınca kuvvet artar, ek venöz dönüş fırlatılır.</p>
+<p class="opt">e) Kas lifinin boyu diyastol sonu hacmi ile orantılıdır.</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Doğru şıklar değişiyor, <strong>yanlış hep aynı: "ard yük"</strong> (doğrusu ön yük).</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ön yük artınca kasılma gücünü artıran temel mekanizma?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Gerilen liflerde aktin–miyozin arasındaki mesafenin azalması (optimal örtüşme).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Frank–Starling mekanizmasını artıran durum?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Venöz dönüşün artması.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Afterload artışı kalpte neye yol açar?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sol ventrikül basıncında artış.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ortalama arter basıncını azaltan değişiklik?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kardiyak kontraktilitenin azalması.</span></p>
+</div>
+</section>
+<section class="sec c-blue" id="fizyo-7-hemodinamik-akim-direnc-basinc">
+<h2>7. Hemodinamik: akım, direnç, basınç</h2><span class="pill">17 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Poiseuille-Hagen formülüne göre hangi sonuca varılır? (2023)<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Kan akımı, toplam kesit alanı fazla olan bölgelerde yüksek hızdadır.</p>
+<p class="opt">b) Eritrosit deformabilitesi artınca viskozite artar, akım olumsuz etkilenir.</p>
+<p class="opt">c) Direnç damar uzunluğu ile ters orantılıdır.</p>
+<p class="opt right">d) Kan akım hızı damar yarıçapı ile doğru orantılı değişir. <span class=tick>✓</span></p>
+<p class="opt">e) Pulmoner dolaşımda direnç sistemik dolaşıma benzer.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Poiseuille-Hagen formülüne göre hangi sonuca varılır? (2F1)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Kan akımı, toplam kesit alanı fazla olan bölgelerde yüksek hızdadır.</p>
+<p class="opt">b) Kanın viskozitesi hematokrit artışı ile azalır.</p>
+<p class="opt right">c) Direnç, damar yarıçapının dördüncü kuvveti ile ters orantılıdır. <span class=tick>✓</span></p>
+<p class="opt">d) Kan akım hızı damar uzunluğu ile doğru orantılıdır.</p>
+<p class="opt">e) Pulmoner dolaşımda direnç sistemik dolaşıma benzer.</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı kök; doğru şık değiştirilmiş, yanlışlar ters çevrilmiş (uzunlukla "ters"/"doğru" orantı).</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kan akımı, basınç ve direnç için doğru tanım?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Yarıçapta bir birimlik artış direnci 4 birim artırır.</p>
+<p class="opt">b) Viskozite önemsizdir.</p>
+<p class="opt right">c) Dirençte en belirgin faktör damar yarıçapıdır. <span class=tick>✓</span></p>
+<p class="opt">d) Kan akımı damar uzunluğu ile doğru orantılı artar.</p>
+<p class="opt">e) Kan akımı iki nokta arasındaki dirençle doğru orantılıdır.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>LAD darlığında akım ne kadar azalır? (yarıçap yarıya inerse)<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>1/16.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Türbülan akımın nedenlerinden OLMAYAN?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt right">a) Parabolik profilin varlığı <span class=tick>✓</span></p>
+<p class="opt">b) Reynolds sayısının 3000 üstünde olması</p>
+<p class="opt">c) Kapak darlıkları</p>
+<p class="opt">d) Aterosklerotik plak varlığı</p>
+<p class="opt">e) Arteriyo-venöz fistül</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Korotkoff seslerinin oluşum nedeni?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kan akımının türbülan olması.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Korotkoff sesleri 130 mmHg'de başlıyor, nabız basıncı 45. Diyastolik basınç?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt right">a) 85 mmHg <span class=tick>✓</span></p>
+<p class="opt">b) 80 mmHg</p>
+<p class="opt">c) 75 mmHg</p>
+<p class="opt">d) 90 mmHg</p>
+<p class="opt">e) 95 mmHg</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>KB 120/90. Ortalama arter basıncı?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Yaklaşık 100 mmHg (D + NB/3 = 90 + 10).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Akım 90 mL/sn, basınç farkı 90 mmHg. Total periferik direnç?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>1 (PRU).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Total sistemik damar direncini hesaplamak için gerekenler?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Debi, ortalama pulmoner arter basıncı, ortalama sağ atriyum basıncı</p>
+<p class="opt right">b) Debi, ortalama arteriyel basınç, ortalama sağ atriyum basıncı <span class=tick>✓</span></p>
+<p class="opt">c) O₂ alımı, venöz basınç, arteriyel basınç</p>
+<p class="opt">d) Debi, sistolik arter basıncı, sol atriyum ortalama basıncı</p>
+<p class="opt">e) Debi, O₂ alımı, venöz ve arteriyel O₂ içerikleri</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kesit alanı en yüksek ve kan akım hızı en düşük damarlar?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Büyük arterler</p>
+<p class="opt">b) Orta çaplı arterler</p>
+<p class="opt">c) Arteriyoller</p>
+<p class="opt right">d) Kapillerler <span class=tick>✓</span></p>
+<p class="opt">e) Venüller</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sistemik dolaşımda kana en büyük direnci gösteren yapı?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Terminal venler</p>
+<p class="opt">b) Aorta</p>
+<p class="opt right">c) Arterioller <span class=tick>✓</span></p>
+<p class="opt">d) Vena kava superior</p>
+<p class="opt">e) Kapillerler</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Üç fonksiyonla ilişkili damar segmentleri?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Arteriyol (direnç) · büyük venler (depo) · büyük venler (yüksek kompliyans).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sıvı ve kan ürünlerinin daha çok venöz tarafta olmasının nedeni?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Venöz kompliyans.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Dolaşımın humoral düzenlenmesinde vazokonstriktör etkili olan? (Online)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) CO₂</p>
+<p class="opt">b) Adenozin</p>
+<p class="opt">c) K⁺</p>
+<p class="opt">d) Asiditenin artışı</p>
+<p class="opt right">e) Vazopressin <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Vazokonstriktör etkili humoral faktör? (2F1)<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) CO₂ artışı</p>
+<p class="opt">b) Adenozin varlığı</p>
+<p class="opt">c) Nitrik oksit artışı</p>
+<p class="opt">d) Asiditenin artışı</p>
+<p class="opt right">e) Endotelin-1 <span class=tick>✓</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Dört çeldirici hep <strong>lokal metabolik dilatatörler</strong> (CO₂, adenozin, K⁺/NO, H⁺). Doğru şık yıla göre vazopressin ya da endotelin.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Perfüzyon basıncı artınca damarın refleks olarak kasılması?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Miyojenik mekanizma.</span></p>
+</div>
+</section>
+<section class="sec c-indigo" id="fizyo-8-mikrodolasim-ve-odem">
+<h2>8. Mikrodolaşım ve ödem</h2><span class="pill">7 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hangisindeki artış kapiller filtrasyonu azaltır?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Kapiller hidrostatik basınç</p>
+<p class="opt right">b) Plazma kolloid osmotik basınç <span class=tick>✓</span></p>
+<p class="opt">c) İnterstisyel kolloid osmotik basınç</p>
+<p class="opt">d) Venöz hidrostatik basınç</p>
+<p class="opt">e) Arteriyolar çap</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kapillerin arteriyel ve venöz uçları arasında değişen?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Hidrostatik basınç (onkotik basınç iki uçta aynı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Pc 30, Pif 2, πc 25, πif 2 mmHg. Net sıvı hareketi?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Emilim 9 mmHg</p>
+<p class="opt">b) Emilim 5 mmHg</p>
+<p class="opt">c) Filtrasyon 9 mmHg</p>
+<p class="opt right">d) Filtrasyon 5 mmHg <span class=tick>✓</span></p>
+<p class="opt">e) Net hareket yok</p>
+<p class="w">(Pc − Pif) − (πc − πif) = (30 − 2) − (25 − 2) = 28 − 23 = <strong>+5 → filtrasyon</strong>.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Arteriyel uçta Pc 35, Pif 0, πc 25, πif 1 mmHg. Sıvı hareketinin yönü ve net gücü?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Filtrasyon 3 mmHg</p>
+<p class="opt">b) Absorbsiyon 9 mmHg</p>
+<p class="opt">c) Filtrasyon 10 mmHg</p>
+<p class="opt right">d) Filtrasyon 11 mmHg <span class=tick>✓</span></p>
+<p class="opt">e) Absorbsiyon 11 mmHg</p>
+<p class="w">(35 − 0) − (25 − 1) = 35 − 24 = <strong>+11 → filtrasyon (dışarı)</strong>. Derlemedeki "kapillere doğru 11" kaydı yanlış hatırlanmış; doğrusu filtrasyon.</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Sadece sayılar değişiyor. Formülü bir kez otur, iki soru biter. İşaretlere dikkat: interstisyel hidrostatik <strong>çıkarılır</strong>, interstisyel onkotik <strong>eklenir</strong>.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Starling yasasına göre ödeme neden olan?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt right">a) Kapiller içi ortalama hidrostatik basıncın artması <span class=tick>✓</span></p>
+<p class="opt">b) Kapiller içi onkotik basıncın artması</p>
+<p class="opt">c) Arteriyollerde tıkanma/daralma</p>
+<p class="opt">d) İnterstisyel hidrostatik basıncın artması</p>
+<p class="opt">e) İnterstisyel onkotik basıncın azalması</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hareketsiz ayakta durma hangi mekanizmayla ödem yapar?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kapiller hidrostatik basınç artışı.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Karaciğer hasarına bağlı hipoalbüminemi?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>İnterstisyel sıvı hacmi artar.</span></p>
+</div>
+</section>
+<section class="sec c-purple" id="fizyo-9-kan-basincinin-kontrolu">
+<h2>9. Kan basıncının kontrolü</h2><span class="pill">15 soru</span>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Baroreseptör refleks arkının doğru sırası? (I deşarj ↑ · II hipertansiyon · III vazomotor inhibisyon · IV direnç ↓ · V deşarj ↓)<span class="srcs"><span class="src s-23">2023</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) II–I–III–IV–V <span class=tick>✓</span></p>
+<p class="opt">b) I–II–III–IV–V</p>
+<p class="opt">c) III–II–V–I–IV</p>
+<p class="opt">d) IV–II–V–III–I</p>
+<p class="opt">e) V–II–I–IV–III</p>
+</div>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>Kan basıncının AKUT regülasyonunda görev almayan?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="opt">a) MSS'nin iskemik yanıtı</p>
+<p class="opt right">b) Böbreklerin kan basıncını düzenleyici etkisi <span class=tick>✓</span></p>
+<p class="opt">c) Kardiyopulmoner reseptörler</p>
+<p class="opt">d) Kemoreseptör refleksler</p>
+<p class="opt">e) Baroreseptör refleksler</p>
+<p class="w">Üç sınavda kelimesi kelimesine aynı.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Arteriyel kan basıncındaki akut düşüş hangi kompansatuvar değişikliğe yol açar? (2F1)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt right">a) Karotid sinüs deşarjında azalma <span class=tick>✓</span></p>
+<p class="opt">b) Kalbe doğru artmış parasempatik uyarı</p>
+<p class="opt">c) Azalmış kalp atım hızı</p>
+<p class="opt">d) Azalmış kontraktilite</p>
+<p class="opt">e) Azalmış ortalama sistemik basınç</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Aynı soru (2K1 şıkları)<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt right">a) Karotid sinüs deşarjında azalma <span class=tick>✓</span></p>
+<p class="opt">b) Renin sekresyonunda azalma</p>
+<p class="opt">c) Azalmış kalp atım hızı</p>
+<p class="opt">d) Azalmış kontraktilite</p>
+<p class="opt">e) Azalmış ortalama sistemik basınç</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Arteriyel baroreseptörlerin yeri, afferentleri ve sonlandığı yer?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) Atrium ve pulmoner venler; vagus, n. ambiguus</p>
+<p class="opt">b) VC ve atrium duvarı; vagal lifler</p>
+<p class="opt right">c) Arkus aorta ve sinus caroticum; aortik sinir ve Hering siniri; NTS'de sonlanır <span class=tick>✓</span></p>
+<p class="opt">d) Atriyumlar; ANP ile hipofiz ve böbreğe</p>
+<p class="opt">e) Karotid sinüs ve atrium; arka kök lifleriyle RVLM</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Karotis cisimciğinin afferent lifleri hangi sinirle taşınır?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>N. glossopharyngeus (Hering siniri).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>KB düşmesi aşağıdakilerden hangisine yol AÇMAZ?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Böbreklerden atılan Na⁺ miktarında artış.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Cushing refleksiyle ilgili HATALI olan?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>"Refleks taşikardi oluşur." (Cushing'de bradikardi olur.)</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>KB'nin artıp kalp hızının azalması hangisine yanıt olabilir?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Yüksek irtifa</p>
+<p class="opt">b) Vücut sıcaklığı artışı</p>
+<p class="opt">c) Egzersiz</p>
+<p class="opt right">d) Artmış kafa içi basıncı <span class=tick>✓</span></p>
+<p class="opt">e) Kanama</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Akut kan kaybında dolaşımı dengelemek için salınan humoral faktörlerden OLMAYAN?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>ANP.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Fenilefrin sonrası gelişen bradikardinin nedeni?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>KB artışı → baroreseptör aktivasyonu → parasempatik aktivite artışı.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Fenilefrin ve propranolol uygulamasında aynı yönde değişen parametre?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kalp hızı (ikisinde de azalır). Hatırlamada "sistolik KB" yazıyor ama fenilefrin KB'yi artırır, propranolol düşürür.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>RAAS ortalama arter basıncını nasıl artırır?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Anjiyotensin II ile vazokonstriksiyon (ve aldosteronla hacim artışı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Medüller kemoreseptörler aracılığıyla hiperventilasyon yapan?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) PCO₂ azalması</p>
+<p class="opt">b) PO₂ azalması</p>
+<p class="opt">c) pH artışı</p>
+<p class="opt">d) K⁺ artışı</p>
+<p class="opt right">e) PCO₂ artışı <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sempatik sistemde asetilkolinle uyarılan yapı?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Adrenal medulla.</span></p>
+</div>
+</section></div><div role="tabpanel" id="panel-anat" aria-labelledby="tab-anat" hidden><div class="filters" data-for="anat"><button type="button" aria-pressed="true" data-f="all">Hepsi</button><button type="button" aria-pressed="false" data-f="rep">🔁 Aynen tekrar eden</button><button type="button" aria-pressed="false" data-f="chg">🔄 Değiştirilmiş</button><span class="count">58 kart</span></div><nav class="toc"><a class="c-red" href="#anat-1-fetal-dolasim-kalintilari">1. Fetal dolaşım kalıntıları</a><a class="c-orange" href="#anat-2-kalp-ve-perikard">2. Kalp ve perikard</a><a class="c-amber" href="#anat-3-bas-boyun-damarlari">3. Baş-boyun damarları</a><a class="c-green" href="#anat-4-toraks-duvari-damarlari">4. Toraks duvarı damarları</a><a class="c-teal" href="#anat-5-ust-ekstremite-ve-aksilla">5. Üst ekstremite ve aksilla</a><a class="c-blue" href="#anat-6-alt-ekstremite">6. Alt ekstremite</a><a class="c-indigo" href="#anat-7-lenfatikler">7. Lenfatikler</a><a class="c-purple" href="#anat-8-sinirda-mediastinum-ve-diafram">8. Sınırda: mediastinum ve diafram</a></nav><section class="sec c-red" id="anat-1-fetal-dolasim-kalintilari">
+<h2>1. Fetal dolaşım kalıntıları</h2><span class="pill">4 soru</span>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>"Ductus arteriosus" için hangisi doğrudur?<span class="srcs"><span class="src s-23">2023</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Embriyolojik dönemde v. porta hepatis ile VCI arasında anastomoz oluşturur.</p>
+<p class="opt">b) Embriyolojik dönemde VCS ile v. pulmonalis arasında anastomoz oluşturur.</p>
+<p class="opt">c) Yenidoğanda kapanması sonucunda lig. teres hepatis oluşur.</p>
+<p class="opt right">d) Embriyolojik dönemde truncus pulmonalis ile aorta arasında anastomoz oluşur. <span class=tick>✓</span></p>
+<p class="opt">e) Yenidoğanda kapanması sonucunda lig. umbilicale mediale oluşur.</p>
+</div>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>"Ductus venosus" için hangisi doğrudur?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="opt right">a) Embriyolojik dönemde v. porta hepatis ile VCI arasında anastomoz oluşturur. <span class=tick>✓</span></p>
+<p class="opt">b) Embriyolojik dönemde VCS ile v. pulmonalis arasında anastomoz oluşturur.</p>
+<p class="opt">c) Yenidoğanda kapanması sonucunda lig. teres hepatis oluşur.</p>
+<p class="opt">d) Yenidoğanda kapanması sonucunda Botallo ligamenti oluşur.</p>
+<p class="opt">e) Yenidoğanda kapanması sonucunda lig. umbilicale mediale oluşur.</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Şıklar neredeyse aynı, sorulan yapı değişiyor: arteriosus → <strong>truncus–aorta (Botallo)</strong>, venosus → <strong>porta–VCI (lig. venosum)</strong>.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hangisi sağlıklı bir erişkinin dolaşım sisteminde varlığını sürdürür?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Ductus arteriosus</p>
+<p class="opt">b) Ductus venosus</p>
+<p class="opt">c) Vena umbilicalis</p>
+<p class="opt right">d) Chorda arteria umbilicalis <span class=tick>✓</span></p>
+<p class="opt">e) Foramen ovale</p>
+<p class="w">A. umbilicalis'in proksimali a. vesicalis superior olarak açık kalır, distali lig. umbilicale mediale olur.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sağlıklı erişkinde lig. arteriosum'un yeri?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Aorta ile truncus pulmonalis arasında.</span></p>
+</div>
+</section>
+<section class="sec c-orange" id="anat-2-kalp-ve-perikard">
+<h2>2. Kalp ve perikard</h2><span class="pill">10 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Apex cordis yerleşimi için hangisi doğrudur?<span class="srcs"><span class="src s-25">2025</span><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sternum'un solunda, 5. interkostal aralıkta (midklaviküler hat).</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>"Sinus transversus pericardii"nin geçiş yeri? (2023 şıkları)<span class="srcs"><span class="src s-23">2023</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Aorta ve truncus pulmonalis arasından</p>
+<p class="opt">b) VCS ve VCI arasından</p>
+<p class="opt">c) Vagina serosum venosum'un altından</p>
+<p class="opt">d) Vagina caroticum'un altından</p>
+<p class="opt right">e) Vagina serosum venosum ve vagina serosum arteriosum arasından <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>"Sinus transversus pericardii"nin geçiş yeri? (Online şıkları)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Aorta ve truncus pulmonalis arasından</p>
+<p class="opt">b) VCS ve VCI arasından</p>
+<p class="opt right">c) Vagina serosum arteriosum ve vagina serosum venosum arasından <span class=tick>✓</span></p>
+<p class="opt">d) V. jugularis interna ve a. carotis communis arasından</p>
+<p class="opt">e) Vagina caroticum ve vagina serosum arteriosum arasından</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>"Sinus obliquus pericardii"nin geçiş yeri?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Aorta ve truncus pulmonalis arasından</p>
+<p class="opt">b) VCS ve VCI arasından</p>
+<p class="opt right">c) Vagina serosum venosum'un altından <span class=tick>✓</span></p>
+<p class="opt">d) V. jugularis interna ve a. carotis communis arasından</p>
+<p class="opt">e) Vagina caroticum ve vagina serosum arteriosum arasından</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı şıklarla <strong>transversus → obliquus</strong> yapılmış. Transversus = iki kılıf ARASI, obliquus = venöz kılıfın ALTI (çıkmaz).</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>"Crista terminalis" için hangisi doğrudur?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Ventriculus dexter'de yer alır.</p>
+<p class="opt">b) Ventriculus sinister'de yer alır.</p>
+<p class="opt">c) Septum interatriale'de bulunur.</p>
+<p class="opt">d) İçerisinde nodus atrioventricularis bulunur.</p>
+<p class="opt right">e) İçerisinde nodus sinoatrialis bulunur. <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalbin ileti sistemine ait yapıların yerleşimi için hangisi DOĞRUDUR?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Nodus sinoatrialis Koch üçgeni içinde yer alır.</p>
+<p class="opt">b) Nodus atrioventricularis sulcus terminalis'te yer alır.</p>
+<p class="opt">c) Fasciculus atrioventricularis, crista terminalis'in içinde yer alır.</p>
+<p class="opt right">d) Fasciculus atrioventricularis crus dextrum'u trabecula septomarginalis'ten geçer. <span class=tick>✓</span></p>
+<p class="opt">e) Plexus subendocardialis, atrium sinistrum'da yer alır.</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Kalbin ileti sistemine ait yapıların yerleşimi için hangisi DOĞRU DEĞİLDİR?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Nodus sinoatrialis sulcus terminalis'te yer alır.</p>
+<p class="opt">b) Nodus atrioventricularis Koch üçgeni içinde yer alır.</p>
+<p class="opt">c) Fasciculus atrioventricularis, trigonum fibrosum dextrum'un içinden geçer.</p>
+<p class="opt">d) Fasciculus atrioventricularis crus dextrum'u trabecula septomarginalis'ten geçer.</p>
+<p class="opt right">e) Plexus subendocardialis, atrium sinistrum'da yer alır. <span class=tick>✓</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>2023'te "doğru", sonra "doğru değil". SA ile AV'nin yerleri ters çevrilip yanlış şık yapılıyor. Sabit yanlış: <strong>Purkinje (plexus subendocardialis) atriyumda değil, ventrikülde</strong>.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Chorda tendinea ile ilişkili kapaklar?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Valva tricuspidalis ve valva mitralis (semilunar kapaklarda yok).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalbin kanlanması için hangisi doğrudur?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) R. interventricularis posterior, a. coronaria sinistra'nın dalıdır.</p>
+<p class="opt">b) R. interventricularis anterior, a. coronaria dextra'nın dalıdır.</p>
+<p class="opt">c) A. coronaria dextra'nın orijin yeri aorta descendens'tir.</p>
+<p class="opt right">d) V. cordis magna, r. interventricularis sinistra'ya (anterior) eşlik eder. <span class=tick>✓</span></p>
+<p class="opt">e) V. cordis parva, r. interventricularis dextra'ya eşlik eder.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalbin kanlanması için hangisi doğrudur? (cevaplı liste)<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. coronaria sinistra'nın orijin yeri aorta ascendens'tir.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı kök, doğru şık değişmiş: bir sınavda v. cordis magna, diğerinde "orijin aorta ascendens". Tuzak hep "aorta descendens".</p>
+</div>
+</section>
+<section class="sec c-amber" id="anat-3-bas-boyun-damarlari">
+<h2>3. Baş-boyun damarları</h2><span class="pill">10 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Tamamı a. carotis externa'nın dallarından oluşan seçenek? (2023 listesi)<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="rom">I occipitalis · II facialis · III thyroidea inferior · IV vertebralis · V thyroidea superior</p>
+<p class="opt">a) I, II, III</p>
+<p class="opt right">b) I, II, V <span class=tick>✓</span></p>
+<p class="opt">c) II, III, V</p>
+<p class="opt">d) II, IV, V</p>
+<p class="opt">e) III, IV, V</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Tamamı ECA dalı olan seçenek? (2F1 listesi)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="rom">I occipitalis · II maxillaris · III ophthalmica · IV thyroidea superior · V thyroidea inferior</p>
+<p class="opt">a) I, II ve III</p>
+<p class="opt right">b) I, II ve IV <span class=tick>✓</span></p>
+<p class="opt">c) II, III ve IV</p>
+<p class="opt">d) II, IV ve V</p>
+<p class="opt">e) III, IV ve V</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Tamamı ECA dalı olan seçenek? (2K1 ve 2024 listesi)<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="rom">I vertebralis · II maxillaris · III pharyngea ascendens · IV thyroidea inferior · V thyroidea superior</p>
+<p class="opt">a) I, II, III</p>
+<p class="opt">b) I, III, IV</p>
+<p class="opt right">c) II, III, V <span class=tick>✓</span></p>
+<p class="opt">d) II, IV, V</p>
+<p class="opt">e) III, IV, V</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hangileri a. carotis externa'nın dallarıdır? (cevaplı liste)<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. temporalis superficialis, a. pharyngea ascendens, a. auricularis posterior.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Her yıl liste değişiyor ama <strong>çeldiriciler hep aynı üçlü: vertebralis, thyroidea inferior (ikisi subclavia), ophthalmica (ICA)</strong>. Bunları elersen doğru kombinasyon kalıyor.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. meningea media'nın orijin aldığı arter?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) A. occipitalis</p>
+<p class="opt right">b) A. maxillaris <span class=tick>✓</span></p>
+<p class="opt">c) A. ophthalmica</p>
+<p class="opt">d) A. thyroidea superior</p>
+<p class="opt">e) A. thyroidea inferior</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Burnu kanlandıran arterlerden hangisi a. carotis interna'nın dallarından orijin alır?<span class="srcs"><span class="src s-23">2023</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) A. sphenopalatina</p>
+<p class="opt">b) A. infraorbitalis</p>
+<p class="opt">c) A. facialis</p>
+<p class="opt right">d) A. ethmoidalis anterior <span class=tick>✓</span></p>
+<p class="opt">e) A. facialis</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Burnu kanlandıran ve a. maxillaris'ten orijin alan arterler?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. sphenopalatina ve a. infraorbitalis.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı arter listesi, kaynak arter değişiyor (ICA → ethmoidalis; maxillaris → sphenopalatina + infraorbitalis).</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Cranium içinde sinus cavernosus'a drene olan ven?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) V. maxillaris</p>
+<p class="opt">b) V. temporalis superficialis</p>
+<p class="opt right">c) V. angularis <span class=tick>✓</span></p>
+<p class="opt">d) V. lingualis</p>
+<p class="opt">e) V. occipitalis</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Baş-boyun bölgesinde derin yerleşimli lenf düğümü?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Nodi lymphatici pretracheales.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>2025 hatırlaması (metin bozuk): "Foramen infraorbital'den geçmeyen" ve "orbitanın medial kompartmanını kanlandıran"<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kayıtta ikisinin cevabı da "a. ophthalmica". Büyük olasılıkla asılları <strong>uyluğun medial kompartmanı</strong> ve <strong>foramen infrapiriforme'den geçmeyen</strong> soruları; ikisinin cevabı <strong>a. obturatoria</strong> (obturatoria ile ophthalmica karışmış).</span></p>
+</div>
+</section>
+<section class="sec c-green" id="anat-4-toraks-duvari-damarlari">
+<h2>4. Toraks duvarı damarları</h2><span class="pill">6 soru</span>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>A. thoracica interna tarafından kanlandırılmayan yapı?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-25">2025</span><span class="src s-D">Derleme</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Thymus</p>
+<p class="opt">b) Sternum</p>
+<p class="opt">c) Diaphragma thoracoabdominalis</p>
+<p class="opt right">d) Oesophagus <span class=tick>✓</span></p>
+<p class="opt">e) Pericardium fibrosum</p>
+<p class="w">Özofagusun boyun kısmını a. thyroidea inferior besler.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. axillaris'in dalı değildir?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. thoracica interna (a. subclavia dalı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. intercostalis anterior'ların orijini?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. thoracica interna (1–6) ve a. musculophrenica (7–9).</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Sol tarafta bulunan v. intercostalis anterior'ların drene olduğu ven?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) V. thoracica interna <span class=tick>✓</span></p>
+<p class="opt">b) V. subclavia</p>
+<p class="opt">c) V. hemiazygos</p>
+<p class="opt">d) V. azygos</p>
+<p class="opt">e) V. cava inferior</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Sağ tarafta bulunan v. intercostalis posterior'ların drene olduğu ven?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) V. thoracica interna</p>
+<p class="opt">b) V. subclavia</p>
+<p class="opt">c) V. hemiazygos</p>
+<p class="opt right">d) V. azygos <span class=tick>✓</span></p>
+<p class="opt">e) V. cava inferior</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı şıklar; taraf ve ön/arka değişiyor. <strong>Ön → thoracica interna (iki tarafta da)</strong>, arka sağ → azygos, arka sol → hemiazygos.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>V. epigastrica superior'un drene olduğu ven?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>V. thoracica interna. (Hatırlamada "musculophrenica" yazıyor; yanlış kayıt.)</span></p>
+</div>
+</section>
+<section class="sec c-teal" id="anat-5-ust-ekstremite-ve-aksilla">
+<h2>5. Üst ekstremite ve aksilla</h2><span class="pill">10 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Fossa axillaris için hangisi DOĞRU DEĞİLDİR?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) Plica axillaris anterior'u m. pectoralis major oluşturur.</p>
+<p class="opt">b) Plica axillaris posterior'u m. latissimus dorsi oluşturur.</p>
+<p class="opt">c) Posterior duvarında m. subscapularis yer alır.</p>
+<p class="opt">d) Lateral duvarında humerus bulunur.</p>
+<p class="opt right">e) Anterior duvarında m. serratus anterior bulunur. <span class=tick>✓</span></p>
+<p class="w">Serratus anterior <strong>medial</strong> duvardır. Ön duvar: pectoralis major + minor.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Spatium axillare laterale (quadrangulare)'den geçen?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) A. circumflexa humeri anterior</p>
+<p class="opt">b) A. circumflexa scapulae</p>
+<p class="opt">c) N. radialis</p>
+<p class="opt right">d) N. axillaris <span class=tick>✓</span></p>
+<p class="opt">e) N. dorsalis scapulae</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Spatium triangulare inferior'dan geçen?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) N. axillaris</p>
+<p class="opt">b) A. circumflexa humeri posterior</p>
+<p class="opt">c) A. circumflexa scapulae</p>
+<p class="opt right">d) N. radialis <span class=tick>✓</span></p>
+<p class="opt">e) N. dorsalis scapulae</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Spatium axillare mediale (triangulare superior)'dan geçen?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) N. axillaris</p>
+<p class="opt">b) A. circumflexa humeri anterior</p>
+<p class="opt right">c) A. circumflexa scapulae <span class=tick>✓</span></p>
+<p class="opt">d) N. radialis</p>
+<p class="opt">e) N. dorsalis scapulae</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span><strong>Üç aralık, aynı beş şık, üç farklı cevap.</strong> Dörtgen → n. axillaris + a. circ. humeri POSTERIOR; alt üçgen → n. radialis + a. profunda brachii; üst üçgen → a. circumflexa scapulae. "Humeri anterior" ve "n. dorsalis scapulae" hiçbir aralıktan geçmez.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>2025 hatırlaması (metin bozuk): "a. vertebralis'ten geçer → n. axillaris"<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Büyük olasılıkla dörtgen aralık sorusu. Cevap n. axillaris.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. ulnaris'in dallarından oluşan seçenek?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="rom">I interossea communis · II r. carpalis palmaris · III r. carpalis dorsalis · IV a. collateralis ulnaris superior · V a. princeps pollicis</p>
+<p class="opt right">a) I, II, III <span class=tick>✓</span></p>
+<p class="opt">b) I, II, V</p>
+<p class="opt">c) II, III, V</p>
+<p class="opt">d) II, IV, V</p>
+<p class="opt">e) III, IV, V</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. ulnaris'in dalı DEĞİLDİR?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) A. interossea communis</p>
+<p class="opt">b) R. carpalis palmaris</p>
+<p class="opt">c) R. carpalis dorsalis</p>
+<p class="opt">d) A. recurrens ulnaris anterior</p>
+<p class="opt right">e) A. princeps pollicis <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>A. radialis'in dalı DEĞİLDİR?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) A. interossea communis <span class=tick>✓</span></p>
+<p class="opt">b) R. carpalis palmaris</p>
+<p class="opt">c) R. carpalis dorsalis</p>
+<p class="opt">d) A. radialis indicis</p>
+<p class="opt">e) A. princeps pollicis</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Neredeyse aynı şıklar, ulnaris ↔ radialis değişiyor. <strong>R. carpalis palmaris ve dorsalis İKİSİNDE de var</strong>, cevap olamaz. Ulnaris'e özgü: interossea communis; radialis'e özgü: princeps pollicis, radialis indicis.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>2025 hatırlaması: "A. princeps pollicis hangi damar için doğru değildir?"<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kayıtta "a. humeralis dalı değildir". Asıl bilgi: princeps pollicis <strong>a. radialis</strong> dalıdır, ulnaris'in değil.</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Fascia clavipectoralis'i delerek v. axillaris'e drene olan ven?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-25">2025</span><span class="src s-D">Derleme</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) V. basilica</p>
+<p class="opt right">b) V. cephalica <span class=tick>✓</span></p>
+<p class="opt">c) V. brachialis</p>
+<p class="opt">d) V. antebrachii mediana</p>
+<p class="opt">e) V. thoracica interna</p>
+</div>
+</section>
+<section class="sec c-blue" id="anat-6-alt-ekstremite">
+<h2>6. Alt ekstremite</h2><span class="pill">11 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Foramen infrapiriforme'den geçen damar ve sinirler için doğru seçenek?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="rom">I n. obturatorius · II a. glutea superior · III a. glutea inferior · IV n. ischiadicus · V n. cutaneus femoris posterior</p>
+<p class="opt">a) I, II, IV</p>
+<p class="opt">b) I, III, V</p>
+<p class="opt">c) II, IV, V</p>
+<p class="opt">d) II, III, IV</p>
+<p class="opt right">e) III, IV, V <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Foramen infrapiriforme'den GEÇMEYEN nörovasküler yapı?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) A. glutea inferior</p>
+<p class="opt">b) N. cutaneus femoris posterior</p>
+<p class="opt">c) N. ischiadicus</p>
+<p class="opt">d) A. pudenda interna</p>
+<p class="opt right">e) A. obturatoria <span class=tick>✓</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Geçen ↔ geçmeyen. Çeldiriciler sabit: <strong>n./a. obturatoria (canalis obturatorius) ve a. glutea superior (suprapiriforme)</strong>.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Foramen suprapiriforme'den geçen sinirin sıkışması sonucunda hangi hareket yapılamaz?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) Art. coxae'da addüksiyon</p>
+<p class="opt right">b) Art. coxae'da abdüksiyon <span class=tick>✓</span></p>
+<p class="opt">c) Art. genu'da fleksiyon</p>
+<p class="opt">d) Art. genu'da iç rotasyon</p>
+<p class="opt">e) Art. coxae'da dış rotasyon</p>
+<p class="w">Suprapiriforme'den <strong>n. gluteus superior</strong> geçer → gluteus medius, minimus, TFL → kalçada <strong>abdüksiyon</strong> (ve iç rotasyon). Bozulursa Trendelenburg.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. femoralis'e ait olmayan dal?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. epigastrica inferior (a. iliaca externa dalı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Uyluğun medial kompartmanını kanlandıran arter?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. obturatoria.</span></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>A. poplitea'ya ait OLMAYAN dal? (2F1 şıkları)<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) A. descendens genus <span class=tick>✓</span></p>
+<p class="opt">b) A. superior lateralis genus</p>
+<p class="opt">c) A. media genus</p>
+<p class="opt">d) Aa. surales</p>
+<p class="opt">e) A. inferior lateralis genus</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. poplitea'nın dalı DEĞİLDİR? (2K1 şıkları)<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt right">a) A. fibularis <span class=tick>✓</span></p>
+<p class="opt">b) A. superior medialis genus</p>
+<p class="opt">c) A. media genus</p>
+<p class="opt">d) Aa. surales</p>
+<p class="opt">e) A. inferior medialis genus</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Doğru cevap değiştirilmiş: <strong>descendens genus</strong> (femoralis dalı) → <strong>fibularis</strong> (tibialis posterior dalı). Genus arterleri ve surales hep poplitea'nın.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Diz ekleminin kanlanmasında a. poplitea dallarıyla anastomoz yapan arterler?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="rom">I circumflexa femoris medialis · II circumflexa femoris lateralis · III tibialis anterior · IV tibialis posterior · V fibularis</p>
+<p class="opt">a) I, II, III</p>
+<p class="opt">b) I, III, V</p>
+<p class="opt">c) II, III, IV</p>
+<p class="opt right">d) II, III, V <span class=tick>✓</span></p>
+<p class="opt">e) III, IV, V</p>
+<p class="w">Lateralis (r. descendens), tibialis anterior (recurrens) ve fibularis. Medialis ve tibialis posterior değil. Listede olmayan ama katılan: a. descendens genus.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. fibularis'in orijin aldığı damar?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) A. tibialis anterior</p>
+<p class="opt right">b) A. tibialis posterior <span class=tick>✓</span></p>
+<p class="opt">c) A. poplitea</p>
+<p class="opt">d) Aa. surales</p>
+<p class="opt">e) A. dorsalis pedis</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>A. dorsalis pedis'in orijin aldığı damar?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>A. tibialis anterior.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>N. peroneus communis'in yüzeyel seyri nedeniyle hasarlanma riski taşıdığı yer?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Caput (collum) fibulae.</span></p>
+</div>
+</section>
+<section class="sec c-indigo" id="anat-7-lenfatikler">
+<h2>7. Lenfatikler</h2><span class="pill">2 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ayak başparmağı çevresinden gelen lenfatiklerin drene olduğu düğüm?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Nodi lymphatici femoralis</p>
+<p class="opt right">b) Nodi lymphatici inguinales <span class=tick>✓</span></p>
+<p class="opt">c) Nodi lymphatici poplitei</p>
+<p class="opt">d) Nodi lymphatici iliaci externi</p>
+<p class="opt">e) Nodi lymphatici iliaci interni</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Ayak BEŞİNCİ parmağı çevresinden gelen lenfatiklerin drene olduğu düğüm?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Nodi lymphatici femoralis</p>
+<p class="opt">b) Nodi lymphatici inguinales</p>
+<p class="opt right">c) Nodi lymphatici poplitei <span class=tick>✓</span></p>
+<p class="opt">d) Nodi lymphatici iliaci externi</p>
+<p class="opt">e) Nodi lymphatici iliaci interni</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı şıklar; parmak değişiyor. Başparmak = medial = <strong>v. saphena magna</strong> boyunca → inguinal. 5. parmak = lateral = <strong>v. saphena parva</strong> boyunca → popliteal.</p>
+</div>
+</section>
+<section class="sec c-purple" id="anat-8-sinirda-mediastinum-ve-diafram">
+<h2>8. Sınırda: mediastinum ve diafram</h2><span class="pill">5 soru</span>
+<p>Bu konu dolaşım listenizde yoktu ama içinden aorta, VCI ve ductus thoracicus geçtiği için neredeyse her sınavda çıkmış. 5 dakikalık iş.</p>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>Hem mediastinum superius hem de mediastinum posterius'ta yer alan?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-23">2023</span><span class="src s-25">2025</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="rom">I trachea · II ductus thoracicus · III aorta ascendens · IV oesophagus · V a. thoracica interna</p>
+<p class="opt">a) I, II</p>
+<p class="opt">b) II, III</p>
+<p class="opt right">c) II, IV <span class=tick>✓</span></p>
+<p class="opt">d) III, IV</p>
+<p class="opt">e) IV, V</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Diaphragma thoracoabdominalis için DOĞRU DEĞİLDİR? (2023 versiyonu)<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) N. phrenicus tarafından innerve edilir.</p>
+<p class="opt right">b) Hiatus oesophagus T12 vertebra düzeyindedir. <span class=tick>✓</span></p>
+<p class="opt">c) İnspirasyon sırasında kasılır.</p>
+<p class="opt">d) Alt yüzde hepar ile komşudur.</p>
+<p class="opt">e) Hiatus aorticus'tan aorta ile birlikte ductus thoracicus geçer.</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Diafram için DOĞRU DEĞİLDİR? (Online / 2025 versiyonu)<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) N. phrenicus tarafından innerve edilir.</p>
+<p class="opt">b) İnspirasyon sırasında kasılır.</p>
+<p class="opt">c) Alt yüzde fundus gastrica ile komşudur.</p>
+<p class="opt right">d) Hiatus aorticus T10 vertebra düzeyindedir. <span class=tick>✓</span></p>
+<p class="opt">e) Hiatus oesophagus'tan oesophagus ile birlikte n. vagus geçer.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Diafram için DOĞRU DEĞİLDİR? (2K1 versiyonu)<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) N. phrenicus tarafından innerve edilir.</p>
+<p class="opt right">b) Foramen venae cavae T10 vertebra düzeyindedir. <span class=tick>✓</span></p>
+<p class="opt">c) İnspirasyon sırasında kasılır.</p>
+<p class="opt">d) Alt yüzde hepar ile komşudur.</p>
+<p class="opt">e) Hiatus aorticus'tan aorta ile birlikte ductus thoracicus geçer.</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span><strong>Üç sınav, üç farklı yanlış seviye.</strong> Her seferinde bir açıklığın vertebrası kaydırılıyor.</p>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>T8 – VCI, T10 – özofagus, T12 – aorta.</strong> "I (IVC) 8, 10 eggs (esophagus), at 12 (aorta)." Sayı ne kadar büyükse yapı o kadar arkada.</p></div>
+<div class="qa" data-n="4"><p class="q"><span class="lbl">Soru</span>Hem sağ hem sol akciğerle komşuluk yapan?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="src s-25">2025</span><span class="times">🔁 4 sınav</span></span></p>
+<p class="opt">a) Aorta</p>
+<p class="opt right">b) Oesophagus <span class=tick>✓</span></p>
+<p class="opt">c) Vena cava superior</p>
+<p class="opt">d) A. subclavia sinistra</p>
+<p class="opt">e) Truncus brachiocephalicus</p>
+</div>
+</section></div><div role="tabpanel" id="panel-biyokim" aria-labelledby="tab-biyokim" hidden><div class="filters" data-for="biyokim"><button type="button" aria-pressed="true" data-f="all">Hepsi</button><button type="button" aria-pressed="false" data-f="rep">🔁 Aynen tekrar eden</button><button type="button" aria-pressed="false" data-f="chg">🔄 Değiştirilmiş</button><span class="count">19 kart</span></div><nav class="toc"><a class="c-red" href="#biyokim-1-hem-sentezi-ve-yikimi">1. Hem sentezi ve yıkımı</a><a class="c-orange" href="#biyokim-2-hemoproteinler">2. Hemoproteinler</a><a class="c-amber" href="#biyokim-3-ksenobiyotik-metabolizmasi-ve-p450">3. Ksenobiyotik metabolizması ve P450</a><a class="c-green" href="#biyokim-4-bilirubin-tasinmasi">4. Bilirubin taşınması</a></nav><section class="sec c-red" id="biyokim-1-hem-sentezi-ve-yikimi">
+<h2>1. Hem sentezi ve yıkımı</h2><span class="pill">4 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hem sentezi yolunun hız sınırlayıcı basamağındaki enzim?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt right">a) ALA sentaz <span class=tick>✓</span></p>
+<p class="opt">b) Ferroşelataz</p>
+<p class="opt">c) Porfobilinojen sentaz</p>
+<p class="opt">d) Üroporfirinojen sentaz</p>
+<p class="opt">e) Porfobilinojen deaminaz</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hem YIKIMINDAKİ hız kısıtlayıcı basamağı katalizleyen enzim?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) ALA sentaz</p>
+<p class="opt">b) Biliverdin redüktaz</p>
+<p class="opt">c) Ferroşelataz</p>
+<p class="opt right">d) Hem oksijenaz <span class=tick>✓</span></p>
+<p class="opt">e) UDP-glukuroniltransferaz</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Sentez → yıkım çevrilmiş; dünkü doğru cevap (ALA sentaz) bugünün çeldiricisi.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Porfirin sentezini artırmak için hangi enzimin aktivitesi artırılmalı?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Hatırlamada "süksinil-CoA sentezinde görevli enzimler" yazıyor. Şıklarda ALA sentaz varsa onu seç (porfirin yolunun hız kısıtlayıcısı).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hücre kültüründe hem sentezlemek için ortama eklenmesi gerekenler (enzimler hazır)?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Glisin, süksinil-CoA, piridoksal fosfat (B6), demir (Fe²⁺). Kayıtta çinko da işaretli.</span></p>
+</div>
+</section>
+<section class="sec c-orange" id="biyokim-2-hemoproteinler">
+<h2>2. Hemoproteinler</h2><span class="pill">7 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Bir molekülünde 4 hem grubu bulunan protein?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt right">a) Hemoglobin <span class=tick>✓</span></p>
+<p class="opt">b) Miyoglobin</p>
+<p class="opt">c) Sitokrom</p>
+<p class="opt">d) Katalaz</p>
+<p class="opt">e) Peroksidaz</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kuarterner yapıya sahip hemoprotein?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt right">a) Hemoglobin <span class=tick>✓</span></p>
+<p class="opt">b) Katalaz</p>
+<p class="opt">c) Miyoglobin</p>
+<p class="opt">d) Peroksidaz</p>
+<p class="opt">e) Sitokromlar</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Monomerik yapıda olup O₂ depolayan hem proteini?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Hemoglobin</p>
+<p class="opt right">b) Miyoglobin <span class=tick>✓</span></p>
+<p class="opt">c) Sitokrom P450</p>
+<p class="opt">d) Katalaz</p>
+<p class="opt">e) Peroksidaz</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı beş protein, soru tersine dönüyor: <strong>4 hem / kuarterner / tetramer → hemoglobin; monomer / depo → miyoglobin.</strong></p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Hemoglobindeki demir globine hangi aminoasitle bağlanır?<span class="srcs"><span class="src s-24">2024</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Histidin (proksimal His F8).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hemoglobinin T → R geçişi nasıl başlar?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Oksijenin hemdeki demire bağlanmasıyla.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ortamda bulunması hemoglobinin O₂'ye bağlanmasını azaltan?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>2,3-bifosfogliserat.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>HbF ile ilgili yanlış ifade?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>"Yapısındaki demir Fe³⁺'tür." (Fe²⁺ olmalı.)</span></p>
+</div>
+</section>
+<section class="sec c-amber" id="biyokim-3-ksenobiyotik-metabolizmasi-ve-p450">
+<h2>3. Ksenobiyotik metabolizması ve P450</h2><span class="pill">6 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Faz 2 reaksiyonu hangisi?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt">a) Aromatik hidroksilasyon</p>
+<p class="opt">b) O-dealkilasyon</p>
+<p class="opt">c) Alifatik oksidasyon</p>
+<p class="opt right">d) Glukuronidasyon <span class=tick>✓</span></p>
+<p class="opt">e) Hidroliz</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Faz I reaksiyonu hangisi?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="src s-D">Derleme</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Asetilasyon</p>
+<p class="opt right">b) Dealkilasyon <span class=tick>✓</span></p>
+<p class="opt">c) Glukuronidasyon</p>
+<p class="opt">d) Metilasyon</p>
+<p class="opt">e) Sülfatasyon</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Faz II ↔ faz I. Şıklar ayna gibi: bir tarafta oksidasyon/hidroksilasyon/dealkilasyon/hidroliz, öbür tarafta konjugasyonlar.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>P450 aracılı reaksiyonlardan OLMAYAN?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Alifatik oksidasyon</p>
+<p class="opt">b) Aromatik hidroksilasyon</p>
+<p class="opt">c) O-dealkilasyon</p>
+<p class="opt right">d) Glukuronidasyon <span class=tick>✓</span></p>
+<p class="opt">e) Oksidatif deaminasyon</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>P450'nin görev aldığı reaksiyon?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Hidroksilasyon.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hangisine etki eden P450 enzim sınıfı mitokondriyal yerleşimlidir?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) İlaç</p>
+<p class="opt">b) Karsinojen</p>
+<p class="opt right">c) Kolesterol <span class=tick>✓</span></p>
+<p class="opt">d) Mutajen</p>
+<p class="opt">e) Toksin</p>
+<p class="w">Ksenobiyotik P450'ler ER'de; steroid sentezindeki (kolesterol yan zincir kesimi) P450'ler mitokondride.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ksenobiyotik metabolizmasında metil donörü?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>S-adenozil metiyonin (SAM).</span></p>
+</div>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>Faz II = konjugasyon "GAMSG":</strong> Glukuronidasyon, Asetilasyon, Metilasyon, Sülfatasyon, Glutatyon. Geri kalanı faz I.</p></div>
+</section>
+<section class="sec c-green" id="biyokim-4-bilirubin-tasinmasi">
+<h2>4. Bilirubin taşınması</h2><span class="pill">2 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hem yıkım ürünü bilirubini HÜCRE İÇİNDE taşıyan protein?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Albümin</p>
+<p class="opt">b) Adrenodoksin</p>
+<p class="opt">c) Globin</p>
+<p class="opt right">d) Ligandin <span class=tick>✓</span></p>
+<p class="opt">e) UDP</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hangisinin A alt birimine 2 molekül bilirubin bağlanır?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Albümin</p>
+<p class="opt right">b) Ligandin <span class=tick>✓</span></p>
+<p class="opt">c) Z proteini</p>
+<p class="opt">d) Glukuronik asit</p>
+<p class="opt">e) Lumirubin</p>
+<p class="w"><strong>Düzeltme:</strong> iki ayrı derlemede de ligandin işaretli. Albümin tek zincir, "alt birim"i yok; ligandin (glutatyon S-transferaz) alt birimli. Önceki notta "albümin seç" demiştim; <strong>ligandin'i işaretle.</strong></p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Kanda <strong>albümin</strong>, hücre içinde <strong>ligandin</strong>. "Alt birim" geçiyorsa ligandin.</p></div>
+</section></div><div role="tabpanel" id="panel-histo" aria-labelledby="tab-histo" hidden><div class="filters" data-for="histo"><button type="button" aria-pressed="true" data-f="all">Hepsi</button><button type="button" aria-pressed="false" data-f="rep">🔁 Aynen tekrar eden</button><button type="button" aria-pressed="false" data-f="chg">🔄 Değiştirilmiş</button><span class="count">29 kart</span></div><nav class="toc"><a class="c-ink" href="#histo-0-slayt-cikmis-haritasi">0. Slayt × çıkmış haritası</a><a class="c-red" href="#histo-1-kalp-gelisimi-ve-sinus-venozus">1. Kalp gelişimi ve sinüs venozus</a><a class="c-orange" href="#histo-2-septumlar-ve-fetal-kalintilar">2. Septumlar ve fetal kalıntılar</a><a class="c-amber" href="#histo-3-i-leti-sistemi-ve-endokard">3. İleti sistemi ve endokard</a><a class="c-green" href="#histo-4-damar-duvari">4. Damar duvarı</a><a class="c-teal" href="#histo-5-kapiller-tipleri-ve-lenfatik-kapiller">5. Kapiller tipleri ve lenfatik kapiller</a></nav><section class="sec c-ink" id="histo-0-slayt-cikmis-haritasi">
+<h2>0. Slayt × çıkmış haritası</h2>
+<p>Dört slayt dosyasını çıkmışlarla tek tek eşleştirdim. En net bulgu: <strong>hocanın her dosyanın sonundaki "Çalışma Soruları" ile sınav soruları neredeyse birebir örtüşüyor.</strong> Foramen ovale, koroner sinüs, kalp halkası, vasa/nervi vasorum, kapakçık yapısı, Purkinje ve kapiller tipleri hepsi çalışma sorusu olarak slaytta duruyor ve hepsi sorulmuş. Bu yüzden <strong>henüz sorulmamış çalışma soruları en güçlü aday.</strong></p>
+<h3>🎯 Henüz sorulmamış çalışma soruları (en yüksek olasılık)</h3>
+<ul>
+<li><strong>VCI ve VCS neden gelişir?</strong> VCS: sağ ana kardinal + sağ anterior kardinal ven. VCI: hepatik segmenti <strong>sağ vitellin ven</strong>, gerisi subkardinal/sakrokardinal.</li>
+<li><strong>Sinüs venarum nedir?</strong> Sağ sinüs boynuzundan gelişen, sağ atriyumun <strong>düz duvarlı</strong> kısmı.</li>
+<li><strong>Crista terminalis'in özelliği?</strong> Trabeküllü (orijinal) atriyum ile düz duvarlı sinüs venarum arasındaki çizgi; <strong>SA ile AV düğüm arasında iletiyi taşıyan lifleri</strong> içerir.</li>
+<li><strong>Sol atriyumun düz kısmını ne oluşturur?</strong> Duvara katılan <strong>pulmoner venler</strong>. Sol kulakçık primitif atriyumun trabeküllü kısmından.</li>
+<li><strong>Membranöz ventriküler septum ne zaman kapanır?</strong> <strong>7. haftanın sonunda</strong> (septumlar 5–8. haftalar arasında). Kaynağı bulbar kabartılar + endokardiyal yastıklar.</li>
+<li><strong>Nöral krista hücrelerinin bulunduğu yapılar?</strong> <strong>Trunkokonal (endokardiyal) yastıklar</strong>; kapaklar ve aortik arkların yapısına da katılır. Bu yüzden kalp anomalileri kraniyofasiyal defektlerle (DiGeorge) birlikte görülür.</li>
+<li><strong>Primitif kalp tüpünün inlet/outlet kısımları?</strong> Giriş (kaudal): sinüs venozus, boynuzlara giren vitellin, umbilikal, ana kardinal venler. Çıkış (kraniyal): truncus arteriosus → aortik kese → aortik arklar.</li>
+<li><strong>Fetal damarların akıbeti</strong> (slaytta üç yıldızla işaretli): aşağıdaki tabloya bak.</li>
+<li><strong>Venöz portal sistem örneği → karaciğer; arteriyel portal sistem örneği → böbrek glomerülü.</strong></li>
+<li><strong>Sistemik kan basıncının ana bileşeni → arteriyoller.</strong> <strong>Adventisyası en iyi gelişmiş damar → venler</strong> (venlerde en kalın tabaka adventisya).</li>
+<li><strong>Kan doku çalışma soruları:</strong> eritrosit 4,3–5,7 milyon (erkek), ömür <strong>120 gün</strong> · agranülositler <strong>lenfosit ve monosit</strong> · en çok lökosit <strong>nötrofil (%50–70)</strong> · pıhtılaşmış kanın sıvısı <strong>serum, fibrinojen içermez</strong> · hematokrit eritrosit hacim oranı, <strong>~%45</strong> · trombosit <strong>megakaryositten</strong> · makrofaja farklılaşan <strong>monosit</strong>.</li>
+</ul>
+<h3>📌 Fetal damarların akıbeti (slaytta en çok işaretlenen yer)</h3>
+<ul>
+<li><strong>Ductus arteriosus</strong> (sol 6. ark) → lig. arteriosum; anatomik kapanma postnatal <strong>12. hafta</strong>.</li>
+<li><strong>Umbilikal arter</strong>: proksimal → <strong>a. iliaca interna ve a. vesicalis superior</strong>; distal → <strong>lig. umbilicale mediale</strong>.</li>
+<li><strong>Vitellin arterler</strong> → <strong>truncus coeliacus, a. mesenterica superior ve inferior</strong> (ön, orta, son bağırsak).</li>
+<li><strong>Dorsal segmental arterler</strong> → interkostal ve vertebral arterler. Sağ dorsal aorta → sağ subclavia'nın distali; sol → sol subclavia altında aorta descendens.</li>
+<li><strong>Sağ vitellin ven</strong> → v. mesenterica superior ve <strong>VCI'nın hepatik segmenti</strong>. <strong>Sol vitellin ven</strong> → portal venin büyük kısmı. Portal ven duodenum çevresindeki vitellin ağdan.</li>
+<li><strong>Umbilikal ven</strong> → lig. teres hepatis. <strong>Ductus venosus</strong> → lig. venosum.</li>
+</ul>
+<h3>📌 Aortik arklar (slaytta yıldızlı, hiç sorulmamış)</h3>
+<ul>
+<li><strong>1.</strong> maksiller arter (ECA'ya katkı) · <strong>2.</strong> stapedial arter · <strong>3.</strong> a. carotis communis ve ICA'nın proksimali · <strong>4. sol</strong> arcus aortae, <strong>4. sağ</strong> sağ subclavia'nın proksimali · <strong>5.</strong> rudimenter/gelişmez · <strong>6. sağ</strong> sağ pulmoner arter, <strong>6. sol</strong> sol pulmoner arter + <strong>ductus arteriosus</strong>.</li>
+<li>Aortik keseden: sağda <strong>truncus brachiocephalicus</strong>, solda aorta ascendens.</li>
+</ul>
+<div class="mn"><span class="mn-h">🧠 Ezber</span><p><strong>"1 Maksi, 2 Stapedi, 3 Karotis, 4 Arkus (sol) / Subklavya (sağ), 6 Pulmoner + Duktus."</strong> Sol rekürren sinir 6. arkın (duktus) altından, sağ rekürren 4. arkın (subclavia) altından döner.</p></div>
+<h3>📌 Diğer potansiyel noktalar</h3>
+<ul>
+<li>Kalp gelişimi <strong>splanknik mezoderm</strong>, anjiyoblastik kordonlar <strong>18–19. gün</strong>; kalp <strong>22–23. gün</strong> atmaya başlar, kan akımı 4. haftada. Kalp halkası <strong>22–24. gün</strong>.</li>
+<li>Primitif çizgiden ilk göç eden hücreler <strong>çıkış yolunu (kraniyal)</strong>, sonra sağ ventrikül, sol ventrikül, en son sinüs venozus.</li>
+<li>Bulbus cordis 3 parça: <strong>truncus arteriosus</strong> (aorta + pulmoner kökleri), <strong>conus cordis</strong> (iki ventrikülün çıkış yolları), <strong>sağ ventrikülün trabeküllü kısmı</strong>. Primitif ventrikül → sol ventrikül.</li>
+<li>Septum primum <strong>ince</strong>, delikleri foramen primum ve secundum; septum secundum <strong>kalın, kaslı</strong>, açıklığı foramen ovale.</li>
+<li>SA düğüm <strong>5. haftada</strong>, sinüs venozus duvarında <strong>VCS'nin sağ atriyuma açıldığı yerde</strong> gelişir.</li>
+<li><strong>Fallot:</strong> pulmoner stenoz + VSD + ata binen aorta + sağ ventrikül hipertrofisi; <strong>pentaloji = + ASD/PDA</strong>. <strong>Persistent truncus her zaman VSD ile.</strong> <strong>En sık KKH: VSD (membranöz).</strong> <strong>Koarktasyon:</strong> Turner, %98 sol subclavia çıkışının altında. <strong>PDA:</strong> kızlarda 2–3 kat, maternal <strong>rubella</strong>, prematürede sık.</li>
+<li>Lenfatik kapillerler: <strong>tam bazal lamina yok</strong>, ankraj filamentleriyle tutunur. Bulunmadığı yerler: <strong>kıkırdak, kemik, epitel, MSS, kemik iliği, plasenta</strong>. Günde 2–3 L lenf. Torasik kanal orta boy ven gibi ama medyası belirgin. Lenfatik sistem <strong>5. hafta sonunda</strong> gelişmeye başlar.</li>
+<li><strong>ANP</strong> atriyal kardiyositlerden (gerilince) → GFR ↑, diürez, natriürez. <strong>Purkinje</strong> lifleri çizgili, <strong>tipik olmayan interkalar disklerle</strong> bağlı, subendokardiyal katmanda.</li>
+<li>Damarlar: <strong>elastik arter</strong> (aort, brakiyosefalik, carotis communis, subclavia, iliaca communis; medyada erişkinde ~70 kat fenestralı elastik lamina) · <strong>müsküler arter</strong> (radial, tibial, popliteal, aksiller, splenik, mezenterik, interkostal; iç elastik lamina belirgin, ≤40 kat kas) · <strong>arteriyol</strong> (&lt;0,5 mm; küçüklerinde iç/dış elastik lamina yok, 1–2 kat kas). <strong>Postkapiller venül</strong>: diyapedez yeri, medyada sadece perisit, en gevşek endotel bağlantıları. <strong>Perisit</strong> mezenkim kökenli, kasılır ve onarıma katılır.</li>
+<li><strong>Karotid cisim</strong>: bifurkasyonda adventisyada, O₂/CO₂ kemoreseptörü, <strong>nöral krista</strong> kökenli. <strong>Karotid sinüs</strong>: ICA adventisyasında, baroreseptör.</li>
+<li><strong>Nervi vasorum</strong>: norepinefrinli miyelinsiz sempatik lifler (vazokonstriksiyon); iskelet kası arterlerinde ayrıca kolinerjik vazodilatatör lifler.</li>
+<li>Kapiller tipleri (slayt notu): <strong>sürekli</strong> = kas, beyin, kemik, testis, timus, akciğer · <strong>pencereli</strong> = endokrin bezler, bağırsak, böbrek glomerülü · <strong>sinüzoid</strong> = karaciğer, dalak, kemik iliği.</li>
+</ul>
+</section>
+<section class="sec c-red" id="histo-1-kalp-gelisimi-ve-sinus-venozus">
+<h2>1. Kalp gelişimi ve sinüs venozus</h2><span class="pill">7 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp gelişimi hangi yapıda başlar?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Splanknik mezoderm.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp halkası ne zaman oluşur?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>22–24. günler arasında.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Dört haftalık embriyoda gövdeden kalbe kan taşıyan damar?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Vitellin venler</p>
+<p class="opt">b) Umbilikal venler</p>
+<p class="opt right">c) Ana kardinal venler <span class=tick>✓</span></p>
+<p class="opt">d) Dorsal aorta</p>
+<p class="opt">e) Umbilikal arterler</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp tüpünün kaudalinden giren damarlara örnek?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Umbilikal arter</p>
+<p class="opt">b) Sağ dorsal aorta</p>
+<p class="opt">c) Sol dorsal aorta</p>
+<p class="opt right">d) Vitellin ven <span class=tick>✓</span></p>
+<p class="opt">e) Vitellin arter</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sinüs venozus boynuzlarından giriş YAPMAYAN?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Sol umbilikal ven</p>
+<p class="opt">b) Sağ umbilikal ven</p>
+<p class="opt">c) Sağ vitellin ven</p>
+<p class="opt">d) Ana kardinal venler</p>
+<p class="opt right">e) Portal ven <span class=tick>✓</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Hep aynı mantık: <strong>kaudalden (sinüs venozusa) giren üç ven çifti = vitellin, umbilikal, ana kardinal.</strong> Arterler ve portal ven girmez.</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Koroner sinüs hangi embriyonik yapıdan gelişir?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Sol vitellin ven</p>
+<p class="opt">b) Sol kardinal ven</p>
+<p class="opt">c) Sol umbilikal ven</p>
+<p class="opt right">d) Sol sinüs boynuzu <span class=tick>✓</span></p>
+<p class="opt">e) Sol sinüs venarum kapakçığı</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Sol sinüs boynuzundan gelişen yapı?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sol atriyumun oblik veni (ve koroner sinüs).</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Aynı yapı, iki yönden: "koroner sinüs neden gelişir" ↔ "sol boynuzdan ne gelişir".</p>
+</div>
+</section>
+<section class="sec c-orange" id="histo-2-septumlar-ve-fetal-kalintilar">
+<h2>2. Septumlar ve fetal kalıntılar</h2><span class="pill">5 soru</span>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Foramen ovale hangi yapı üzerinde yer alır?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-25">2025</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) Septum primum</p>
+<p class="opt right">b) Septum secundum <span class=tick>✓</span></p>
+<p class="opt">c) Septum spurium</p>
+<p class="opt">d) Müsküler interventriküler septum</p>
+<p class="opt">e) Membranöz interventriküler septum</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Foramen secundum nerede yer alır? (2K1 sırası)<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-24">2024</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) Septum primum üzerinde <span class=tick>✓</span></p>
+<p class="opt">b) Septum secundum üzerinde</p>
+<p class="opt">c) Septum spurium üzerinde</p>
+<p class="opt">d) Septum atrioventriculare üzerinde</p>
+<p class="opt">e) Septum interventriculare üzerinde</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Foramen secundum nerede yer alır? (2F1 sırası)<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Septum spurium üzerinde</p>
+<p class="opt right">b) Septum primum üzerinde <span class=tick>✓</span></p>
+<p class="opt">c) Septum secundum üzerinde</p>
+<p class="opt">d) Septum atrioventriculare üzerinde</p>
+<p class="opt">e) Septum interventriculare üzerinde</p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Ovale ↔ secundum değişiyor, şıklar karıştırılıyor. <strong>İsimleri çapraz: foramen SECUNDUM septum PRIMUM'da; foramen ovale septum SECUNDUM'da.</strong></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Fetal damarlar ve doğum sonrası dönüşümleri doğru eşleşmiş olan?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt">a) Umbilikal arter – lig. arteriosum</p>
+<p class="opt right">b) Umbilikal ven – lig. teres hepatis <span class=tick>✓</span></p>
+<p class="opt">c) Sağ vitellin ven – lig. venosum</p>
+<p class="opt">d) Vitellin arter – vertebral arter</p>
+<p class="opt">e) Sağ dorsal aorta – VCI</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>İntrauterin dönemde gözlenmeyen dolaşım yapısı?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Lig. umbilicale mediale (doğumdan sonra oluşan kalıntı).</span></p>
+</div>
+</section>
+<section class="sec c-amber" id="histo-3-i-leti-sistemi-ve-endokard">
+<h2>3. İleti sistemi ve endokard</h2><span class="pill">5 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalp kesitinde Purkinje lifleri nerede gözlenir?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt">a) İnteratriyal septum subendokardiyumunda</p>
+<p class="opt right">b) İnterventriküler septum subendokardiyumunda <span class=tick>✓</span></p>
+<p class="opt">c) Sol atriyum miyokardiyumunda</p>
+<p class="opt">d) Sağ atriyum miyokardiyumunda</p>
+<p class="opt">e) Kalbin fibröz iskeleti boyunca</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Purkinje lifleri nerede bulunur?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Subendokardiyal bağ dokuda.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Purkinje hücreleri için doğru olan?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Özelleşmiş düz kas hücreleridir.</p>
+<p class="opt">b) Atriyal natriüretik hormon salgılarlar.</p>
+<p class="opt right">c) Aralarında interkalar disk bulunur. <span class=tick>✓</span></p>
+<p class="w">Kalan şıklar kayıtta okunamıyor. Purkinje = özelleşmiş <strong>kalp kası</strong>, düz kas değil; ANP atriyal kardiyomiyositlerden.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalpteki nodal kardiyomiyositler için doğru olan?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Özelleşmiş kardiyomiyositlerdir.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Endokardiyum hangi epitelle örtülü?<span class="srcs"><span class="src s-23">2023</span><span class="src s-D">Derleme</span></span></p>
+<p class="opt right">a) Tek katlı yassı epitel (endotel) <span class=tick>✓</span></p>
+<p class="opt">b) Tek katlı kübik</p>
+<p class="opt">c) Tek katlı kolumnar</p>
+<p class="opt">d) Çok katlı yassı</p>
+<p class="opt">e) Değişici epitel</p>
+</div>
+</section>
+<section class="sec c-green" id="histo-4-damar-duvari">
+<h2>4. Damar duvarı</h2><span class="pill">5 soru</span>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Vasa vasorum nedir?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt right">a) Büyük damarları besleyen damarlardır. <span class=tick>✓</span></p>
+<p class="opt">b) Dağıtıcı arterlerin bifurkasyon yaptığı yerdir.</p>
+<p class="opt">c) Müsküler venlerdeki tunika intima katlantılarıdır.</p>
+<p class="opt">d) Büyük damarların lenfatikleridir.</p>
+<p class="opt">e) İletici arterlerden ilk çıkan arter dalıdır.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Nervi vasorum nedir?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Damarların sinir dağılımı.</span></p>
+<p class="chg"><span class="chg-h">🔄 Değiştirilmiş soru</span>Vasa ↔ nervi. "Vasa vasorum = damarın damarı, nervi vasorum = damarın siniri."</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Müsküler arter yapısındaki damar?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt">a) Aort</p>
+<p class="opt">b) Brakiyosefalik arter</p>
+<p class="opt">c) Subklavyen arter</p>
+<p class="opt right">d) Radyal arter <span class=tick>✓</span></p>
+<p class="opt">e) Ana iliak arter</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Venöz kapakçıkların histolojik yapısı?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt right">a) Endotelle örtülü elastik lifler (intima katlantısı) <span class=tick>✓</span></p>
+<p class="opt">b) Düz kas hücrelerinden yarım ay çıkıntılar</p>
+<p class="opt">c) Tunika media kalınlaşması</p>
+<p class="opt">d) Kapiller genişlemeler</p>
+<p class="opt">e) Subendotel tabaka kıvrımları</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Venler ve lenf damarlarının ortak özelliği?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kapakçıklara sahip olmaları.</span></p>
+</div>
+</section>
+<section class="sec c-teal" id="histo-5-kapiller-tipleri-ve-lenfatik-kapiller">
+<h2>5. Kapiller tipleri ve lenfatik kapiller</h2><span class="pill">7 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kesintili tip kapiller hangi yapıda gözlenir?<span class="srcs"><span class="src s-F1">2F1</span></span></p>
+<p class="opt right">a) Dalak <span class=tick>✓</span></p>
+<p class="opt">b) Akciğer</p>
+<p class="opt">c) Kas</p>
+<p class="opt">d) Beyin</p>
+<p class="opt">e) (okunamıyor)</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Dalak sinüzoidleri hangi tip kapiller?<span class="srcs"><span class="src s-23">2023</span></span></p>
+<p class="opt right">a) Kesintili kapiller <span class=tick>✓</span></p>
+<p class="opt">b) Kesintisiz kapiller</p>
+<p class="opt">c) Pencereli kapiller</p>
+<p class="opt">d) Porlu kapiller</p>
+<p class="opt">e) Sürekli kapiller</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Karaciğer sinüzoidleri hangi tip?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Kesintili kapiller.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Akciğer kapillerleri hangi tip?<span class="srcs"><span class="src s-24">2024</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sürekli (kesintisiz).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Timustaki kapillerlerin özelliği?<span class="srcs"><span class="src s-25">2025</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sürekli (kesintisiz); kan–timus bariyeri.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>KEMİK kapiller sistemini doğru tanımlayan?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Endotel pencereli, bazal membran kesintisiz</p>
+<p class="opt">b) Endotel kesintisiz, bazal membran kesintili</p>
+<p class="opt right">c) Endotel ve bazal membran kesintisiz <span class=tick>✓</span></p>
+<p class="opt">d) Endotel ve bazal membran porlu</p>
+<p class="opt">e) Endotel kesintili, bazal membran diyaframlı</p>
+<p class="w"><strong>Düzeltme:</strong> resmi anahtar C. Soru kemik <strong>dokusu</strong> (sürekli kapiller); kemik <strong>iliği</strong> sorulursa cevap sinüzoid (kesintili). Önceki notta bunu "şüpheli" diye işaretlemiştim, yanlıştı.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Biyopside lenfatik kapiller yok. Doku nereden alınmış olabilir?<span class="srcs"><span class="src s-K1">2K1</span></span></p>
+<p class="opt right">a) Kemik iliği <span class=tick>✓</span></p>
+<p class="opt">b) Karaciğer</p>
+<p class="opt">c) Böbrek</p>
+<p class="opt">d) Lenf nodu</p>
+<p class="opt">e) Akciğer</p>
+<p class="w"><strong>Düzeltme:</strong> 2025 hatırlamasındaki "lenfoid organ değildir → kemik iliği" kaydının aslı bu soru. Lenfatik kapiller bulunmayan yerler: kemik iliği, MSS, kıkırdak, epidermis, kornea.</p>
+</div>
+<div class="tip"><span class="tip-h">💡 Dikkat</span><p>Sinüzoid (kesintili) = <strong>karaciğer, dalak, kemik iliği</strong>. Sürekli = <strong>kas, akciğer, timus, MSS, kemik dokusu</strong>. Pencereli = böbrek glomerülü, endokrin bezler, bağırsak villusu.</p></div>
+</section></div><div role="tabpanel" id="panel-biyofiz" aria-labelledby="tab-biyofiz" hidden><div class="filters" data-for="biyofiz"><button type="button" aria-pressed="true" data-f="all">Hepsi</button><button type="button" aria-pressed="false" data-f="rep">🔁 Aynen tekrar eden</button><button type="button" aria-pressed="false" data-f="chg">🔄 Değiştirilmiş</button><span class="count">12 kart</span></div><nav class="toc"><a class="c-red" href="#biyofiz-1-her-yil-gelen-dortlu">1. Her yıl gelen dörtlü</a><a class="c-teal" href="#biyofiz-2-diger-cikmislar">2. Diğer çıkmışlar</a></nav><section class="sec c-red" id="biyofiz-1-her-yil-gelen-dortlu">
+<h2>1. Her yıl gelen dörtlü</h2><span class="pill">4 soru</span>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>Kemiğin dengede kalabilmesi için kemiğe etkiyen ... ve ... bileşkesi ayrı ayrı sıfır olmalı?<span class="srcs"><span class="src s-F1">2F1</span><span class="src s-24">2024</span><span class="src s-25">2025</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="opt">a) Basınçların, momentlerin</p>
+<p class="opt">b) İşlerin, debilerin</p>
+<p class="opt right">c) Kuvvetlerin, momentlerin <span class=tick>✓</span></p>
+<p class="opt">d) Kuvvetlerin, debilerin</p>
+<p class="opt">e) Debilerin, basınçların</p>
+</div>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>Ortalama aort basıncı 100 mmHg. 1,80 m boyundaki biri YATARKEN başına ve ayağına gelen arter basıncı?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-24">2024</span><span class="src s-25">2025</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="opt">a) 67</p>
+<p class="opt">b) 199</p>
+<p class="opt right">c) 100 <span class=tick>✓</span></p>
+<p class="opt">d) 156</p>
+<p class="opt">e) 52</p>
+<p class="w">Yatarken yükseklik farkı yok. 67/156 ayakta baş/ayak değerleri, tuzak.</p>
+</div>
+<div class="qa" data-n="3"><p class="q"><span class="lbl">Soru</span>Şekildeki düzeneğin adı ve kullanım amacı?<span class="srcs"><span class="src s-ONL">Online</span><span class="src s-24">2024</span><span class="src s-25">2025</span><span class="times">🔁 3 sınav</span></span></p>
+<p class="opt right">a) Ostwald viskozimetresi, kan gibi sıvıların bağıl viskozluğunu ölçmek <span class=tick>✓</span></p>
+<p class="opt">b) Laplace yasası, damarların viskozluğunu ölçmek</p>
+<p class="opt">c) Süreklilik yasası, kalbin etkinliğini ölçmek</p>
+<p class="opt">d) Bernoulli ilkesi, kılcal akış hızını ölçmek</p>
+<p class="opt">e) Poiseuille yasası, akış direncini ölçmek</p>
+</div>
+<div class="qa" data-n="2"><p class="q"><span class="lbl">Soru</span>Zorlukla duyulan bir sesin ses şiddet düzeyi kaç dB?<span class="srcs"><span class="src s-K1">2K1</span><span class="src s-23">2023</span><span class="times">🔁 2 sınav</span></span></p>
+<p class="opt">a) 50</p>
+<p class="opt">b) 40</p>
+<p class="opt">c) 10</p>
+<p class="opt">d) 20</p>
+<p class="opt right">e) 0 <span class=tick>✓</span></p>
+</div>
+</section>
+<section class="sec c-teal" id="biyofiz-2-diger-cikmislar">
+<h2>2. Diğer çıkmışlar</h2><span class="pill">8 soru</span>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Hareketli akışkanın tüm noktalarında hız değişmiyorsa bu akışın adı?<span class="srcs"><span class="src s-24">2024</span><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Düzgün akış.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kalbin izovolümetrik kasılma ve gevşemede yaptığı iş?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Sıfır (ΔV = 0).</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ventriküllerde yayılan depolarizasyon dalgaları neyle temsil edilir?<span class="srcs"><span class="src s-D">Derleme</span></span></p>
+<p class="a"><span class="ok">✅</span><span>Elektriksel dipol.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Barotravmalar arasında yer ALMAYAN?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt right">a) Akselerasyon <span class=tick>✓</span></p>
+<p class="opt">b) Pulmoner</p>
+<p class="opt">c) Kulak</p>
+<p class="opt">d) Sinüs</p>
+<p class="opt">e) Dental</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Kanalopatiler için YANLIŞ örnek?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) Kalsiyum nöropatileri</p>
+<p class="opt">b) Konjenital gece körlüğü</p>
+<p class="opt">c) Brugada sendromu</p>
+<p class="opt">d) MSS hastalıkları</p>
+<p class="opt right">e) Dekompresyon <span class=tick>✓</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>İyon kanalları için ifadeler (anahtar C)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="opt">a) İyon kanalları seçici geçirgendir.</p>
+<p class="opt">b) Pasif ve aktif olmak üzere ikiye ayrılır.</p>
+<p class="opt right">c) Voltaj kapılı kanallar tat ve koku duyu hücrelerinde karşımıza çıkar. <span class=tick>✓</span></p>
+<p class="opt">d) Mekanik kanallar gerilme ve basınçla açılıp kapanır.</p>
+<p class="opt">e) Voltaj bağımlı kanallar potansiyel farkın değişmesiyle açılıp kapanır.</p>
+<p class="w">Kök "doğrudur" yazıyor ama anahtar C. C aslında yanlış ifade (tat/koku = ligand kapılı). Büyük olasılıkla kök "yanlıştır" idi. Sınavda kökü dikkatli oku.</p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>(1) ve (2) durumlarında elde edilen sinyallerin polariteleri? (şekilli)<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="a"><span class="ok">✅</span><span>1 pozitif, 2 negatif. Vektör elektroda yaklaşırsa pozitif, uzaklaşırsa negatif.</span></p>
+</div>
+<div class="qa" data-n="1"><p class="q"><span class="lbl">Soru</span>Ergonominin amaçları arasında yer ALMAYAN?<span class="srcs"><span class="src s-ONL">Online</span></span></p>
+<p class="a"><span class="ok">✅</span><span>İnsan performansını düşürerek sistemin performansının azalmasını sağlamak.</span></p>
+</div>
+</section></div>
+<p class="foot">Kaynaklar: Online kurul sınavı (cevap anahtarlı), 2F1 ve 2K1 sınavları, 2023–24 orijinal kitapçık, 2024 ve 2025 hatırlamaları, D2 ve "Tam Final" ders derlemeleri. Anahtarı olmayan sorularda doğru şık derleme işaretleri ve slaytlarla kontrol edildi.</p>
+</div>
+<script>
+(function () {
+  var btns = document.querySelectorAll('.tabs button');
+  function show(id, scroll) {
+    btns.forEach(function (b) {
+      var on = b.dataset.tab === id;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      document.getElementById('panel-' + b.dataset.tab).hidden = !on;
+    });
+    try { localStorage.setItem('banka-tab', id); } catch (e) {}
+    if (scroll) window.scrollTo({ top: 0 });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab, true); }); });
+  document.querySelectorAll('.filters').forEach(function (bar) {
+    var panel = document.getElementById('panel-' + bar.dataset.for);
+    var fb = bar.querySelectorAll('button');
+    fb.forEach(function (b) {
+      b.addEventListener('click', function () {
+        fb.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var f = b.dataset.f, shown = 0;
+        panel.querySelectorAll('.qa').forEach(function (q) {
+          var ok = f === 'all' || (f === 'rep' && +q.dataset.n >= 2) || (f === 'chg' && q.querySelector('.chg'));
+          q.hidden = !ok; if (ok) shown++;
+        });
+        panel.querySelectorAll('.sec').forEach(function (s) {
+          var any = s.querySelector('.qa:not([hidden])');
+          s.classList.toggle('empty', f !== 'all' && !any);
+          s.querySelectorAll(':scope > ul, :scope > p, :scope > .tip, :scope > .mn, :scope > h3').forEach(function (e) { e.hidden = f !== 'all'; });
+        });
+        bar.querySelector('.count').textContent = shown + ' kart';
+      });
+    });
+  });
+  var start = null;
+  try { start = localStorage.getItem('banka-tab'); } catch (e) {}
+  if (start && document.getElementById('panel-' + start)) show(start, false);
+})();
+</script>
+
+</body>
+</html>

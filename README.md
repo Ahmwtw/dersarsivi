@@ -1,11 +1,9 @@
 # Ders Arşivi
 
-GitHub Pages ana sayfası iki bölüme açılır:
+Ana sayfa: dönem seçimi → kurul seçimi → formatif / kurul sonu.
 
-- **Spot Notlar** (`notlar/`): dolaşım kurulu fizyoloji, anatomi, histoloji, biyokimya ve biyofizik spot notları, çıkmış sorular ve cevaplarıyla.
-- **Damar Yolculuğu** (`damar/`): arter ve venlerde dallanarak ilerleme, atlas, çıkmışlar ve önemli geçitler.
-- **Simülasyon** (`simulasyon/`): KVS Sanal Hasta, kardiyovasküler fizyoloji simülatörü (öğrenci ve uzman modu). Kaynak dosyalar `kaynak/` klasöründe.
+- `donem2/kurul1/formatif/`: dolaşım formatif sınavı materyalleri (spot notlar, çıkmış bankası, denemeler, simülasyon, damar modülü).
+- `donem2/kurul1/kurul-sonu/`: kan ve solunum dahil kurul sonu hazırlık planı.
+- `nazliturta/`: biyokimya denemeleri.
 
-Her sayfanın üstündeki çubukla iki bölüm arasında geçiş yapılır.
-
-Eğitim amaçlıdır; klinik karar için kullanılmaz.
+Eski adresler (`notlar/`, `banka/` vb.) yeni yerlerine yönlendirir. Eğitim amaçlıdır.

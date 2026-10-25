@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Damar Yolculuğu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap">
+<style>
+/* Yerleşim: solda yapışkan anatomi şeması, sağda kaydırılan panel. Arter kırmızı, ven mavi. */
+:root {
+  --bg: #f7f8fb; --fg: #1d2330; --muted: #5d6779; --line: #e2e6ee; --card: #ffffff; --figbg: #ffffff;
+  --art: #cf3036; --art-soft: #fdecec; --ven: #2e5fd0; --ven-soft: #eaf0fd;
+  --star: #c98a00; --star-soft: #fff4d6; --lm: #7a3fb8; --lm-soft: #f3ecfb; --body: #e9ecf2; --organ: #d8dde7;
+  --f: "Lexend", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11141a; --fg: #e5e8ef; --muted: #a0a8b8; --line: #2a303b; --card: #181c24; --figbg: #141820;
+  --art: #ff6b6f; --art-soft: #3a1c1f; --ven: #7aa2ff; --ven-soft: #1b2440;
+  --star: #f2be4a; --star-soft: #3a2f12; --lm: #c69bf5; --lm-soft: #2c2140; --body: #232935; --organ: #2e3544; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #11141a; --fg: #e5e8ef; --muted: #a0a8b8; --line: #2a303b; --card: #181c24; --figbg: #141820;
+  --art: #ff6b6f; --art-soft: #3a1c1f; --ven: #7aa2ff; --ven-soft: #1b2440;
+  --star: #f2be4a; --star-soft: #3a2f12; --lm: #c69bf5; --lm-soft: #2c2140; --body: #232935; --organ: #2e3544; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f); font-weight: 300; font-size: 15.5px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 24px; }
+button { font: inherit; color: inherit; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-block: 14px 10px; }
+.top h1 { margin: 0; font-size: 1.35rem; font-weight: 600; margin-right: auto; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; background: color-mix(in srgb, var(--fg) 6%, transparent); padding: 4px; border-radius: 999px; }
+.seg button { border: 0; background: transparent; padding: 6px 13px; border-radius: 999px; cursor: pointer; font-weight: 500; font-size: .92rem; white-space: nowrap; }
+.seg button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.seg button:focus-visible, .btn:focus-visible, .opt:focus-visible, .tname:focus-visible, .qitem:focus-visible { outline: 3px solid var(--ven); outline-offset: 2px; }
+.ctl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding-bottom: 10px; }
+.zoom { display: flex; gap: 4px; flex-wrap: wrap; }
+.zoom button { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 3px 10px; font-size: .8rem; cursor: pointer; }
+.legend { display: flex; gap: 12px; font-size: .78rem; color: var(--muted); flex-wrap: wrap; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 18px; align-items: start; }
+.figwrap { position: sticky; top: 10px; height: calc(100vh - 140px); min-height: 420px; background: var(--figbg); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+#fig { width: 100%; height: 100%; display: block; touch-action: manipulation; }
+#panel { min-width: 0; max-height: calc(100vh - 140px); overflow-y: auto; padding-right: 4px; }
+@media (max-width: 820px) {
+  .main { grid-template-columns: 1fr; }
+  .figwrap { top: env(safe-area-inset-top, 0px); height: 46vh; min-height: 300px; z-index: 3; }
+  #panel { max-height: none; overflow: visible; }
+}
+/* şema */
+.bodyfill { fill: var(--body); stroke: none; }
+.organ { fill: none; stroke: var(--organ); stroke-width: 1.2px; vector-effect: non-scaling-stroke; }
+.organf { fill: var(--organ); opacity: .55; }
+.v .ln { fill: none; stroke: var(--c); stroke-width: calc(var(--w, 2) * var(--k, 1) * 1px); stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; transition: opacity .25s; }
+.v.art { --c: var(--art); } .v.ven { --c: var(--ven); }
+.v.deep .ln { stroke-dasharray: 5 3; }
+.v .hit { fill: none; stroke: transparent; stroke-width: 14px; vector-effect: non-scaling-stroke; pointer-events: stroke; cursor: pointer; }
+.v.off, .v.gone, .v.rootv { display: none; }
+.v.dim { opacity: .14; }
+.v.seen { opacity: .35; }
+.v.prev .ln { opacity: .55; stroke-dasharray: 2 4; }
+.v.kid { opacity: .75; }
+.v.path .ln { opacity: 1; }
+.v.cur .ln { stroke-width: calc(6px * max(var(--k, 1), .7)); filter: drop-shadow(0 0 4px var(--c)); }
+.v.star .ln { stroke: var(--star); stroke-width: calc(3.4px * max(var(--k, 1), .7)); }
+.v.wrong { opacity: .55; } .v.wrong .ln { stroke-dasharray: 1 4; }
+.lb { font-size: var(--fs, 13px); fill: var(--fg); paint-order: stroke; stroke: var(--figbg); stroke-width: calc(var(--fs, 13px) * .28); stroke-linejoin: round; font-family: var(--f); pointer-events: none; }
+.lb.faint { opacity: .55; font-size: calc(var(--fs, 13px) * .82); }
+.lb.curl { font-weight: 600; }
+.mk { fill: var(--lm); opacity: .9; }
+.mkt { fill: var(--lm); font-weight: 600; }
+@media (prefers-reduced-motion: no-preference) { .mk { animation: pulse 1.6s ease-in-out infinite; } }
+@keyframes pulse { 50% { opacity: .35; } }
+.drop.art { fill: var(--art); } .drop.ven { fill: var(--ven); }
+/* panel */
+.intro p { margin: 0 0 8px; }
+.hint { color: var(--muted); font-size: .92rem; }
+.sh { font-size: .98rem; font-weight: 600; margin: 18px 0 8px; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-bottom: 10px; font-size: .8rem; }
+.crumb { border: 0; background: none; padding: 2px 4px; cursor: pointer; color: var(--muted); border-radius: 6px; text-align: left; }
+.crumb.on { color: var(--fg); font-weight: 600; }
+.sep { color: var(--muted); }
+.cur { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: grid; gap: 8px; }
+.cur.art { border-color: color-mix(in srgb, var(--art) 35%, var(--line)); } .cur.ven { border-color: color-mix(in srgb, var(--ven) 35%, var(--line)); }
+.cur p { margin: 0; }
+.curh { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.cur h2 { margin: 0; font-size: 1.2rem; font-weight: 600; text-wrap: balance; }
+.cur.art h2 { color: var(--art); } .cur.ven h2 { color: var(--ven); } .cur.lmc h2 { color: var(--lm); }
+.side { font-size: .72rem; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; color: var(--muted); }
+.route { font-size: .82rem; color: var(--muted); }
+.lmbanner { background: var(--lm-soft); border-radius: 12px; padding: 9px 12px; display: grid; gap: 2px; font-size: .9rem; }
+.lmbanner b { color: var(--lm); font-weight: 600; }
+.qchips { display: flex; flex-direction: column; gap: 6px; }
+.qchip, .linkchip { text-align: left; border: 0; border-radius: 10px; padding: 7px 11px; cursor: pointer; font-size: .86rem; }
+.qchip { background: var(--star-soft); } .linkchip { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { display: grid; gap: 2px; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 11px 14px; cursor: pointer; transition: transform .12s, border-color .12s; }
+.opt:hover { transform: translateX(3px); }
+.opt.art:hover { border-color: var(--art); } .opt.ven:hover { border-color: var(--ven); }
+.opt .on { font-weight: 500; }
+.opt.art .on { color: var(--art); } .opt.ven .on { color: var(--ven); }
+.opt small { color: var(--muted); font-weight: 300; }
+.opt .pv { font-size: .82rem; color: var(--muted); opacity: .8; }
+.bd { font-size: .8rem; }
+.navrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: .88rem; }
+.btn:disabled { opacity: .4; cursor: default; }
+input[type=search] { width: 100%; margin: 14px 0 8px; padding: 9px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--fg); font: inherit; }
+.tree { font-size: .9rem; }
+.tk { padding-left: 14px; border-left: 1px dashed var(--line); margin-left: 9px; }
+.trow { display: flex; align-items: center; gap: 2px; }
+.tog { width: 20px; flex: none; border: 0; background: none; cursor: pointer; color: var(--muted); padding: 0; }
+.tog.sp { display: inline-block; }
+.tname { border: 0; background: none; text-align: left; cursor: pointer; padding: 3px 6px; border-radius: 8px; min-width: 0; }
+.trow.art .tname { color: var(--art); } .trow.ven .tname { color: var(--ven); }
+.trow.on .tname { background: color-mix(in srgb, var(--c2, var(--fg)) 10%, transparent); font-weight: 600; }
+.tname small { color: var(--muted); }
+.bdg { font-size: .75rem; }
+.kidsline { font-size: .88rem; }
+.mini { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 1px 9px; margin: 2px 0; cursor: pointer; font-size: .8rem; }
+.qlist { display: flex; flex-direction: column; gap: 6px; }
+.qitem { display: grid; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 9px 12px; cursor: pointer; gap: 1px; }
+.qitem small { color: var(--muted); font-size: .76rem; }
+.qitem.on { border-color: var(--star); background: var(--star-soft); }
+.cur.qa .src { font-size: .74rem; color: var(--muted); }
+.cur.qa h2 { color: var(--fg); font-size: 1.05rem; }
+.ans { font-weight: 600; color: color-mix(in srgb, #1f8a4c 80%, var(--fg)); }
+</style>
+</head>
+<body>
+<style>
+.ds-bar{--ds-bg:#ffffff;--ds-fg:#1f2633;--ds-line:#e3e7ef;--ds-on:#1f2633;--ds-onfg:#ffffff;
+  background:var(--ds-bg);border-bottom:1px solid var(--ds-line);font-family:"Lexend","Segoe UI",system-ui,sans-serif;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;line-height:1.4}
+@media (prefers-color-scheme:dark){.ds-bar{--ds-bg:#12151c;--ds-fg:#e6e9f0;--ds-line:#2a303c;--ds-on:#e6e9f0;--ds-onfg:#12151c}}
+.ds-bar a{text-decoration:none;color:var(--ds-fg)}
+.ds-home{font-weight:600;margin-right:auto;white-space:nowrap}.ds-home a{color:inherit}
+.ds-sw{display:flex;flex-wrap:wrap;gap:6px;background:color-mix(in srgb,var(--ds-fg) 7%,transparent);padding:4px;border-radius:999px}
+.ds-sw a{padding:6px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.ds-sw a[aria-current="page"]{background:var(--ds-on);color:var(--ds-onfg)}
+.ds-sw a:focus-visible,.ds-home:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
+</style>
+<nav class="ds-bar" aria-label="Sayfalar">
+  <span class="ds-home"><a href="../../../../">🏠</a> › <a href="../../../">Dönem 2</a> › <a href="../../">Kurul 1</a> › <a href="../">Formatif</a></span>
+  <div class="ds-sw">
+    <a href="../notlar/">📚 Notlar</a>
+    <a href="../banka/">🗂️ Çıkmışlar</a>
+    <a href="../deneme/">📝 Deneme</a>
+    <a href="../simulasyon/">🩺 Simülasyon</a>
+    <a href="../damar/" aria-current="page">🩸 Damar</a>
+  </div>
+</nav>
+<style>.ds-bar{margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));}</style>
+<header class="top">
+  <h1>🩸 Damar Yolculuğu</h1>
+  <nav class="seg" id="modeSeg" role="tablist" aria-label="Mod">
+    <button data-m="yol" role="tab">🧭 Yolculuk</button>
+    <button data-m="atl" role="tab">🗺️ Atlas</button>
+    <button data-m="cik" role="tab">⭐ Çıkmışlar</button>
+    <button data-m="lm" role="tab">📍 Önemli geçitler</button>
+  </nav>
+</header>
+<div class="ctl">
+  <div id="typeWrap"><div class="seg" id="typeSeg" aria-label="Damar tipi">
+    <button data-t="A">Arterler</button><button data-t="V">Venler</button><button data-t="B">İkisi</button>
+  </div></div>
+  <div class="zoom" aria-label="Yakınlaştır">
+    <button data-zoom="all">Tüm vücut</button><button data-zoom="head">Baş-boyun</button><button data-zoom="chest">Göğüs-kalp</button><button data-zoom="arm">Kol</button><button data-zoom="leg">Bacak</button>
+  </div>
+  <div class="legend"><span><i style="background:var(--art)"></i>arter</span><span><i style="background:var(--ven)"></i>ven</span><span><i style="background:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 8px)"></i>derin / arkada</span><span><i style="background:var(--star)"></i>çıkmış</span></div>
+</div>
+<div class="main">
+  <div class="figwrap">
+    <svg id="fig" viewBox="0 0 400 820" role="img" aria-label="Damar şeması">
+      <g id="base">
+        <path class="bodyfill" d="M182 108 L180 160 L150 166 L124 174 L112 190 L104 230 L86 330 L68 450 L60 470 L56 500 L62 520 L78 524 L96 518 L103 470 L104 450 L116 335 L136 250 L144 222 L146 260 L150 330 L146 400 L138 450 L138 470 L140 560 L142 625 L146 700 L148 760 L142 780 L140 800 L148 812 L170 812 L178 800 L178 760 L180 700 L183 625 L192 540 L198 494 L200 490 L202 494 L208 540 L217 625 L220 700 L222 760 L222 800 L230 812 L252 812 L260 800 L258 780 L252 760 L254 700 L258 625 L260 560 L262 470 L262 450 L254 400 L250 330 L254 260 L256 222 L264 250 L284 335 L296 450 L297 470 L304 518 L322 524 L338 520 L344 500 L340 470 L332 450 L314 330 L296 230 L288 190 L276 174 L250 166 L220 160 L218 108 Z"/>
+        <ellipse class="bodyfill" cx="200" cy="62" rx="40" ry="50"/>
+        <ellipse class="organ" cx="173" cy="268" rx="24" ry="62"/>
+        <ellipse class="organ" cx="234" cy="275" rx="20" ry="58"/>
+        <path class="organf" d="M196 240 C182 240 178 262 184 278 C192 294 222 300 240 296 C252 290 252 266 240 254 C230 244 214 238 196 240 Z"/>
+        <path class="organ" d="M152 170 L195 178 M248 170 L205 178"/>
+        <ellipse class="organ" cx="186" cy="58" rx="8" ry="5"/><ellipse class="organ" cx="214" cy="58" rx="8" ry="5"/>
+      </g>
+      <g id="ves"></g>
+      <g id="top"></g>
+      <g id="lab"></g>
+    </svg>
+  </div>
+  <section id="panel" aria-live="polite"></section>
+</div>
+<script>/* Damar ağacı. Koordinatlar ön görünüm, 400x820 tuval; hastanın sağı izleyicinin solunda (x<200).
+   '*' ile biten id'ler iki taraflı şablondur: sağ (_d) olduğu gibi, sol (_s) x -> 400-x aynalanır. */
+const RAW = [];
+function A(id, name, parent, pts, o) { RAW.push(Object.assign({ id, name, parent, pts, t: 'A' }, o || {})); }
+function V(id, name, parent, pts, o) { RAW.push(Object.assign({ id, name, parent, pts, t: 'V' }, o || {})); }
+
+/* ======================= ARTERLER ======================= */
+A('lv', 'Ventriculus sinister', null, [[238, 290], [215, 262]], { n: 'Sol ventrikül. Oksijenli kanı aortaya pompalar. Duvarı sağ ventrikülden 3 kat kalın.', root: 1 });
+A('aao', 'Aorta ascendens', 'lv', [[206, 252], [200, 228], [201, 212]], { n: 'Mediastinum medius içinde. İlk dalları koroner arterler; sinus aortae (Valsalva) içinden çıkarlar.', l: ['perikard'] });
+A('rca', 'A. coronaria dextra', 'aao', [[204, 248], [188, 254], [182, 270], [190, 290], [200, 296]], { n: 'Sağ sinus aortae\'den çıkar. Kalbin arka yüzü, sağ atriyum, sağ ventrikülün büyük kısmı ve ileti sisteminin çoğunu besler.', q: ['koroner2'] });
+A('rca_coni', 'R. coni arteriosi', 'rca', [[194, 251], [200, 262]], { n: 'Sol koronerin aynı adlı dalıyla Vieussens halkasını yapar.' });
+A('rca_sa', 'R. nodi sinoatrialis', 'rca', [[188, 254], [184, 240]], { n: 'SA düğümü besler (çoğunlukla sağ koronerden).' });
+A('rca_marg', 'R. marginalis dexter', 'rca', [[183, 272], [196, 288]], { n: 'Kalbin alt kenarını besler. V. cordis parva buna eşlik eder.' });
+A('rca_pl', 'R. posterolateralis dexter', 'rca', [[190, 290], [192, 298]], { d: 1 });
+A('rca_ivp', 'R. interventricularis posterior', 'rca', [[200, 296], [222, 297], [236, 293]], { d: 1, n: '%70 kişide sağ koronerden (sağ dominans). Septumun arka-alt 1/3\'ünü besler, apekste LAD ile anastomoz yapar. V. cordis media eşlik eder.', q: ['koroner2'] });
+A('rca_av', 'R. nodi atrioventricularis', 'rca', [[198, 295], [205, 285]], { d: 1, n: 'AV düğümü besler.' });
+A('lca', 'A. coronaria sinistra', 'aao', [[210, 247], [222, 248]], { n: 'Sol sinus aortae\'den, aorta ascendens\'ten çıkar. Sağdan kalındır. Kalbin ön yüzünü, septumun ön 2/3\'ünü besler.', q: ['koroner1', 'koroner2'] });
+A('lad', 'R. interventricularis anterior (LAD)', 'lca', [[222, 248], [227, 266], [238, 292]], { n: 'Sulcus interventricularis anterior\'da apekse iner. V. cordis magna eşlik eder. Dalları: rr. diagonales, rr. septales.', q: ['koroner2'] });
+A('lad_diag', 'Rr. laterales (diagonales)', 'lad', [[226, 262], [240, 268]]);
+A('lad_sept', 'Rr. interventriculares septales', 'lad', [[228, 272], [222, 280]]);
+A('lcx', 'R. circumflexus', 'lca', [[222, 248], [240, 252], [248, 266]], { n: 'Sulcus coronarius\'ta sola ve arkaya döner.' });
+A('lcx_marg', 'R. marginalis sinister', 'lcx', [[244, 258], [246, 280]]);
+A('lcx_post', 'R. ventriculi sinistri posterior', 'lcx', [[248, 266], [244, 284]], { d: 1 });
+
+A('arc', 'Arcus aortae', 'aao', [[201, 212], [208, 200], [222, 199], [230, 210]], { n: '2. kosta hizasında başlar. Dalları sağdan sola: truncus brachiocephalicus, a. carotis communis sinistra, a. subclavia sinistra. Duvarında baroreseptörler (n. vagus) ve glomera aortica (kemoreseptör) var.', l: ['arcus'] });
+A('tbc', 'Truncus brachiocephalicus', 'arc', [[205, 204], [196, 190], [188, 180]], { n: 'Arcus\'un ilk ve en büyük dalı. Art. sternoclavicularis arkasında sağ subclavia ve sağ carotis communis\'e ayrılır.' });
+A('cc_d', 'A. carotis communis dextra', 'tbc', [[188, 180], [184, 152], [182, 128]], { side: 'd', n: 'Truncus brachiocephalicus\'tan çıkar. Vagina carotica içinde, C4 hizasında ikiye ayrılır.', l: ['vagcar', 'bifur'] });
+A('cc_s', 'A. carotis communis sinistra', 'arc', [[214, 199], [216, 152], [218, 128]], { side: 's', n: 'Doğrudan arcus aortae\'den çıkar. C4 hizasında ikiye ayrılır.', l: ['vagcar', 'bifur'] });
+A('sc_d', 'A. subclavia dextra', 'tbc', [[188, 180], [170, 174], [150, 176], [136, 188]], { side: 'd', n: 'Truncus brachiocephalicus\'tan çıkar. M. scalenus anterior onu 3 bölüme ayırır. 1. kostanın dış kenarında a. axillaris olur. Dalları: VIT C D.', l: ['scalen'], q: ['ti_kan'] });
+A('sc_s', 'A. subclavia sinistra', 'arc', [[226, 203], [232, 182], [250, 176], [264, 188]], { side: 's', n: 'Doğrudan arcus aortae\'den çıkar. M. scalenus anterior onu 3 bölüme ayırır. 1. kostanın dış kenarında a. axillaris olur.', l: ['scalen'] });
+
+/* ---- Carotis communis şablonu ---- */
+A('ica*', 'A. carotis interna', 'cc*', [[182, 128], [181, 106], [185, 86], [188, 72]], { n: 'Boyun kısmı (pars cervicalis) DAL VERMEZ. Canalis caroticus\'tan kafa içine girer, sinus cavernosus içinden geçer (pars cavernosa). Kafa içi dalları: ophthalmica, cerebri anterior, cerebri media, communicans posterior. Başlangıcındaki genişleme sinus caroticus (baroreseptör, n. IX).', l: ['bifur', 'cavern'], q: ['eca1', 'eca3', 'burun1'] });
+A('oph*', 'A. ophthalmica', 'ica*', [[188, 72], [182, 62], [178, 56]], { n: 'ICA\'nın kafa içindeki İLK dalı. Göz ve orbitayı, burnun üst kısmını besler. ECA listelerinde hep tuzak olarak çıkar.', q: ['eca3', 'menmed', 'burun1'] });
+A('eth_a*', 'A. ethmoidalis anterior', 'oph*', [[180, 58], [190, 62], [194, 70]], { n: 'Burnu besleyen ICA dalı (çıkmış). Kiesselbach alanına katılır.', q: ['burun1', 'burun2'] });
+A('eth_p*', 'A. ethmoidalis posterior', 'oph*', [[181, 60], [189, 66]], { n: 'Burnun üst-arka kısmı. ICA kökenli.', q: ['burun2'] });
+A('dnasi*', 'A. dorsalis nasi', 'oph*', [[178, 56], [193, 60]], { n: 'Burun sırtı. A. angularis (ECA) ile anastomoz yapar: burun sırtına dolgu enjeksiyonunda emboli ve körlük riski (slayttaki TUS sorusu).', l: ['tehlike'] });
+A('cret*', 'A. centralis retinae', 'oph*', [[179, 57], [176, 55]], { n: 'Retinayı besleyen terminal arter. Tıkanırsa ani görme kaybı.' });
+A('lacr*', 'A. lacrimalis', 'oph*', [[178, 56], [168, 52]]);
+A('cant*', 'A. cerebri anterior', 'ica*', [[188, 72], [194, 50], [197, 24]], { n: 'Beynin iç yüzü. A. communicans anterior ile iki taraf birleşir.' });
+A('cmed*', 'A. cerebri media', 'ica*', [[188, 72], [174, 62], [164, 52]], { n: 'ICA\'nın en büyük dalı, beynin dış yüzü.' });
+A('ccp*', 'A. communicans posterior', 'ica*', [[188, 72], [193, 82]], { n: 'ICA ile a. cerebri posterior (basilaris) arasında; Willis halkasını tamamlar.' });
+
+A('eca*', 'A. carotis externa', 'cc*', [[182, 128], [177, 112], [173, 96], [171, 90]], { n: 'Yüz ve boyun dışı yapıları besler. 8 dalı (aşağıdan yukarı): thyroidea superior, pharyngea ascendens, lingualis, facialis, occipitalis, auricularis posterior, maxillaris, temporalis superficialis. Ezber: Some Anatomists Like Freaking Out Poor Medical Students.', l: ['bifur'], q: ['eca1', 'eca2', 'eca3', 'eca4'] });
+A('thys*', 'A. thyroidea superior', 'eca*', [[181, 125], [188, 134], [193, 142]], { n: 'ECA\'nın ilk dalı, tiroidin üst kutbuna. (Thyroidea INFERIOR subclavia\'dan, karıştırma!)', q: ['eca1', 'eca2', 'eca3'] });
+A('phas*', 'A. pharyngea ascendens', 'eca*', [[181, 122], [186, 100]], { n: 'ECA\'nın tek medial dalı; yutak duvarı boyunca yukarı çıkar.', q: ['eca2', 'eca4'] });
+A('ling*', 'A. lingualis', 'eca*', [[180, 118], [190, 110]], { n: 'Dil ve ağız tabanı.' });
+A('fac*', 'A. facialis', 'eca*', [[179, 114], [176, 106], [186, 99], [190, 86]], { n: 'Mandibula kenarını dolanarak yüze çıkar (nabız alınabilir). Burun kenarında a. angularis olarak sonlanır.', q: ['eca1', 'burun1'] });
+A('labs*', 'A. labialis superior', 'fac*', [[186, 99], [196, 95]], { n: 'Üst dudak ve burun septumunun önü (Kiesselbach alanına katılır).' });
+A('ang*', 'A. angularis', 'fac*', [[190, 86], [193, 64]], { n: 'A. facialis\'in uç dalı. A. dorsalis nasi (ICA) ile anastomoz yapar.', l: ['tehlike'] });
+A('occ*', 'A. occipitalis', 'eca*', [[179, 116], [168, 110], [160, 98]], { n: 'Ense ve kafa derisinin arkası.', q: ['eca1', 'eca3', 'menmed'] });
+A('aurp*', 'A. auricularis posterior', 'eca*', [[175, 101], [163, 88]], { n: 'Kulak arkası.', q: ['eca4'] });
+A('max*', 'A. maxillaris', 'eca*', [[172, 93], [180, 93], [186, 92]], { n: 'ECA\'nın iki uç dalından biri; fossa infratemporalis ve pterygopalatina\'da dallanır.', q: ['eca2', 'eca3', 'menmed', 'burun2'] });
+A('menm*', 'A. meningea media', 'max*', [[180, 93], [180, 76], [172, 52]], { n: 'FORAMEN SPINOSUM\'dan kafa içine girer. Pterion kırığında yırtılırsa EPİDURAL HEMATOM.', l: ['spinosum'], q: ['menmed'] });
+A('alvi*', 'A. alveolaris inferior', 'max*', [[178, 93], [184, 108]], { n: 'Alt çene dişleri; canalis mandibulae içinde.' });
+A('sphp*', 'A. sphenopalatina', 'max*', [[186, 92], [196, 76]], { n: 'Burnu besleyen a. maxillaris dalı (ECA tarafı). Arka burun kanamalarının kaynağı.', q: ['burun1', 'burun2'] });
+A('info*', 'A. infraorbitalis', 'max*', [[185, 92], [186, 70]], { n: 'Foramen infraorbitale\'den yüze çıkar; burnu besleyen a. maxillaris dalı.', q: ['burun1', 'burun2'] });
+A('temps*', 'A. temporalis superficialis', 'eca*', [[171, 90], [166, 62], [170, 30]], { n: 'ECA\'nın diğer uç dalı. Kulağın önünde nabız alınır.', q: ['eca4'] });
+
+/* ---- Subclavia şablonu ---- */
+A('vert*', 'A. vertebralis', 'sc*', [[172, 175], [176, 150], [178, 120], [184, 96], [196, 88]], { n: 'Subclavia\'nın İLK dalı. C6\'dan C1\'e foramen transversarium\'lardan çıkar, foramen magnum\'dan kafa içine girer. İki vertebralis birleşip a. basilaris olur.', l: ['transv'], q: ['eca1'] });
+A('pica*', 'A. inferior posterior cerebelli (PICA)', 'vert*', [[190, 92], [182, 100]], { n: 'Vertebralis\'in en büyük kafa içi dalı. Beyincik altı ve medulla lateral.' });
+A('spa*', 'A. spinalis anterior', 'vert*', [[195, 89], [199, 104]], { n: 'İki taraftan çıkıp birleşir, omuriliğin önünden iner.' });
+A('basil', 'A. basilaris', 'vert_d', [[200, 88], [200, 74]], { n: 'Sağ ve sol a. vertebralis\'in pons önünde birleşmesiyle oluşur (tek). Posterior kafa içi dolaşım; a. cerebri posterior\'lara ayrılır.', once: 1 });
+A('ti*', 'A. thoracica interna', 'sc*', [[168, 178], [180, 190], [182, 240], [182, 330]], { n: 'Sternumun 1 cm yanından iner. Besler: meme, timus, sternum, perikard, diyafram, ön göğüs duvarı (ilk 6 ön interkostal). ÖZOFAGUSU BESLEMEZ. Koroner by-pass\'ta kullanılır. Uç dalları: musculophrenica ve epigastrica superior.', q: ['ti_kan', 'ax_dal', 'ic_ant'] });
+A('pcph*', 'A. pericardiacophrenica', 'ti*', [[181, 200], [188, 230], [192, 300]], { n: 'N. phrenicus ile birlikte iner; perikard ve diyaframı besler.', q: ['obliq'] });
+A('ica_ant*', 'Rr. intercostales anteriores (1–6)', 'ti*', [[182, 215], [150, 212], [182, 245], [150, 242], [182, 275], [150, 272]], { seg: 1, n: 'İlk 6 ön interkostal arter doğrudan thoracica interna\'dan. Ön interkostal venler de v. thoracica interna\'ya döner.', q: ['ic_ant', 'ic_v'] });
+A('mphr*', 'A. musculophrenica', 'ti*', [[182, 330], [165, 342], [152, 352]], { n: '7–9. ön interkostal arterleri verir; diyafram.', q: ['ic_ant'] });
+A('epis*', 'A. epigastrica superior', 'ti*', [[182, 330], [183, 370], [184, 396]], { n: 'M. rectus abdominis kılıfına girer, a. epigastrica inferior ile anastomoz yapar (subclavia–iliaca externa köprüsü).', q: ['epi'] });
+A('mamm*', 'Rr. mammarii (perforantes)', 'ti*', [[182, 225], [170, 228]], { n: 'Meme bezinin medial kısmı.' });
+A('tct*', 'Truncus thyrocervicalis', 'sc*', [[165, 175], [164, 165]], { n: 'Dalları (STAT): suprascapularis, transversa colli, ascendens cervicalis, thyroidea inferior.', q: ['eca1'] });
+A('thyi*', 'A. thyroidea inferior', 'tct*', [[164, 165], [172, 150], [190, 145]], { n: 'Tiroidin alt kutbu, ÖZOFAGUSUN boyun kısmı, larinks (a. laryngea inferior). ECA dalı DEĞİL; ECA sorularının bir numaralı tuzağı.', q: ['eca1', 'eca3', 'ti_kan'] });
+A('cerva*', 'A. cervicalis ascendens', 'tct*', [[164, 165], [167, 135]]);
+A('trcol*', 'A. transversa colli', 'tct*', [[164, 168], [146, 164], [134, 168]], { n: 'Yüzeyel dalı a. cervicalis superficialis; derin dalı çoğu kez a. dorsalis scapulae.' });
+A('supsc*', 'A. suprascapularis', 'tct*', [[163, 172], [142, 176], [128, 186]], { n: 'Skapula arkasına; rete scapulare\'ye katılır.' });
+A('cct*', 'Truncus costocervicalis', 'sc*', [[158, 178], [157, 170]], { n: 'Dalları: a. intercostalis suprema (1–2. arka interkostal), a. cervicalis profunda.' });
+A('icsup*', 'A. intercostalis suprema', 'cct*', [[157, 172], [152, 196]]);
+A('cervp*', 'A. cervicalis profunda', 'cct*', [[157, 170], [160, 140]]);
+A('dsca*', 'A. dorsalis scapulae', 'sc*', [[150, 177], [140, 168]], { n: 'Genellikle subclavia\'dan (bazen transversa colli\'den). Rete scapulare.' });
+
+A('ax*', 'A. axillaris', 'sc*', [[136, 188], [129, 212], [122, 236]], { n: '1. kostanın dış kenarından m. teres major alt kenarına kadar. M. PECTORALIS MINOR onu 3 bölüme ayırır: 1. bölüm 1 dal, 2. bölüm 2 dal, 3. bölüm 3 dal. Ezber: Screw The Lawyer Save A Patient.', l: ['pecmin'], q: ['ax_dal'] });
+A('thsup*', 'A. thoracica superior', 'ax*', [[134, 194], [146, 204]], { n: '1. bölüm. İlk iki interkostal aralık.' });
+A('thac*', 'A. thoracoacromialis', 'ax*', [[131, 202], [138, 190]], { n: '2. bölüm. Dalları: r. acromialis, clavicularis, deltoideus, pectorales.' });
+A('thlat*', 'A. thoracica lateralis', 'ax*', [[129, 210], [140, 250]], { n: '2. bölüm. M. serratus anterior ve memenin dış kısmı (rr. mammarii laterales).' });
+A('subsc*', 'A. subscapularis', 'ax*', [[125, 226], [130, 248]], { n: '3. bölüm, axillaris\'in EN BÜYÜK dalı.' });
+A('cxsc*', 'A. circumflexa scapulae', 'subsc*', [[128, 240], [140, 236]], { n: 'SPATIUM AXILLARE MEDIALE (üçgen aralık)\'den geçer. Dörtgen aralık sorularında çeldirici.', l: ['sp_med'], q: ['quad', 'tri'] });
+A('thdor*', 'A. thoracodorsalis', 'subsc*', [[130, 248], [135, 285]], { n: 'M. latissimus dorsi; n. thoracodorsalis ile.' });
+A('cxha*', 'A. circumflexa humeri anterior', 'ax*', [[123, 232], [116, 226]], { n: '3. bölüm. Hiçbir aralıktan GEÇMEZ; dörtgen aralık sorusunun "anterior" tuzağı.', q: ['quad'] });
+A('cxhp*', 'A. circumflexa humeri posterior', 'ax*', [[123, 234], [114, 230], [110, 222]], { d: 1, n: 'N. axillaris ile birlikte SPATIUM AXILLARE LATERALE (dörtgen aralık)\'den geçer, collum chirurgicum\'u dolanır.', l: ['sp_lat'], q: ['quad', 'tri'] });
+
+A('br*', 'A. brachialis', 'ax*', [[122, 236], [112, 285], [100, 330]], { n: 'M. teres major alt kenarından caput radii\'ye. N. medianus ile seyreder ve onu çaprazlar. Fossa cubitalis\'te lacertus fibrosus arkasında radialis ve ulnaris\'e ayrılır.', l: ['cubital'] });
+A('prbr*', 'A. profunda brachii', 'br*', [[120, 246], [110, 270], [104, 300]], { d: 1, n: 'N. radialis ile birlikte SPATIUM TRIANGULARE INFERIOR (triseps açıklığı)\'ndan geçer, humerus arkasında sulcus n. radialis\'te.', l: ['sp_inf'], q: ['tri'] });
+A('colr*', 'A. collateralis radialis', 'prbr*', [[104, 300], [95, 326]], { n: 'A. recurrens radialis ile anastomoz.' });
+A('colm*', 'A. collateralis media', 'prbr*', [[106, 300], [108, 326]], { d: 1 });
+A('cus*', 'A. collateralis ulnaris superior', 'br*', [[117, 256], [118, 322]], { n: 'BRACHIALIS dalı (adında ulnaris var, tuzak!). N. ulnaris ile iner; a. recurrens ulnaris posterior ile anastomoz.', q: ['uln1'] });
+A('cui*', 'A. collateralis ulnaris inferior', 'br*', [[104, 314], [112, 326]], { n: 'A. recurrens ulnaris anterior ile anastomoz.' });
+
+A('rad*', 'A. radialis', 'br*', [[100, 330], [88, 390], [80, 450]], { n: 'Önkolun dış (başparmak) tarafı. Bilekte FCR ile brachioradialis tendonları arasında NABIZ. Anatomik enfiye çukurundan elin sırtına geçer, arcus palmaris profundus\'u yapar.', l: ['bilek'], q: ['uln1', 'uln2', 'rad', 'pp'] });
+A('recr*', 'A. recurrens radialis', 'rad*', [[98, 338], [94, 322]], { n: 'A. collateralis radialis ile anastomoz (dirsek ağı).', q: ['rad'] });
+A('rcpr*', 'R. carpalis palmaris (radialis)', 'rad*', [[82, 444], [88, 447]], { n: 'Hem radialis hem ulnaris\'in bu dalı var; ikisi için de doğru şık.' });
+A('rpsr*', 'R. palmaris superficialis', 'rad*', [[81, 446], [86, 470]], { n: 'A. ulnaris ile arcus palmaris superficialis\'i tamamlar.' });
+A('rcdr*', 'R. carpalis dorsalis (radialis)', 'rad*', [[80, 450], [84, 456]], { d: 1 });
+A('mcd*', 'Aa. metacarpales dorsales', 'rad*', [[78, 460], [82, 492]], { d: 1 });
+A('pp*', 'A. princeps pollicis', 'rad*', [[77, 464], [66, 492]], { n: 'BAŞPARMAK arteri; a. RADIALIS dalı. Ulnaris "dalı değil" sorularının doğru cevabı.', q: ['uln1', 'uln2', 'rad', 'pp'] });
+A('radi*', 'A. radialis indicis', 'pp*', [[74, 474], [72, 506]], { n: 'İşaret parmağı; genellikle princeps pollicis\'ten.', q: ['rad'] });
+A('apd*', 'Arcus palmaris profundus', 'rad*', [[79, 466], [94, 468]], { n: 'A. radialis + r. palmaris profundus (ulnaris). Dalları: aa. metacarpales palmares, rr. perforantes.' });
+
+A('uln*', 'A. ulnaris', 'br*', [[100, 330], [102, 390], [98, 450]], { n: 'Brachialis\'in büyük dalı. N. ulnaris ile seyreder; bilekte FCU tendonunun yanında nabız. Arcus palmaris superficialis\'i yapar.', q: ['uln1', 'uln2', 'rad'] });
+A('rua*', 'A. recurrens ulnaris anterior', 'uln*', [[101, 338], [107, 330]], { n: 'A. collateralis ulnaris INFERIOR ile anastomoz.', q: ['uln2'] });
+A('rup*', 'A. recurrens ulnaris posterior', 'uln*', [[102, 340], [112, 327]], { d: 1, n: 'A. collateralis ulnaris SUPERIOR ile anastomoz.' });
+A('ioc*', 'A. interossea communis', 'uln*', [[100, 346], [95, 356]], { n: 'Kısa bir gövde; ULNARIS dalı. Radialis "dalı değil" sorusunun cevabı.', q: ['uln1', 'uln2', 'rad'] });
+A('ioa*', 'A. interossea anterior', 'ioc*', [[95, 356], [92, 420]]);
+A('iop*', 'A. interossea posterior', 'ioc*', [[96, 357], [96, 420]], { d: 1 });
+A('ior*', 'A. interossea recurrens', 'iop*', [[96, 362], [99, 345]], { d: 1 });
+A('rcpu*', 'R. carpalis palmaris (ulnaris)', 'uln*', [[97, 444], [92, 447]], { q: ['uln1', 'uln2'] });
+A('rcdu*', 'R. carpalis dorsalis (ulnaris)', 'uln*', [[97, 446], [94, 453]], { d: 1, q: ['uln1', 'uln2'] });
+A('rppu*', 'R. palmaris profundus', 'uln*', [[97, 454], [92, 467]], { n: 'Radialis ile arcus palmaris profundus\'u tamamlar.' });
+A('aps*', 'Arcus palmaris superficialis', 'uln*', [[98, 452], [92, 478], [80, 476]], { n: 'A. ulnaris + r. palmaris superficialis (radialis). Aponeurosis palmaris altında. Dalları: aa. digitales palmares communes ve propriae.' });
+A('dpc*', 'Aa. digitales palmares communes', 'aps*', [[92, 478], [94, 508], [86, 478], [86, 510]], { seg: 1 });
+
+/* ---- Aorta descendens ve alt ekstremite ---- */
+A('aod', 'Aorta descendens', 'arc', [[230, 210], [226, 260], [220, 340], [208, 400], [200, 420]], { n: 'Pars thoracica (mediastinum posterius) ve pars abdominalis. L4 hizasında bifurcatio aortae ile iki a. iliaca communis\'e ayrılır.', l: ['bifaort'] });
+A('icpos', 'Aa. intercostales posteriores', 'aod', [[226, 250], [250, 248], [224, 280], [250, 278], [222, 310], [250, 308]], { seg: 1, n: 'Aorta thoracica\'dan (ilk ikisi truncus costocervicalis\'ten). Venleri sağda v. azygos\'a, solda v. hemiazygos\'a döner.', q: ['ic_v2'] });
+A('pulm_note', 'Truncus pulmonalis', 'rv', [[205, 280], [204, 250], [212, 228]], { n: 'Sağ ventrikülden çıkar, oksijensiz kanı akciğere götürür. Fetüste ductus arteriosus ile aortaya bağlanır (kalıntısı lig. arteriosum).', q: ['da', 'ligart'] });
+A('apd_r', 'A. pulmonalis dextra', 'pulm_note', [[212, 228], [195, 234], [168, 236]], { n: 'Aorta ascendens ve VCS\'nin arkasından sağ akciğere.' });
+A('apd_l', 'A. pulmonalis sinistra', 'pulm_note', [[212, 228], [232, 230], [252, 236]], { n: 'Başlangıcı ile arcus aortae arasında lig. arteriosum (Botallo) var.', q: ['ligart'] });
+A('rv', 'Ventriculus dexter', null, [[200, 290], [205, 280]], { n: 'Sağ ventrikül. Oksijensiz kanı truncus pulmonalis\'e pompalar. İçinde trabecula septomarginalis (moderatör bant, sağ dal).', root: 1 });
+
+A('ilc*', 'A. iliaca communis', 'aod', [[200, 420], [186, 440]], { n: 'Bifurcatio aortae (L4)\'dan; art. sacroiliaca önünde interna ve externa\'ya ayrılır.' });
+A('ili*', 'A. iliaca interna', 'ilc*', [[186, 440], [180, 456]], { n: 'Pelvis ve kalça. Dalları: glutea superior, glutea inferior, obturatoria, pudenda interna, umbilicalis...', q: ['infra1', 'infra2'] });
+A('glsup*', 'A. glutea superior', 'ili*', [[180, 454], [164, 452]], { d: 1, n: 'FORAMEN SUPRAPIRIFORME\'den çıkar (v. ve n. gluteus superior ile).', l: ['supra'], q: ['infra1'] });
+A('glinf*', 'A. glutea inferior', 'ili*', [[180, 457], [168, 468]], { d: 1, n: 'FORAMEN INFRAPIRIFORME\'den çıkar.', l: ['infra'], q: ['infra1', 'infra2'] });
+A('obt*', 'A. obturatoria', 'ili*', [[180, 458], [177, 478], [174, 494]], { n: 'CANALIS OBTURATORIUS\'tan uyluğun MEDİAL (addüktör) kompartmanına. Foramen infrapiriforme\'den GEÇMEZ.', l: ['obtur'], q: ['infra2', 'medkomp'] });
+A('pudi*', 'A. pudenda interna', 'ili*', [[181, 460], [186, 486]], { d: 1, n: 'Foramen infrapiriforme\'den çıkıp foramen ischiadicum minus\'tan perineye döner.', l: ['infra'], q: ['infra2'] });
+A('umb*', 'A. umbilicalis', 'ili*', [[182, 449], [193, 438], [200, 412]], { n: 'Fetüste plasentaya kan götürür. Proksimali açık kalır (a. vesicalis superior); distali kapanır: chorda a. umbilicalis = lig. umbilicale mediale.', q: ['eriskin'] });
+A('ile*', 'A. iliaca externa', 'ilc*', [[186, 440], [176, 452], [168, 462]], { n: 'Linea terminalis ile lig. inguinale arası. Dalları: a. epigastrica inferior, a. circumflexa iliaca profunda. Lacuna vasorum\'dan geçince a. femoralis olur.' });
+A('epii*', 'A. epigastrica inferior', 'ile*', [[172, 458], [180, 425], [184, 398]], { n: 'İLIACA EXTERNA dalı (femoralis değil!). Karın ön duvarı; epigastrica superior ile anastomoz.', q: ['fem'] });
+A('cxip*', 'A. circumflexa iliaca profunda', 'ile*', [[171, 459], [150, 450]], { n: 'Iliaca externa dalı. "Femoralis dalı değil" sorularında doğru cevap adayı.', q: ['fem'] });
+
+A('fem*', 'A. femoralis', 'ile*', [[168, 462], [170, 520], [176, 584]], { n: 'Lig. inguinale ile hiatus adductorius arası. Vagina femoralis içinde LACUNA VASORUM\'dan geçer, trigonum femorale ve CANALIS ADDUCTORIUS\'tan sonra arkaya geçip a. poplitea olur. Kasıkta nabız.', l: ['lacuna', 'addukt'], q: ['fem'] });
+A('epsf*', 'A. epigastrica superficialis', 'fem*', [[168, 466], [172, 440]], { n: 'Femoralis dalı (yüzeyeller femoralis\'ten).', q: ['fem'] });
+A('cxis*', 'A. circumflexa ilium superficialis', 'fem*', [[167, 466], [148, 455]], { q: ['fem'] });
+A('pudes*', 'A. pudenda externa superficialis', 'fem*', [[169, 468], [186, 472]], { q: ['fem'] });
+A('puded*', 'A. pudenda externa profunda', 'fem*', [[169, 472], [186, 478]]);
+A('prf*', 'A. profunda femoris', 'fem*', [[168, 478], [160, 500], [158, 560]], { n: 'Femoralis\'in en büyük dalı; uyluğun arka ve medial kompartmanı, kalça eklemi. Dalları: circumflexa femoris medialis ve lateralis, aa. perforantes.', q: ['fem'] });
+A('cfm*', 'A. circumflexa femoris medialis', 'prf*', [[164, 484], [178, 492]], { n: 'Femur başı ve kalça eklemi (femur boyun kırığında baş nekrozu riski). Dize İNMEZ.', q: ['diz'] });
+A('cfl*', 'A. circumflexa femoris lateralis', 'prf*', [[162, 486], [148, 488]], { n: 'Dalları r. ascendens, transversus, DESCENDENS. R. descendens dize iner, a. superior lateralis genus ile anastomoz yapar.', q: ['diz'] });
+A('cfl_d*', 'R. descendens (circumflexa femoris lateralis)', 'cfl*', [[148, 488], [149, 540], [152, 606]], { n: 'Diz anastomozuna katılır.', q: ['diz'] });
+A('perf*', 'Aa. perforantes', 'prf*', [[159, 515], [148, 518], [158, 540], [147, 543]], { seg: 1, d: 1, n: 'Uyluğun ARKA kompartmanı (4 adet).', q: ['medkomp'] });
+A('dgen*', 'A. descendens genus', 'fem*', [[175, 578], [180, 600], [182, 616]], { n: 'Canalis adductorius içinde FEMORALIS\'ten çıkar ve dize iner. Adında "genu" var ama poplitea dalı DEĞİL.', l: ['addukt'], q: ['popl'] });
+
+A('pop*', 'A. poplitea', 'fem*', [[176, 584], [171, 612], [167, 650]], { d: 1, n: 'Hiatus adductorius ile m. popliteus alt kenarı arası, FOSSA POPLITEA\'nın en derin yapısı. Dalları: 5 genus arteri + aa. surales + tibialis anterior ve posterior.', l: ['poplf'], q: ['popl', 'diz'] });
+A('gsl*', 'A. superior lateralis genus', 'pop*', [[171, 608], [156, 610]], { d: 1, n: 'Circumflexa femoris lateralis\'in r. descendens\'i ile anastomoz.', q: ['popl'] });
+A('gsm*', 'A. superior medialis genus', 'pop*', [[172, 608], [184, 610]], { d: 1, n: 'A. descendens genus ile anastomoz.' });
+A('gmed*', 'A. media genus', 'pop*', [[171, 618], [167, 620]], { d: 1, n: 'Çapraz bağlar.', q: ['popl'] });
+A('sur*', 'Aa. surales', 'pop*', [[170, 628], [164, 662]], { d: 1, n: 'Gastrocnemius ve soleus.', q: ['popl'] });
+A('gil*', 'A. inferior lateralis genus', 'pop*', [[168, 638], [154, 642]], { d: 1, n: 'A. FIBULARIS ile anastomoz.', q: ['popl', 'diz'] });
+A('gim*', 'A. inferior medialis genus', 'pop*', [[168, 640], [182, 645]], { d: 1, n: 'A. descendens genu ve a. TIBIALIS ANTERIOR ile anastomoz.' });
+
+A('tant*', 'A. tibialis anterior', 'pop*', [[167, 650], [158, 660], [158, 720], [160, 760]], { n: 'Membrana interossea\'nın üstünden öne geçer, bacağın ön kompartmanında iner. Ayak bileğinde RETINACULUM EXTENSORUM altında a. dorsalis pedis olur.', l: ['retin'], q: ['diz', 'dp'] });
+A('rta*', 'A. recurrens tibialis anterior', 'tant*', [[158, 662], [159, 642]], { n: 'Diz ağına katılır (a. inferior medialis genu ile).', q: ['diz'] });
+A('rtp*', 'A. recurrens tibialis posterior', 'tant*', [[160, 655], [163, 640]], { d: 1 });
+A('mal_l*', 'A. malleolaris anterior lateralis', 'tant*', [[159, 754], [149, 757]]);
+A('mal_m*', 'A. malleolaris anterior medialis', 'tant*', [[160, 754], [171, 757]]);
+A('dp*', 'A. dorsalis pedis', 'tant*', [[160, 760], [157, 782], [154, 800]], { n: 'Tibialis ANTERIOR\'un devamı. Ayak sırtında, EHL tendonunun dışında NABIZ. Dalları: tarsalis lateralis/medialis, a. arcuata, a. plantaris profunda.', q: ['dp'] });
+A('tarl*', 'A. tarsalis lateralis', 'dp*', [[158, 772], [147, 776]]);
+A('arcu*', 'A. arcuata', 'dp*', [[156, 786], [144, 788]], { n: 'Aa. metatarsales dorsales verir.' });
+A('plpr*', 'A. plantaris profunda', 'dp*', [[155, 792], [160, 796]], { d: 1, n: 'Tabana geçip a. plantaris lateralis ile ARCUS PLANTARIS PROFUNDUS\'u yapar.' });
+
+A('tpost*', 'A. tibialis posterior', 'pop*', [[167, 652], [168, 700], [174, 762]], { d: 1, n: 'Bacağın arka kompartmanında iner, MALLEOLUS MEDİALİS\'in ARKASINDAN tabana geçer (nabız burada, slayttaki TUS sorusu). Dalları: r. circumflexus fibularis, A. FIBULARIS, plantaris medialis ve lateralis.', l: ['malmed'], q: ['fib', 'dp'] });
+A('rcf*', 'R. circumflexus fibularis', 'tpost*', [[167, 656], [156, 652]], { d: 1, n: 'Fibula başını dolanır, diz ağına katılır.' });
+A('fib*', 'A. fibularis', 'tpost*', [[167, 668], [158, 700], [155, 756]], { d: 1, n: 'TİBİALİS POSTERIOR\'dan çıkar; adı lateral kompartmandan ama arka kompartmanda seyreder. A. inferior lateralis genus ile anastomoz (diz).', q: ['fib', 'diz'] });
+A('plm*', 'A. plantaris medialis', 'tpost*', [[174, 764], [170, 800]], { d: 1 });
+A('pll*', 'A. plantaris lateralis', 'tpost*', [[173, 765], [150, 796]], { d: 1, n: 'A. plantaris profunda ile arcus plantaris profundus.' });
+
+/* ======================= VENLER (kalpten geriye, kanın geldiği yere) ======================= */
+V('ra', 'Atrium dextrum', null, [[186, 262], [192, 262]], { n: 'Sağ atriyum: VCS, VCI ve sinus coronarius buraya açılır. Venlerde kan kalbe doğru akar; bu modda kalpten başlayıp kanın geldiği yere geriye doğru ilerliyorsun.', root: 1 });
+V('vcs', 'V. cava superior', 'ra', [[192, 255], [192, 200]], { n: 'İki v. brachiocephalica\'nın birleşmesiyle oluşur; v. azygos arkadan katılır. Kapağı yok.' });
+V('bc_d', 'V. brachiocephalica dextra', 'vcs', [[192, 200], [178, 178]], { side: 'd', n: 'V. jugularis interna + v. subclavia birleşir (angulus venosus: ductus lymphaticus dexter buraya açılır).', l: ['angulus'] });
+V('bc_s', 'V. brachiocephalica sinistra', 'vcs', [[192, 200], [214, 190], [222, 178]], { side: 's', n: 'Sağdakinden uzun; arcus aortae dallarının önünden çapraz geçer. Angulus venosus sinister\'e ductus thoracicus açılır.', l: ['angulus'] });
+V('azy', 'V. azygos', 'vcs', [[192, 214], [197, 222], [197, 300], [197, 400]], { d: 1, n: 'Sağ arka gövde duvarı. Artere eşlik etmez, kapağı yok. Sağ bronşun üstünden kavis yapıp VCS\'ye dökülür. Mediastinum posterius.', q: ['ic_v2'] });
+V('icpd', 'Vv. intercostales posteriores dextrae', 'azy', [[197, 260], [160, 258], [197, 290], [160, 288], [197, 330], [160, 328]], { seg: 1, d: 1, n: 'SAĞ arka interkostaller → v. AZYGOS (çıkmış).', q: ['ic_v2'] });
+V('hazy', 'V. hemiazygos', 'azy', [[197, 310], [205, 318], [205, 400]], { d: 1, n: 'Sol alt arka interkostalleri toplar, T8 hizasında omurga önünden sağa geçip azygos\'a katılır.' });
+V('icps', 'Vv. intercostales posteriores sinistrae', 'hazy', [[205, 340], [242, 338], [205, 370], [242, 368]], { seg: 1, d: 1, n: 'SOL arka interkostaller → v. HEMIAZYGOS (üsttekiler hemiazygos accessoria).' });
+V('hazya', 'V. hemiazygos accessoria', 'azy', [[197, 280], [205, 272], [205, 225]], { d: 1, n: 'Sol üst arka interkostaller.' });
+
+/* ---- Brachiocephalica şablonu ---- */
+V('ji*', 'V. jugularis interna', 'bc*', [[178, 178], [179, 150], [178, 128], [176, 104], [174, 90]], { n: 'Foramen jugulare\'de sigmoid sinüsün devamı olarak başlar. Vagina carotica içinde a. carotis ile birlikte iner (en dışta). Beyin, yüz ve boynun büyük kısmının kanını toplar.', l: ['vagcar'] });
+V('sdm*', 'Sinus durae matris', 'ji*', [[174, 90], [180, 82]], { n: 'Dura mater\'in iki yaprağı arasındaki venöz kanallar.' });
+V('scav*', 'Sinus cavernosus', 'sdm*', [[180, 82], [190, 78]], { n: 'Sella turcica yanında. İçinden ICA (pars cavernosa) ve n. VI; duvarında III, IV, V1, V2 geçer. V. ophthalmica superior buraya açılır.', l: ['cavern', 'tehlike'], q: ['cav'] });
+V('ophs*', 'V. ophthalmica superior', 'scav*', [[190, 78], [186, 66], [190, 60]], { n: 'Orbitadan sinus cavernosus\'a. Ön ucu v. angularis ile bağlantılı: yüz enfeksiyonunun kafa içine yolu.', link: 'angv*', l: ['tehlike'], q: ['cav'] });
+V('ling_v*', 'V. lingualis', 'ji*', [[178, 120], [189, 112]], { n: 'Sinus cavernosus\'a DRENE OLMAZ (çıkmış şıkkı).', q: ['cav'] });
+V('thys_v*', 'V. thyroidea superior', 'ji*', [[178, 126], [190, 136]]);
+V('thym_v*', 'V. thyroidea media', 'ji*', [[178, 140], [190, 145]]);
+V('facv*', 'V. facialis', 'ji*', [[177, 116], [186, 100], [190, 85]], { n: 'Yüzün ön kısmı; v. jugularis interna\'ya dökülür. Kapakçığı yok.' });
+V('angv*', 'V. angularis', 'facv*', [[190, 85], [194, 62]], { n: 'Burnun yanında. V. ophthalmica superior aracılığıyla SINUS CAVERNOSUS\'a drene olur (çıkmış). "Tehlikeli üçgen": burun-dudak bölgesindeki enfeksiyon → sinus cavernosus trombozu.', link: 'ophs*', l: ['tehlike'], q: ['cav'] });
+V('suptr*', 'V. supratrochlearis', 'angv*', [[194, 62], [196, 34]]);
+V('supor*', 'V. supraorbitalis', 'angv*', [[194, 62], [184, 38]]);
+V('vert_v*', 'V. vertebralis', 'bc*', [[176, 180], [176, 150], [178, 120]], { d: 1 });
+V('ti_v*', 'V. thoracica interna', 'bc*', [[180, 182], [185, 192], [185, 330]], { n: 'Sol ve sağ ÖN interkostal venleri toplar (çıkmış). V. epigastrica superior ve v. musculophrenica birleşerek oluşturur.', q: ['ic_v', 'epi'] });
+V('ica_v*', 'Vv. intercostales anteriores', 'ti_v*', [[185, 220], [152, 218], [185, 250], [152, 248], [185, 280], [152, 278]], { seg: 1, n: 'Her iki tarafta → v. thoracica interna.', q: ['ic_v'] });
+V('mph_v*', 'V. musculophrenica', 'ti_v*', [[185, 330], [168, 344], [154, 354]], { n: 'V. epigastrica superior ile birleşip v. thoracica interna\'yı yapar (kayıtta tuzak cevap olarak geçti).', q: ['epi'] });
+V('epis_v*', 'V. epigastrica superior', 'ti_v*', [[185, 330], [186, 370], [187, 398]], { n: 'Karın ön duvarı → v. THORACICA INTERNA.', q: ['epi'] });
+V('thyi_v*', 'V. thyroidea inferior', 'bc*', [[188, 190], [193, 150]], { n: 'Brachiocephalica\'ya dökülür.' });
+V('scv*', 'V. subclavia', 'bc*', [[178, 178], [152, 182], [136, 192]], { n: 'V. axillaris\'in devamı; m. scalenus anterior\'un ÖNÜNDEN geçer (arter arkasından).' });
+V('jext*', 'V. jugularis externa', 'scv*', [[150, 182], [160, 140], [166, 106]], { n: 'M. sternocleidomastoideus üzerinde, yüzeyel. V. auricularis posterior + v. retromandibularis\'in arka dalıyla oluşur; v. subclavia\'ya dökülür.' });
+V('retm*', 'V. retromandibularis', 'jext*', [[166, 106], [170, 93]], { n: 'V. temporalis superficialis + v. maxillaris birleşir.' });
+V('temp_v*', 'V. temporalis superficialis', 'retm*', [[170, 93], [165, 62], [168, 32]], { n: 'Sinus cavernosus\'a DRENE OLMAZ (çıkmış şıkkı).', q: ['cav'] });
+V('max_v*', 'V. maxillaris', 'retm*', [[170, 95], [182, 96]], { n: 'Plexus pterygoideus\'tan. Sinus cavernosus şıkkı olarak tuzak.', q: ['cav'] });
+V('aurp_v*', 'V. auricularis posterior', 'jext*', [[165, 108], [157, 92]]);
+V('occ_v*', 'V. occipitalis', 'jext*', [[164, 114], [155, 104]], { n: 'Sinus cavernosus\'a DRENE OLMAZ (çıkmış şıkkı).', q: ['cav'] });
+V('jant*', 'V. jugularis anterior', 'scv*', [[176, 182], [188, 168], [191, 132]], { n: 'Boynun önünde, yüzeyel.' });
+V('axv*', 'V. axillaris', 'scv*', [[136, 192], [128, 214], [121, 238]], { n: 'Vv. brachiales + v. basilica\'dan oluşur; v. CEPHALICA fascia clavipectoralis\'i delip buraya katılır.' });
+V('ceph*', 'V. cephalica', 'axv*', [[133, 196], [128, 210], [112, 270], [92, 330], [78, 400], [80, 466]], { n: 'Kolun DIŞ (başparmak) yanı. Sulcus deltoideopectoralis\'te yükselir, FASCIA CLAVIPECTORALIS\'i DELEREK v. axillaris\'e dökülür (çıkmış). Lenfatikleri → n.l. infraclaviculares.', l: ['clavip'], q: ['ceph'] });
+V('mcub*', 'V. mediana cubiti', 'ceph*', [[93, 330], [104, 340], [112, 334]], { n: 'Dirsek önünde cephalica ile basilica\'yı bağlar. KAN ALMA yeri.', l: ['cubital'] });
+V('mant*', 'V. mediana antebrachii', 'mcub*', [[102, 338], [96, 400], [90, 446]], { n: 'Önkolun ortası. Lenfatikleri → n.l. cubitales.', q: ['ceph'] });
+V('brv*', 'Vv. brachiales', 'axv*', [[121, 238], [114, 285], [103, 330]], { n: 'A. brachialis\'e eşlik eden çift ven (venae comitantes).', q: ['ceph'] });
+V('bas*', 'V. basilica', 'brv*', [[116, 286], [114, 320], [108, 400], [98, 466]], { n: 'Kolun İÇ (serçe parmak) yanı. Kolun ortasında fascia\'yı delip derine girer, vv. brachiales\'e katılır. Lenfatikleri → n.l. cubitales (supratrochleares).', q: ['ceph'] });
+V('radv*', 'Vv. radiales', 'brv*', [[103, 330], [91, 390], [83, 450]], { d: 1 });
+V('ulnv*', 'Vv. ulnares', 'brv*', [[103, 330], [105, 390], [101, 450]], { d: 1 });
+V('thlv*', 'V. thoracica lateralis', 'axv*', [[128, 212], [139, 252]]);
+V('thepi*', 'V. thoracoepigastrica', 'thlv*', [[139, 252], [150, 340], [160, 440]], { n: 'V. thoracica lateralis (VCS sistemi) ile v. epigastrica superficialis (VCI sistemi) arasında KAVA-KAVAL ANASTOMOZ.', link: 'epsf_v*' });
+
+/* ---- VCI ve alt ekstremite ---- */
+V('vci', 'V. cava inferior', 'ra', [[190, 275], [198, 300], [200, 420]], { n: 'İki v. iliaca communis\'in L5 hizasında birleşmesiyle oluşur. Pericardium fibrosum\'un örtmediği tek damar. Ağzında Eustachian kapağı.' });
+V('ilcv*', 'V. iliaca communis', 'vci', [[200, 420], [189, 444]]);
+V('iliv*', 'V. iliaca interna', 'ilcv*', [[189, 444], [183, 460]], { d: 1 });
+V('ilev*', 'V. iliaca externa', 'ilcv*', [[189, 444], [179, 454], [172, 464]], { n: 'Lacuna vasorum\'da arterin MEDİALİNDE.' });
+V('epii_v*', 'V. epigastrica inferior', 'ilev*', [[175, 460], [183, 425], [187, 400]]);
+V('femv*', 'V. femoralis', 'ilev*', [[172, 464], [174, 520], [179, 584]], { n: 'Kasıkta arterin medialinde (lateralden mediale: sinir, arter, ven, lenf boşluğu). V. saphena magna hiatus saphenus\'tan buraya açılır.', l: ['lacuna', 'hiatus'] });
+V('sm*', 'V. saphena magna', 'femv*', [[173, 472], [180, 540], [186, 630], [180, 700], [173, 756], [168, 792]], { n: 'Ayağın MEDİAL kenarından (v. marginalis medialis), medial malleolün ÖNÜNDEN çıkar; HIATUS SAPHENUS\'tan v. femoralis\'e. Yanında n. saphenus (by-pass alınırken hasar). Medial ayak/başparmak lenfi bunu izleyip n.l. INGUINALES\'e gider (çıkmış).', l: ['hiatus'], q: ['lenf1', 'lenf2'] });
+V('cxis_v*', 'V. circumflexa ilium superficialis', 'sm*', [[173, 474], [150, 458]]);
+V('epsf_v*', 'V. epigastrica superficialis', 'sm*', [[174, 472], [178, 442]], { n: 'V. thoracoepigastrica üzerinden v. thoracica lateralis ile kava-kaval anastomoz.', link: 'thepi*' });
+V('pude_v*', 'Vv. pudendae externae', 'sm*', [[175, 474], [188, 478]]);
+V('sacc*', 'V. saphena accessoria', 'sm*', [[177, 520], [158, 540]]);
+V('prfv*', 'V. profunda femoris', 'femv*', [[172, 480], [163, 505], [161, 560]], { d: 1 });
+V('popv*', 'V. poplitea', 'femv*', [[179, 584], [173, 612], [169, 650]], { d: 1, n: 'Fossa poplitea\'da arterin yüzeyelinde. V. saphena parva buraya dökülür.', l: ['poplf'] });
+V('sp*', 'V. saphena parva', 'popv*', [[171, 632], [162, 690], [154, 758], [150, 792]], { n: 'Ayağın LATERAL kenarından (v. marginalis lateralis), lateral malleolün ARKASINDAN, baldırın arkasından fossa poplitea\'da v. POPLITEA\'ya. Lateral ayak / 5. parmak lenfi bunu izleyip n.l. POPLITEI\'ye gider (çıkmış).', l: ['poplf'], q: ['lenf1', 'lenf2'] });
+V('tav*', 'Vv. tibiales anteriores', 'popv*', [[169, 650], [161, 662], [162, 758]], { d: 1 });
+V('tpv*', 'Vv. tibiales posteriores', 'popv*', [[169, 652], [170, 700], [176, 762]], { d: 1 });
+V('fibv*', 'Vv. fibulares', 'tpv*', [[169, 668], [160, 700], [157, 754]], { d: 1 });
+V('surv*', 'Vv. surales', 'popv*', [[172, 628], [167, 664]], { d: 1 });
+
+/* ---- Kalbin venleri ve pulmoner venler ---- */
+V('scor', 'Sinus coronarius', 'ra', [[190, 284], [215, 284], [244, 270]], { d: 1, n: 'Kalbin venöz dönüşünün %85\'i. Arkada sulcus coronarius\'ta; sağ atriyuma Thebesian kapaklı ağızla açılır (Koch üçgeninin kenarı).' });
+V('vcm', 'V. cordis magna', 'scor', [[244, 270], [240, 252], [224, 250], [228, 268], [237, 290]], { n: 'Sulcus interventricularis ANTERIOR\'da LAD\'ye eşlik eder (çıkmış), sonra sola dönüp sinus coronarius\'a.', q: ['koroner2'] });
+V('vcmed', 'V. cordis media', 'scor', [[215, 284], [226, 296]], { d: 1, n: 'Sulcus interventricularis POSTERIOR\'da, r. interventricularis posterior ile.', q: ['koroner2'] });
+V('vcp', 'V. cordis parva', 'scor', [[192, 286], [184, 272], [186, 258]], { n: 'Sağ kenarda r. marginalis dexter\'e eşlik eder ("r. interventricularis dextra" diye dal yok).', q: ['koroner2'] });
+V('vcmin', 'Vv. cardiacae minimae (Thebesian)', 'ra', [[196, 266], [204, 270]], { n: 'Sinus coronarius\'a AÇILMAZ; doğrudan kalp boşluklarına (en çok sağ atriyuma).' });
+V('vcant', 'Vv. cardiacae anteriores', 'ra', [[187, 268], [197, 282]], { n: 'Sağ ventrikülün önünden doğrudan sağ atriyuma; sinus coronarius\'a açılmaz.' });
+
+V('la', 'Atrium sinistrum', null, [[226, 254], [222, 254]], { n: 'Sol atriyum: 4 v. pulmonalis açılır. Kalbin en arkadaki boşluğu; sinus obliquus\'un ön duvarı.', root: 1 });
+V('vpds', 'V. pulmonalis dextra superior', 'la', [[220, 250], [190, 244], [168, 240]], { d: 1 });
+V('vpdi', 'V. pulmonalis dextra inferior', 'la', [[220, 256], [190, 262], [170, 266]], { d: 1 });
+V('vpss', 'V. pulmonalis sinistra superior', 'la', [[228, 250], [252, 242]], { d: 1 });
+V('vpsi', 'V. pulmonalis sinistra inferior', 'la', [[228, 256], [252, 264]], { d: 1 });
+</script>
+<script>/* Önemli geçitler (koordinatlar sağ taraf) ve çıkmış sorular */
+const LANDMARKS = [
+  { id: 'arcus', name: 'Arcus aortae', at: [214, 200], v: ['arc', 'tbc', 'cc_s', 'sc_s'], t: '2. kosta hizasında. Dalları sağdan sola truncus brachiocephalicus, sol carotis communis, sol subclavia. Duvarında baroreseptörler (sinus aortae, n. vagus) ve glomera aortica (kemoreseptör). Önünden sol n. phrenicus ve n. vagus çaprazlar; altından sol n. laryngeus recurrens döner.' },
+  { id: 'perikard', name: 'Perikard sinüsleri', at: [206, 236], v: ['aao', 'pulm_note', 'vcs', 'vci'], t: 'SINUS TRANSVERSUS (Thiele): arteriyel kılıf (aorta ascendens + truncus pulmonalis) ile venöz kılıf (VCS, VCI, vv. pulmonales) ARASI. SINUS OBLIQUUS: venöz kılıfın ALTINDAKİ çıkmaz; ön duvarı sol atriyum. Çıkmışta 5 kez soruldu.', q: ['transv', 'obliq'] },
+  { id: 'bifur', name: 'Bifurcatio carotica (C4)', at: [182, 128], v: ['cc_d', 'ica_d', 'eca_d'], t: 'A. carotis communis C4 hizasında interna ve externa\'ya ayrılır. ICA başlangıcındaki genişleme SINUS CAROTICUS (baroreseptör), çatallanmadaki cisim GLOMUS CAROTICUM (kemoreseptör). İkisi de n. GLOSSOPHARYNGEUS (IX) ile.' },
+  { id: 'vagcar', name: 'Vagina carotica', at: [181, 152], v: ['cc_d', 'ji_d'], t: 'İçinde a. carotis communis (içte), v. jugularis interna (dışta), n. vagus (arkada aralarında). Sinus transversus sorusunun yeni çeldiricileri buradan alındı.' },
+  { id: 'cavern', name: 'Sinus cavernosus', at: [190, 78], v: ['ica_d', 'scav_d', 'ophs_d'], t: 'Sella turcica yanında venöz sinüs. İçinden ICA (pars cavernosa) ve n. abducens geçer. V. ophthalmica superior buraya açılır; v. angularis ile bağlantılı.' },
+  { id: 'tehlike', name: 'Yüzün tehlikeli üçgeni', at: [193, 66], v: ['angv_d', 'ophs_d', 'scav_d', 'ang_d', 'dnasi_d'], t: 'Burun kökü ile ağız köşeleri arası. V. angularis → v. ophthalmica superior → SINUS CAVERNOSUS: kapaksız venler enfeksiyonu kafa içine taşır (sinus cavernosus trombozu). Arter tarafında a. angularis ↔ a. dorsalis nasi anastomozu: burun sırtına dolgu emboli yaparsa körlük.', q: ['cav'] },
+  { id: 'spinosum', name: 'Foramen spinosum', at: [180, 76], v: ['menm_d', 'max_d'], t: 'A. meningea media kafa içine buradan girer. Pterion kırığında yırtılırsa epidural hematom.', q: ['menmed'] },
+  { id: 'transv', name: 'Foramina transversaria (C6–C1)', at: [177, 140], v: ['vert_d', 'vert_v_d'], t: 'A. vertebralis C6\'dan başlayarak foramen transversarium\'lardan yükselir, foramen magnum\'dan kafa içine girer.' },
+  { id: 'scalen', name: 'M. scalenus anterior', at: [162, 178], v: ['sc_d', 'scv_d'], t: 'A. subclavia\'yı 3 bölüme ayırır (önü, arkası, dışı). Arter kasın ARKASINDAN, v. subclavia ÖNÜNDEN geçer.' },
+  { id: 'angulus', name: 'Angulus venosus', at: [178, 180], v: ['ji_d', 'scv_d', 'bc_d'], t: 'V. jugularis interna ile v. subclavia\'nın birleşme açısı. Solda DUCTUS THORACICUS, sağda ductus lymphaticus dexter buraya açılır.' },
+  { id: 'clavip', name: 'Fascia clavipectoralis', at: [131, 199], v: ['ceph_d', 'axv_d', 'thac_d'], t: 'V. CEPHALICA sulcus deltoideopectoralis\'ten gelip bu fasyayı DELEREK v. axillaris\'e dökülür (çıkmış). A. thoracoacromialis de buradan geçer.', q: ['ceph'] },
+  { id: 'pecmin', name: 'M. pectoralis minor', at: [129, 212], v: ['ax_d', 'thsup_d', 'thac_d', 'thlat_d', 'subsc_d', 'cxha_d', 'cxhp_d'], t: 'A. axillaris\'i 3 bölüme ayırır: 1. bölüm 1 dal (thoracica superior), 2. bölüm 2 dal (thoracoacromialis, thoracica lateralis), 3. bölüm 3 dal (subscapularis, circumflexa humeri anterior ve posterior).', q: ['ax_dal'] },
+  { id: 'sp_med', name: 'Spatium axillare mediale (üçgen aralık)', at: [136, 238], v: ['cxsc_d'], t: 'Sınırları teres minor, teres major, caput longum tricipitis. İçinden yalnızca A. CIRCUMFLEXA SCAPULAE geçer. Henüz sorulmadı, sıradaki aday.', q: ['quad', 'tri'] },
+  { id: 'sp_lat', name: 'Spatium axillare laterale (dörtgen aralık)', at: [114, 228], v: ['cxhp_d'], t: 'Sınırları teres minor, teres major, caput longum tricipitis, humerus. İçinden N. AXILLARIS + A. CIRCUMFLEXA HUMERI POSTERIOR geçer (çıkmış). Humerus collum chirurgicum kırığında n. axillaris hasarı → deltoid felci.', q: ['quad'] },
+  { id: 'sp_inf', name: 'Spatium triangulare inferior (triseps açıklığı)', at: [114, 262], v: ['prbr_d'], t: 'Teres major altı, triceps başları ve humerus arası. İçinden N. RADIALIS + A. PROFUNDA BRACHII geçer (çıkmış). Humerus cisim kırığında n. radialis hasarı → düşük el.', q: ['tri'] },
+  { id: 'cubital', name: 'Fossa cubitalis', at: [100, 332], v: ['br_d', 'rad_d', 'uln_d', 'mcub_d'], t: 'A. brachialis burada lacertus fibrosus\'un arkasında radialis ve ulnaris\'e ayrılır (n. medianus medialinde). Yüzeyde v. mediana cubiti: kan alma yeri.' },
+  { id: 'bilek', name: 'Bilek ve el arkları', at: [86, 458], v: ['rad_d', 'uln_d', 'aps_d', 'apd_d', 'pp_d'], t: 'Radial nabız FCR ile brachioradialis arasında; a. radialis anatomik enfiye çukurundan elin sırtına geçer. Arcus palmaris SUPERFICIALIS = ulnaris (+ r. palmaris superficialis), PROFUNDUS = radialis (+ r. palmaris profundus). Başparmak (princeps pollicis) radialis\'ten.', q: ['uln2', 'pp'] },
+  { id: 'bifaort', name: 'Bifurcatio aortae (L4)', at: [200, 420], v: ['aod', 'ilc_d', 'ilc_s'], t: 'Aorta L4 hizasında iki a. iliaca communis\'e ayrılır. VCI ise L5 hizasında oluşur.' },
+  { id: 'supra', name: 'Foramen suprapiriforme', at: [164, 452], v: ['glsup_d'], t: 'Sadece SUPERIOR gluteal üçlü: a., v., n. gluteus superior.', q: ['infra1'] },
+  { id: 'infra', name: 'Foramen infrapiriforme', at: [167, 468], v: ['glinf_d', 'pudi_d'], t: 'A./v./n. gluteus inferior, N. ISCHIADICUS, N. CUTANEUS FEMORIS POSTERIOR, a./v. pudenda interna, n. pudendus. Ezber: POPS IQ. A. OBTURATORIA ve glutea superior GEÇMEZ (çıkmış).', q: ['infra1', 'infra2'] },
+  { id: 'obtur', name: 'Canalis obturatorius', at: [176, 484], v: ['obt_d'], t: 'A., v. ve n. obturatorius pelvisten uyluğun MEDİAL (addüktör) kompartmanına buradan geçer.', q: ['medkomp', 'infra2'] },
+  { id: 'lacuna', name: 'Lacuna vasorum ve trigonum femorale', at: [170, 464], v: ['fem_d', 'femv_d', 'ile_d'], t: 'Lig. inguinale altında. Lateralden mediale: n. femoralis (lacuna musculorum), A. FEMORALIS, V. FEMORALIS, canalis femoralis (lenf). Kasıkta femoral nabız.' },
+  { id: 'hiatus', name: 'Hiatus saphenus', at: [172, 472], v: ['sm_d', 'femv_d'], t: 'V. SAPHENA MAGNA fascia lata\'daki bu açıklıktan derine geçip v. femoralis\'e dökülür. Yanındaki yüzeyel inguinal lenf düğümleri medial bacak/ayak lenfini alır.', q: ['lenf1'] },
+  { id: 'addukt', name: 'Canalis adductorius ve hiatus adductorius', at: [177, 584], v: ['fem_d', 'dgen_d', 'pop_d'], t: 'A. femoralis canalis adductorius\'ta A. DESCENDENS GENUS\'u verir, sonra hiatus adductorius\'tan arkaya geçip A. POPLITEA olur. Descendens genu bu yüzden femoralis dalıdır (çıkmış tuzak).', q: ['popl'] },
+  { id: 'poplf', name: 'Fossa poplitea', at: [169, 632], v: ['pop_d', 'popv_d', 'sp_d'], t: 'Yüzeyelden derine: n. tibialis, v. poplitea, A. POPLITEA (en derin). V. saphena parva buraya dökülür; lateral ayak lenfi n.l. poplitei\'ye gelir (çıkmış).', q: ['lenf2', 'popl'] },
+  { id: 'fibula', name: 'Caput / collum fibulae', at: [150, 650], v: ['rcf_d', 'tant_d'], t: 'N. peroneus (fibularis) communis burada deri altında, kemiğe yaslı: alçı, bacak bacak üstüne atma ya da fibula boyun kırığında hasar → DÜŞÜK AYAK (çıkmış). R. circumflexus fibularis de fibula başını dolanır.' },
+  { id: 'retin', name: 'Retinaculum extensorum', at: [160, 760], v: ['tant_d', 'dp_d'], t: 'A. tibialis anterior bu bağın altından geçince adı A. DORSALIS PEDIS olur (çıkmış). Dorsalis pedis nabzı ayak sırtında.', q: ['dp'] },
+  { id: 'malmed', name: 'Malleolus medialis arkası', at: [176, 762], v: ['tpost_d', 'tpv_d'], t: 'A. tibialis posterior nabzı burada alınır (slayttaki TUS sorusu). Önünden ise v. saphena magna geçer.' },
+];
+
+const CIKMIS = [
+  { id: 'da', ok: 1, g: 'Fetal', src: '2023 · 2025 · D2', s: 'Ductus arteriosus için hangisi doğrudur?', a: 'Embriyolojik dönemde truncus pulmonalis ile aorta arasında anastomoz oluşur.', n: 'Kalıntısı lig. arteriosum (Botallo). Ertesi yıl aynı şıklarla ductus venosus soruldu (v. porta–VCI, kalıntısı lig. venosum).', v: ['pulm_note', 'apd_l', 'arc'] },
+  { id: 'ligart', ok: 2, g: 'Fetal', src: 'D2', s: 'Lig. arteriosum yerleşimi?', a: 'Aorta ile truncus pulmonalis arasında.', n: 'A. pulmonalis sinistra başlangıcı ile arcus aortae alt yüzü arası.', v: ['apd_l', 'arc'] },
+  { id: 'eriskin', ok: 2, g: 'Fetal', src: 'D2', s: 'Sağlıklı erişkinde varlığını sürdüren?', a: 'Chorda arteriae umbilicalis.', n: 'A. umbilicalis\'in kapanmış distali = lig. umbilicale mediale.', v: ['umb_d', 'umb_s'] },
+  { id: 'transv', ok: 4, g: 'Kalp', src: '2023 · 2025 · D2 ×3', s: 'Sinus transversus pericardii\'nin geçiş yeri?', a: 'Vagina serosa arteriosum ile venosum arasından.', n: 'Arteriyel kılıf: aorta ascendens + truncus pulmonalis. Venöz kılıf: VCS, VCI, vv. pulmonales.', v: ['aao', 'pulm_note', 'vcs', 'vci'] },
+  { id: 'obliq', ok: 4, g: 'Kalp', src: '2024', s: 'Sinus obliquus pericardii\'nin geçiş yeri?', a: 'Vagina serosa venosum\'un altından.', n: 'Perikardı a. pericardiacophrenica (thoracica interna) besler.', v: ['vcs', 'vci', 'vpds', 'vpss', 'pcph_d'] },
+  { id: 'koroner1', ok: 2, g: 'Kalp', src: 'D2', s: 'Kalbin kanlanması için doğru?', a: 'A. coronaria sinistra\'nın orijini aorta ascendens\'tir.', n: 'İki koroner de sinus aortae\'den çıkar.', v: ['aao', 'lca', 'rca'] },
+  { id: 'koroner2', ok: 2, g: 'Kalp', src: 'D2', s: 'Kalbin kanlanması için doğru? (ven–arter eşleri)', a: 'V. cordis magna, r. interventricularis anterior\'a (LAD) eşlik eder.', n: 'Posterior interventriküler sağ koronerden, LAD soldan. V. cordis parva r. marginalis dexter\'e eşlik eder.', v: ['lad', 'vcm', 'rca_ivp', 'vcmed', 'vcp', 'rca_marg'] },
+  { id: 'eca1', ok: 3, g: 'Baş-boyun', src: '2023 · D2', s: 'Tamamı ECA dalı: occipitalis, facialis, thyroidea inferior, vertebralis, thyroidea superior?', a: 'I, II, V: occipitalis, facialis, thyroidea superior.', n: 'Thyroidea inferior (truncus thyrocervicalis) ve vertebralis subclavia\'dan.', v: ['occ_d', 'fac_d', 'thys_d', 'thyi_d', 'vert_d'] },
+  { id: 'eca2', ok: 3, g: 'Baş-boyun', src: '2024', s: 'Tamamı ECA dalı olan seçenek?', a: 'Maxillaris, pharyngea ascendens, thyroidea superior.', n: 'Liste her yıl değişiyor; ECA\'nın 8 dalını ezberle.', v: ['max_d', 'phas_d', 'thys_d'] },
+  { id: 'eca3', ok: 3, g: 'Baş-boyun', src: 'D2', s: 'Tamamı ECA dalı: occipitalis, maxillaris, ophthalmica, thyroidea sup., thyroidea inf.?', a: 'I, II, IV: occipitalis, maxillaris, thyroidea superior.', n: 'Ophthalmica ICA\'nın ilk kafa içi dalı.', v: ['occ_d', 'max_d', 'thys_d', 'oph_d', 'thyi_d'] },
+  { id: 'eca4', ok: 3, g: 'Baş-boyun', src: 'D2', s: 'Hangileri ECA dalıdır?', a: 'Temporalis superficialis, pharyngea ascendens, auricularis posterior.', n: 'Temporalis superficialis ve maxillaris ECA\'nın iki uç dalı.', v: ['temps_d', 'phas_d', 'aurp_d'] },
+  { id: 'menmed', ok: 2, g: 'Baş-boyun', src: 'D2 ×2', s: 'A. meningea media\'nın orijin aldığı arter?', a: 'A. maxillaris.', n: 'Foramen spinosum; epidural hematom.', v: ['menm_d', 'max_d', 'occ_d', 'oph_d'] },
+  { id: 'burun1', ok: 2, g: 'Baş-boyun', src: '2023 · 2025 · D2', s: 'Burnu kanlandıran hangi arter ICA dallarından orijin alır?', a: 'A. ethmoidalis anterior.', n: 'ICA → a. ophthalmica → aa. ethmoidales. Sphenopalatina, infraorbitalis (maxillaris) ve facialis ECA tarafı.', v: ['eth_a_d', 'oph_d', 'sphp_d', 'info_d', 'fac_d'] },
+  { id: 'burun2', ok: 3, g: 'Baş-boyun', src: '2024', s: 'Burnu kanlandıran ve a. maxillaris\'ten çıkan arterler?', a: 'A. sphenopalatina ve a. infraorbitalis.', n: 'Önceki sorunun aynası: bu kez ECA tarafı soruldu.', v: ['sphp_d', 'info_d', 'max_d', 'eth_a_d', 'eth_p_d'] },
+  { id: 'cav', ok: 3, g: 'Baş-boyun', src: 'D2', s: 'Cranium içinde sinus cavernosus\'a drene olan ven?', a: 'V. angularis.', n: 'V. angularis → v. ophthalmica superior → sinus cavernosus. Şıklardaki v. maxillaris, temporalis superficialis, lingualis, occipitalis drene olmaz.', v: ['angv_d', 'ophs_d', 'scav_d', 'max_v_d', 'temp_v_d', 'ling_v_d', 'occ_v_d'] },
+  { id: 'ti_kan', ok: 1, g: 'Üst ekstremite', src: '2025 · D2 ×2', s: 'A. thoracica interna tarafından kanlandırılmayan?', a: 'Oesophagus.', n: 'Timus, perikard, sternum, diyafram beslenir. Özofagusun boyun kısmı a. thyroidea inferior\'dan.', v: ['ti_d', 'pcph_d', 'mphr_d', 'thyi_d'] },
+  { id: 'ax_dal', ok: 1, g: 'Üst ekstremite', src: 'D2', s: 'A. axillaris\'in dalı değildir?', a: 'A. thoracica interna.', n: 'Thoracica interna subclavia\'nın dalı.', v: ['ti_d', 'ax_d', 'thsup_d', 'thac_d', 'thlat_d', 'subsc_d'] },
+  { id: 'ic_ant', ok: 3, g: 'Üst ekstremite', src: '2024', s: 'A. intercostalis anterior\'un orijini?', a: 'A. thoracica interna ve a. musculophrenica.', n: 'İlk 6 doğrudan, 7–9 musculophrenica\'dan.', v: ['ti_d', 'ica_ant_d', 'mphr_d'] },
+  { id: 'ic_v', ok: 2, g: 'Üst ekstremite', src: '2023 · D2', s: 'Sol v. intercostalis anterior\'ların drene olduğu ven?', a: 'V. thoracica interna.', n: 'Ön interkostaller her iki tarafta thoracica interna\'ya.', v: ['ica_v_s', 'ti_v_s'] },
+  { id: 'ic_v2', ok: 2, g: 'Üst ekstremite', src: '2025 · D2', s: 'Sağ v. intercostalis posterior\'ların drene olduğu ven?', a: 'V. azygos.', n: 'Aynı şıklar, "sol anterior" → "sağ posterior" oldu. Sol arka → hemiazygos.', v: ['icpd', 'azy', 'hazy', 'icps'] },
+  { id: 'epi', ok: 2, g: 'Üst ekstremite', src: '2024', s: 'V. epigastrica superior\'un drene olduğu ven?', a: 'V. thoracica interna.', n: 'Kayıtta musculophrenica yazıyor; o kardeş daldır.', v: ['epis_v_d', 'ti_v_d', 'mph_v_d'] },
+  { id: 'quad', ok: 1, g: 'Üst ekstremite', src: '2023 · D2', s: 'Spatium axillare laterale (quadrangulare)\'den geçen?', a: 'N. axillaris (+ a. circumflexa humeri posterior).', n: 'Circumflexa humeri ANTERIOR tuzak; circumflexa scapulae üçgen aralıktan.', v: ['cxhp_d', 'cxha_d', 'cxsc_d'] },
+  { id: 'tri', ok: 1, g: 'Üst ekstremite', src: '2024 · D2', s: 'Spatium triangulare inferior\'dan geçen?', a: 'N. radialis (+ a. profunda brachii).', n: 'Dörtgen aralık sorusunun değişmiş hali.', v: ['prbr_d', 'cxhp_d', 'cxsc_d'] },
+  { id: 'uln1', ok: 3, g: 'Üst ekstremite', src: '2023 · D2', s: 'A. ulnaris\'in dallarından oluşan seçenek?', a: 'Interossea communis, r. carpalis palmaris, r. carpalis dorsalis.', n: 'Collateralis ulnaris superior brachialis\'ten, princeps pollicis radialis\'ten.', v: ['ioc_d', 'rcpu_d', 'rcdu_d', 'cus_d', 'pp_d'] },
+  { id: 'uln2', ok: 1, g: 'Üst ekstremite', src: 'D2 ×2', s: 'A. ulnaris\'in dalı değildir?', a: 'A. princeps pollicis.', n: 'Başparmak radialis\'in.', v: ['pp_d', 'ioc_d', 'rua_d', 'uln_d'] },
+  { id: 'rad', ok: 1, g: 'Üst ekstremite', src: '2024', s: 'A. radialis\'in dalı değildir?', a: 'A. interossea communis.', n: 'Taraf değişti; cevap ulnaris\'in dalı.', v: ['ioc_d', 'rad_d', 'recr_d', 'pp_d', 'radi_d'] },
+  { id: 'pp', ok: 2, g: 'Üst ekstremite', src: '2025', s: 'A. princeps pollicis için doğru olmayan?', a: '"A. brachialis\'in dalıdır" (doğrusu radialis).', n: '', v: ['pp_d', 'rad_d', 'br_d'] },
+  { id: 'ceph', ok: 2, g: 'Üst ekstremite', src: '2025 · D2', s: 'Fascia clavipectoralis\'i delerek v. axillaris\'e drene olan ven?', a: 'V. cephalica.', n: 'Basilica içte v. brachialis\'e katılır.', v: ['ceph_d', 'bas_d', 'axv_d', 'brv_d'] },
+  { id: 'infra1', ok: 1, g: 'Alt ekstremite', src: '2023 · D2', s: 'Foramen infrapiriforme\'den geçenler?', a: 'A. glutea inferior, n. ischiadicus, n. cutaneus femoris posterior.', n: 'Glutea superior suprapiriforme\'den; n. obturatorius canalis obturatorius\'tan.', v: ['glinf_d', 'glsup_d', 'pudi_d'] },
+  { id: 'infra2', ok: 1, g: 'Alt ekstremite', src: 'D2 ×2', s: 'Foramen infrapiriforme\'den geçmeyen?', a: 'A. obturatoria.', n: 'A. pudenda interna ise geçer.', v: ['obt_d', 'glinf_d', 'pudi_d'] },
+  { id: 'fem', ok: 2, g: 'Alt ekstremite', src: 'D2', s: 'A. femoralis\'e ait olmayan?', a: 'A. epigastrica inferior.', n: 'Iliaca externa dalı; circumflexa iliaca profunda da öyle.', v: ['epii_d', 'cxip_d', 'fem_d', 'epsf_d', 'cxis_d', 'pudes_d', 'prf_d'] },
+  { id: 'medkomp', ok: 1, g: 'Alt ekstremite', src: 'D2 · 2025', s: 'Uyluğun medial kompartmanını kanlandıran?', a: 'A. obturatoria.', n: 'Ön: femoralis; arka: aa. perforantes.', v: ['obt_d', 'perf_d', 'fem_d'] },
+  { id: 'popl', ok: 1, g: 'Alt ekstremite', src: 'D2 · 2025', s: 'A. poplitea\'ya ait olmayan?', a: 'A. descendens genus.', n: 'Canalis adductorius\'ta femoralis\'ten çıkar.', v: ['dgen_d', 'pop_d', 'gsl_d', 'gmed_d', 'sur_d', 'gil_d'] },
+  { id: 'diz', ok: 4, g: 'Alt ekstremite', src: 'D2 ×2', s: 'Diz ekleminde poplitea dallarıyla anastomoz yapan arterler?', a: 'Circumflexa femoris lateralis, tibialis anterior, fibularis.', n: 'Medial circumflexa kalçada kalır.', v: ['cfl_d', 'cfl_d_d', 'rta_d', 'fib_d', 'cfm_d', 'gil_d'] },
+  { id: 'fib', ok: 2, g: 'Alt ekstremite', src: '2023 · D2', s: 'A. fibularis\'in orijin aldığı damar?', a: 'A. tibialis posterior.', n: '', v: ['fib_d', 'tpost_d'] },
+  { id: 'dp', ok: 2, g: 'Alt ekstremite', src: '2024', s: 'A. dorsalis pedis\'in orijin aldığı damar?', a: 'A. tibialis anterior.', n: 'Fibularis sorusunun değişmiş hali.', v: ['dp_d', 'tant_d'] },
+  { id: 'lenf1', ok: 1, g: 'Alt ekstremite', src: 'D2', s: 'Ayak başparmağı çevresinden gelen lenf hangi düğüme?', a: 'Nodi lymphatici inguinales.', n: 'Lenf v. saphena magna\'yı izler.', v: ['sm_d'] },
+  { id: 'lenf2', ok: 2, g: 'Alt ekstremite', src: '2025', s: '5. ayak parmağı aralığından gelen lenf hangi düğüme?', a: 'Nodi lymphatici poplitei.', n: 'Lenf v. saphena parva\'yı izler; başparmak sorusunun değişmiş hali.', v: ['sp_d', 'popv_d'] },
+];
+</script>
+<script>(function () {
+'use strict';
+/* ---------- veri genişletme ---------- */
+const N = {};          // id -> node
+const ORDER = [];
+const mir = p => [400 - p[0], p[1]];
+RAW.forEach(r => {
+  if (r.id.endsWith('*')) {
+    ['d', 's'].forEach(side => {
+      const id = r.id.slice(0, -1) + '_' + side;
+      const parent = r.parent && r.parent.endsWith('*') ? r.parent.slice(0, -1) + '_' + side : r.parent;
+      const link = r.link ? r.link.slice(0, -1) + '_' + side : null;
+      const pts = side === 'd' ? r.pts : r.pts.map(mir);
+      N[id] = Object.assign({}, r, { id, parent, pts, side, link });
+      ORDER.push(id);
+    });
+  } else {
+    N[r.id] = Object.assign({}, r);
+    ORDER.push(r.id);
+  }
+});
+ORDER.forEach(id => { N[id].kids = []; });
+ORDER.forEach(id => { const n = N[id]; if (n.parent && N[n.parent]) N[n.parent].kids.push(id); });
+function depth(id) { let d = 0, n = N[id]; while (n.parent) { d++; n = N[n.parent]; } return d; }
+ORDER.forEach(id => { N[id].dp = depth(id); });
+function anc(id) { const a = []; let n = N[id]; while (n) { a.unshift(n.id); n = n.parent ? N[n.parent] : null; } return a; }
+function sub(id, acc) { acc = acc || []; acc.push(id); N[id].kids.forEach(k => sub(k, acc)); return acc; }
+const LM = {}; LANDMARKS.forEach(l => { LM[l.id] = l; });
+const QZ = {}; CIKMIS.forEach(q => { QZ[q.id] = q; });
+// çıkmış bağlantıları: düğümdeki q + soruların damar listesi
+ORDER.forEach(id => { N[id].qs = new Set(N[id].q || []); });
+
+function sideTag(n) { return n.side === 'd' ? 'sağ' : n.side === 's' ? 'sol' : ''; }
+function nm(id) { const n = N[id]; return n.name + (n.side ? ` (${sideTag(n)})` : ''); }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ---------- SVG ---------- */
+const svg = document.getElementById('fig');
+const gVes = document.getElementById('ves');
+const gTop = document.getElementById('top');
+const gLab = document.getElementById('lab');
+function dOf(n) {
+  const p = n.pts;
+  if (n.seg) { let s = ''; for (let i = 0; i + 1 < p.length; i += 2) s += `M${p[i][0]} ${p[i][1]}L${p[i + 1][0]} ${p[i + 1][1]}`; return s; }
+  return 'M' + p.map(q => q.join(' ')).join('L');
+}
+function widthOf(n) { return Math.max(1.1, 5.2 - n.dp * 0.75); }
+const EL = {};
+ORDER.forEach(id => {
+  const n = N[id];
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'v ' + (n.t === 'A' ? 'art' : 'ven') + (n.d ? ' deep' : ''));
+  g.dataset.id = id;
+  const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  hit.setAttribute('d', dOf(n)); hit.setAttribute('class', 'hit');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', dOf(n)); p.setAttribute('class', 'ln');
+  p.style.setProperty('--w', widthOf(n));
+  g.appendChild(hit); g.appendChild(p);
+  gVes.appendChild(g);
+  EL[id] = g;
+  g.addEventListener('click', e => { e.stopPropagation(); onFigClick(id); });
+});
+
+/* görünür alan ve yakınlaştırma */
+const FULL = [0, 0, 400, 820];
+let vb = FULL.slice(), vbTarget = FULL.slice(), anim = null;
+function setVB(v) { vb = v; svg.setAttribute('viewBox', v.map(x => x.toFixed(1)).join(' ')); scaleText(); }
+function zoomTo(v, instant) {
+  vbTarget = v;
+  if (instant || matchMedia('(prefers-reduced-motion: reduce)').matches) { setVB(v); return; }
+  const from = vb.slice(), t0 = performance.now(), dur = 450;
+  cancelAnimationFrame(anim);
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    setVB(from.map((x, i) => x + (v[i] - x) * e)); if (k < 1) anim = requestAnimationFrame(step); };
+  anim = requestAnimationFrame(step);
+}
+function boxOf(ids, pad, minW) {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  ids.forEach(id => N[id].pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }));
+  return fitBox(x0, y0, x1, y1, pad, minW);
+}
+function fitBox(x0, y0, x1, y1, pad, minW) {
+  pad = pad == null ? 20 : pad; minW = minW || 90;
+  const ex = (x1 - x0) * 0.3 + pad * 1.6;
+  let w = Math.max(x1 - x0 + ex * 2, minW), h = Math.max(y1 - y0 + pad * 2, minW);
+  const r = svg.clientWidth / Math.max(1, svg.clientHeight) || 0.6;
+  if (w / h < r) w = h * r; else h = w / r;
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  return [cx - w / 2, cy - h / 2, w, h];
+}
+function scaleText() { svg.style.setProperty('--fs', (vb[2] / 30).toFixed(2) + 'px'); svg.style.setProperty('--k', Math.min(1, Math.max(0.42, 170 / vb[2])).toFixed(3)); const k = vb[2] / 400; gTop.querySelectorAll('circle').forEach(c => c.setAttribute('r', (c.classList.contains('mk') ? 7 : 3.4) * k)); }
+document.querySelectorAll('[data-zoom]').forEach(b => b.addEventListener('click', () => {
+  const z = { all: FULL, head: [130, 0, 140, 190], chest: [140, 160, 120, 200], arm: [40, 160, 120, 380], leg: [120, 400, 100, 420] }[b.dataset.zoom];
+  zoomTo(fitBox(z[0], z[1], z[0] + z[2], z[1] + z[3], 4, 60));
+}));
+
+/* ---------- durum ---------- */
+const S = { mode: 'yol', type: 'A', path: [], sel: null, q: null, lm: null, open: new Set() };
+try { const m = localStorage.getItem('damar-mode'); if (m) S.mode = m; } catch (e) {}
+const panel = document.getElementById('panel');
+
+function classAll(fn) { ORDER.forEach(id => { EL[id].setAttribute('class', fn(id)); }); }
+function baseCls(id) { const n = N[id]; return 'v ' + (n.t === 'A' ? 'art' : 'ven') + (n.d ? ' deep' : '') + (n.root ? ' rootv' : ''); }
+function clearLabels() { gLab.innerHTML = ''; gTop.innerHTML = ''; }
+function label(id, txt, cls) {
+  const n = N[id], p = n.pts[n.pts.length - 1];
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', p[0] + (n.side === 's' || p[0] > 200 ? 3 : -3)); t.setAttribute('y', p[1]);
+  t.setAttribute('text-anchor', n.side === 's' || p[0] > 200 ? 'start' : 'end');
+  t.setAttribute('class', 'lb ' + (cls || ''));
+  t.textContent = txt; gLab.appendChild(t);
+}
+function marker(at, txt) {
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx', at[0]); c.setAttribute('cy', at[1]); c.setAttribute('class', 'mk'); c.setAttribute('r', 1);
+  gTop.appendChild(c); scaleText();
+  if (txt) { const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', at[0]); t.setAttribute('y', at[1]); t.setAttribute('class', 'lb mkt'); t.setAttribute('dy', '-0.9em'); t.setAttribute('text-anchor', 'middle');
+    t.textContent = txt; gTop.appendChild(t); }
+}
+function drop(id) {
+  const n = N[id]; if (n.seg) return;
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('r', 1); c.setAttribute('class', 'drop ' + (n.t === 'A' ? 'art' : 'ven'));
+  const am = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+  am.setAttribute('dur', '1.6s'); am.setAttribute('repeatCount', 'indefinite'); am.setAttribute('path', dOf(n));
+  if (n.t === 'V') { am.setAttribute('keyPoints', '1;0'); am.setAttribute('keyTimes', '0;1'); am.setAttribute('calcMode', 'linear'); }
+  c.appendChild(am); gTop.appendChild(c); scaleText();
+}
+
+/* ---------- yolculuk ---------- */
+function rootsOf(t) { return t === 'A' ? ['lv', 'rv'] : ['ra', 'la']; }
+function renderYol() {
+  clearLabels();
+  const cur = S.path[S.path.length - 1];
+  if (!cur) {
+    classAll(id => baseCls(id) + ' off');
+    const roots = rootsOf(S.type);
+    panel.innerHTML = `<div class="intro">${S.type === 'A'
+      ? '<p>Kan gibi ilerle: bir boşluktan çık, her çatalda nereye gideceğini sen seç. Geçtiğin damarlar soldaki boş şemaya tek tek çizilir.</p><p class="hint">Not: aortaya <b>sol</b> ventrikülden çıkılır. Sağ ventrikülden çıkan yol truncus pulmonalis (akciğere).</p>'
+      : '<p>Venlerde kan kalbe doğru akar. Burada kalpten başlayıp <b>kanın geldiği yere doğru geriye</b> ilerliyorsun; şemadaki damla gerçek akış yönünü (kalbe doğru) gösterir.</p>'}</div>
+      <h3 class="sh">Nereden başlayalım?</h3><div class="opts">${roots.map(r => optCard(r, true)).join('')}</div>`;
+    bindOpts(); zoomTo(fitBox(150, 200, 260, 320, 10), false); return;
+  }
+  const n = N[cur];
+  const onPath = new Set(S.path), seen = new Set(S.seen || []);
+  classAll(id => {
+    let c = baseCls(id);
+    if (id === cur) c += ' cur';
+    else if (onPath.has(id)) c += ' path';
+    else if (n.kids.includes(id)) c += ' prev';
+    else if (seen.has(id)) c += ' seen';
+    else c += ' off';
+    return c;
+  });
+  n.kids.forEach(k => label(k, N[k].name.replace(/^(A|V|Vv|Aa|R|Rr)\. /, ''), 'faint'));
+  label(cur, n.name, 'curl');
+  (n.l || []).forEach(l => marker(LM[l].at[0] && n.side === 's' ? mir(LM[l].at) : LM[l].at, ''));
+  drop(cur);
+  const box = boxOf([cur].concat(n.kids).concat(n.parent ? [n.parent] : []), 22, n.dp > 7 ? 110 : 140);
+  zoomTo(box);
+  const crumbs = S.path.map((id, i) => `<button class="crumb${i === S.path.length - 1 ? ' on' : ''}" data-i="${i}">${esc(N[id].name)}</button>`).join('<span class="sep">›</span>');
+  const lms = (n.l || []).map(l => `<div class="lmbanner"><b>📍 Önemli geçiş: ${esc(LM[l].name)}</b><span>${esc(LM[l].t)}</span></div>`).join('');
+  const qs = [...n.qs].map(q => `<button class="qchip" data-q="${q}">⭐ ${esc(QZ[q] ? QZ[q].s : q)}</button>`).join('');
+  const link = n.link && N[n.link] ? `<button class="linkchip" data-go="${n.link}">↔ Bağlantı: ${esc(nm(n.link))}</button>` : '';
+  const head = S.type === 'A' ? 'Buradan nereye gidebilirsin?' : 'Bu vene kan nereden geliyor?';
+  panel.innerHTML = `<div class="crumbs">${crumbs}</div>
+    <div class="cur ${n.t === 'A' ? 'art' : 'ven'}"><div class="curh"><h2>${esc(n.name)}</h2>${n.side ? `<span class="side">${sideTag(n)}</span>` : ''}${n.d ? '<span class="side">derin / arkada</span>' : ''}</div>
+    ${n.n ? `<p>${esc(n.n)}</p>` : ''}${lms}${link}${qs ? `<div class="qchips">${qs}</div>` : ''}</div>
+    <h3 class="sh">${n.kids.length ? head : 'Yolun sonu'}</h3>
+    ${n.kids.length ? `<div class="opts">${n.kids.map(k => optCard(k)).join('')}</div>` : '<p class="hint">Bu damarın şemada başka dalı yok. Geri dönüp başka bir çatala sapabilirsin.</p>'}
+    <div class="navrow"><button class="btn" id="back" ${S.path.length < 2 ? 'disabled' : ''}>← Geri</button><button class="btn" id="restart">Baştan başla</button></div>`;
+  bindOpts();
+  panel.querySelectorAll('.crumb').forEach(b => b.addEventListener('click', () => { S.path = S.path.slice(0, +b.dataset.i + 1); renderYol(); }));
+  panel.querySelector('#back').addEventListener('click', () => { S.path.pop(); renderYol(); });
+  panel.querySelector('#restart').addEventListener('click', () => { S.path = []; S.seen = []; renderYol(); });
+  panel.querySelectorAll('.qchip').forEach(b => b.addEventListener('click', () => { S.mode = 'cik'; S.q = b.dataset.q; render(); }));
+  panel.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => goTo(b.dataset.go)));
+}
+function optCard(id, isRoot) {
+  const n = N[id];
+  const prev = n.kids.map(k => N[k].name).join(' · ');
+  const badges = (n.l && n.l.length ? '<span class="bd lm" title="Önemli geçiş">📍</span>' : '') + (n.qs.size ? '<span class="bd q" title="Çıkmışta soruldu">⭐</span>' : '');
+  const sub = isRoot ? (n.kids.map(k => N[k].name).join(', ')) : prev;
+  return `<button class="opt ${n.t === 'A' ? 'art' : 'ven'}" data-id="${id}"><span class="on">${esc(n.name)}${n.side && !isRoot ? ` <small>${sideTag(n)}</small>` : ''} ${badges}</span>${sub ? `<span class="pv">→ ${esc(sub)}</span>` : '<span class="pv">son dal</span>'}</button>`;
+}
+function bindOpts() { panel.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { const id = b.dataset.id; if (!S.path.length) S.path = [id]; else S.path.push(id); S.seen = [...new Set((S.seen || []).concat(S.path))]; renderYol(); panel.scrollTop = 0; })); }
+function goTo(id) { S.path = anc(id); S.seen = [...new Set((S.seen || []).concat(S.path))]; S.type = N[id].t; syncType(); renderYol(); }
+
+/* ---------- atlas ---------- */
+function renderAtlas() {
+  clearLabels();
+  const sel = S.sel && N[S.sel] && (S.type === 'B' || N[S.sel].t === S.type) ? S.sel : null;
+  const show = id => S.type === 'B' || N[id].t === S.type;
+  if (sel) {
+    const path = new Set(anc(sel)), below = new Set(sub(sel));
+    classAll(id => baseCls(id) + (!show(id) ? ' gone' : id === sel ? ' cur' : path.has(id) ? ' path' : below.has(id) ? ' kid' : ' dim'));
+    label(sel, N[sel].name, 'curl');
+    (N[sel].l || []).forEach(l => marker(N[sel].side === 's' ? mir(LM[l].at) : LM[l].at, ''));
+    zoomTo(boxOf(sub(sel).concat([sel]), 22, 100));
+  } else {
+    classAll(id => baseCls(id) + (show(id) ? '' : ' gone'));
+  }
+  const roots = (S.type === 'A' ? ['lv', 'rv'] : S.type === 'V' ? ['ra', 'la'] : ['lv', 'rv', 'ra', 'la']);
+  const n = sel ? N[sel] : null;
+  const info = n ? `<div class="cur ${n.t === 'A' ? 'art' : 'ven'}"><div class="curh"><h2>${esc(n.name)}</h2>${n.side ? `<span class="side">${sideTag(n)}</span>` : ''}</div>
+      <p class="route">${anc(sel).map(a => esc(N[a].name)).join(' → ')}</p>${n.n ? `<p>${esc(n.n)}</p>` : ''}
+      ${(n.l || []).map(l => `<div class="lmbanner"><b>📍 ${esc(LM[l].name)}</b><span>${esc(LM[l].t)}</span></div>`).join('')}
+      ${n.kids.length ? `<p class="kidsline"><b>Dalları:</b> ${n.kids.map(k => `<button class="mini" data-sel="${k}">${esc(N[k].name)}</button>`).join(' ')}</p>` : ''}
+      ${[...n.qs].map(q => `<button class="qchip" data-q="${q}">⭐ ${esc(QZ[q] ? QZ[q].s : q)}</button>`).join('')}
+      <div class="navrow"><button class="btn" id="clr">Seçimi kaldır</button><button class="btn" id="travel">Bu damara yolculuk yap</button></div></div>` : '<p class="hint">Listeden ya da şemadan bir damar seç: aorttan (veya kalpten) o damara kadarki yol belirginleşir, geri kalan her şey soluklaşır.</p>';
+  panel.innerHTML = `${info}<input type="search" id="q" placeholder="Damar ara (ör. radialis, saphena)" value="${esc(S.search || '')}" autocomplete="off"><div class="tree">${roots.map(r => treeNode(r, 0)).join('')}</div>`;
+  const qi = panel.querySelector('#q');
+  qi.addEventListener('input', () => { S.search = qi.value; const pos = qi.selectionStart; renderAtlasTreeOnly(); });
+  bindTree();
+  panel.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => selectAtlas(b.dataset.sel)));
+  panel.querySelectorAll('.qchip').forEach(b => b.addEventListener('click', () => { S.mode = 'cik'; S.q = b.dataset.q; render(); }));
+  const c = panel.querySelector('#clr'); if (c) c.addEventListener('click', () => { S.sel = null; zoomTo(FULL); renderAtlas(); });
+  const tr = panel.querySelector('#travel'); if (tr) tr.addEventListener('click', () => { S.mode = 'yol'; goTo(sel); render(); });
+}
+function renderAtlasTreeOnly() {
+  const roots = (S.type === 'A' ? ['lv', 'rv'] : S.type === 'V' ? ['ra', 'la'] : ['lv', 'rv', 'ra', 'la']);
+  panel.querySelector('.tree').innerHTML = roots.map(r => treeNode(r, 0)).join('');
+  bindTree();
+}
+function matches(id, q) { return N[id].name.toLowerCase().includes(q); }
+function treeNode(id, lvl) {
+  const n = N[id], q = (S.search || '').trim().toLowerCase();
+  const subIds = sub(id);
+  if (q && !subIds.some(s => matches(s, q))) return '';
+  const open = q ? true : (S.open.has(id) || lvl < 2 || (S.sel && anc(S.sel).includes(id)));
+  const has = n.kids.length > 0;
+  const on = S.sel === id ? ' on' : '';
+  const badges = (n.l && n.l.length ? ' 📍' : '') + (n.qs.size ? ' ⭐' : '');
+  return `<div class="tn"><div class="trow${on} ${n.t === 'A' ? 'art' : 'ven'}">${has ? `<button class="tog" data-tog="${id}" aria-label="aç/kapa">${open ? '▾' : '▸'}</button>` : '<span class="tog sp"></span>'}<button class="tname" data-sel="${id}">${esc(n.name)}${n.side ? ` <small>${sideTag(n)}</small>` : ''}<span class="bdg">${badges}</span></button></div>${has && open ? `<div class="tk">${n.kids.map(k => treeNode(k, lvl + 1)).join('')}</div>` : ''}</div>`;
+}
+function bindTree() {
+  panel.querySelectorAll('.tree [data-tog]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.tog; S.open.has(id) ? S.open.delete(id) : S.open.add(id); renderAtlasTreeOnly(); }));
+  panel.querySelectorAll('.tree [data-sel]').forEach(b => b.addEventListener('click', () => selectAtlas(b.dataset.sel)));
+}
+function selectAtlas(id) { S.sel = id; if (S.type !== 'B' && N[id].t !== S.type) { S.type = N[id].t; syncType(); } renderAtlas(); panel.scrollTop = 0; }
+
+/* ---------- çıkmışlar ---------- */
+function renderCik() {
+  clearLabels();
+  const q = S.q ? QZ[S.q] : null;
+  const all = new Set(); CIKMIS.forEach(c => c.v.forEach(v => all.add(v)));
+  if (q) {
+    const okN = q.ok || q.v.length;
+    const good = new Set(q.v.slice(0, okN).filter(v => N[v])), bad = new Set(q.v.slice(okN).filter(v => N[v]));
+    const path = new Set(); good.forEach(v => anc(v).forEach(a => path.add(a)));
+    classAll(id => baseCls(id) + (good.has(id) ? ' cur' : bad.has(id) ? ' wrong' : path.has(id) ? ' path' : ' dim'));
+    good.forEach(v => label(v, N[v].name, 'curl'));
+    bad.forEach(v => label(v, '✗ ' + N[v].name, 'faint'));
+    zoomTo(boxOf([...good, ...bad], 22, 110));
+  } else {
+    const path = new Set(); all.forEach(v => N[v] && anc(v).forEach(a => path.add(a)));
+    classAll(id => baseCls(id) + (all.has(id) ? ' star' : path.has(id) ? ' path' : ' dim'));
+    zoomTo(FULL);
+  }
+  const groups = [...new Set(CIKMIS.map(c => c.g))];
+  panel.innerHTML = (q ? `<div class="cur qa"><span class="src">${esc(q.src)}</span><h2>${esc(q.s)}</h2><p class="ans">✅ ${esc(q.a)}</p>${q.n ? `<p>${esc(q.n)}</p>` : ''}
+      <p class="hint">Şemada parlak çizgi doğru cevap ve yolu, ✗ işaretli soluk olanlar şıklardaki çeldiriciler.</p><p class="kidsline"><b>Doğru:</b> ${q.v.slice(0, q.ok || q.v.length).filter(v => N[v]).map(v => `<button class="mini" data-atl="${v}">${esc(nm(v))}</button>`).join(' ')}</p>${q.v.length > (q.ok || q.v.length) ? `<p class="kidsline"><b>Çeldirici:</b> ${q.v.slice(q.ok).filter(v => N[v]).map(v => `<button class="mini" data-atl="${v}">${esc(nm(v))}</button>`).join(' ')}</p>` : ''}
+      <div class="navrow"><button class="btn" id="clr">Tümünü göster</button></div></div>` : '<p class="hint">Çıkmışta sorulan damarlar şemada yıldız rengiyle işaretli. Bir soruya tıkla: o sorunun damarları belirginleşir, cevabı ve püf noktası görünür.</p>')
+    + groups.map(g => `<h3 class="sh">${esc(g)}</h3><div class="qlist">${CIKMIS.filter(c => c.g === g).map(c => `<button class="qitem${S.q === c.id ? ' on' : ''}" data-q="${c.id}"><span>${esc(c.s)}</span><small>${esc(c.src)}</small></button>`).join('')}</div>`).join('');
+  panel.querySelectorAll('.qitem').forEach(b => b.addEventListener('click', () => { S.q = b.dataset.q; renderCik(); panel.scrollTop = 0; }));
+  const c = panel.querySelector('#clr'); if (c) c.addEventListener('click', () => { S.q = null; renderCik(); });
+  panel.querySelectorAll('[data-atl]').forEach(b => b.addEventListener('click', () => { S.mode = 'atl'; S.type = 'B'; syncType(); S.sel = b.dataset.atl; render(); }));
+}
+
+/* ---------- önemli geçitler ---------- */
+function renderLm() {
+  clearLabels();
+  const l = S.lm ? LM[S.lm] : null;
+  if (l) {
+    const vs = new Set(l.v.filter(v => N[v]));
+    const path = new Set(); vs.forEach(v => anc(v).forEach(a => path.add(a)));
+    classAll(id => baseCls(id) + (vs.has(id) ? ' cur' : path.has(id) ? ' path' : ' dim'));
+    marker(l.at, l.name);
+    vs.forEach(v => label(v, N[v].name, 'curl'));
+    const ids = [...vs];
+    const b = boxOf(ids, 20, 80);
+    zoomTo(b);
+  } else {
+    classAll(id => baseCls(id) + ' dim');
+    LANDMARKS.forEach(x => marker(x.at, ''));
+    zoomTo(FULL);
+  }
+  panel.innerHTML = (l ? `<div class="cur lmc"><h2>📍 ${esc(l.name)}</h2><p>${esc(l.t)}</p>
+      <p class="kidsline"><b>Buradan geçen / ilgili damarlar:</b> ${l.v.filter(v => N[v]).map(v => `<button class="mini" data-atl="${v}">${esc(nm(v))}</button>`).join(' ')}</p>
+      ${(l.q || []).filter(q => QZ[q]).map(q => `<button class="qchip" data-q="${q}">⭐ ${esc(QZ[q].s)}</button>`).join('')}
+      <div class="navrow"><button class="btn" id="clr">Tümünü göster</button></div></div>` : '<p class="hint">Damarların geçtiği dar yerler, aralıklar ve açıklıklar. Sınavda "nereden geçer" sorularının hepsi buradan. Birine tıkla, şemada yeri ve geçen damarlar gösterilsin.</p>')
+    + `<div class="qlist">${LANDMARKS.map(x => `<button class="qitem${S.lm === x.id ? ' on' : ''}" data-lm="${x.id}"><span>📍 ${esc(x.name)}</span><small>${esc(x.t.length > 95 ? x.t.slice(0, 92).replace(/\s+\S*$/, '') + '…' : x.t)}</small></button>`).join('')}</div>`;
+  panel.querySelectorAll('[data-lm]').forEach(b => b.addEventListener('click', () => { S.lm = b.dataset.lm; renderLm(); panel.scrollTop = 0; }));
+  const c = panel.querySelector('#clr'); if (c) c.addEventListener('click', () => { S.lm = null; renderLm(); });
+  panel.querySelectorAll('[data-atl]').forEach(b => b.addEventListener('click', () => { S.mode = 'atl'; S.type = 'B'; syncType(); S.sel = b.dataset.atl; render(); }));
+  panel.querySelectorAll('.qchip').forEach(b => b.addEventListener('click', () => { S.mode = 'cik'; S.q = b.dataset.q; render(); }));
+}
+
+/* ---------- şema tıklaması ---------- */
+function onFigClick(id) {
+  if (S.mode === 'atl') { selectAtlas(id); return; }
+  if (S.mode === 'yol') { const cur = S.path[S.path.length - 1]; if (cur && N[cur].kids.includes(id)) { S.path.push(id); S.seen = [...new Set((S.seen || []).concat(S.path))]; renderYol(); } return; }
+  S.mode = 'atl'; S.type = 'B'; syncType(); S.sel = id; render();
+}
+
+/* ---------- üst kontroller ---------- */
+const typeBox = document.getElementById('typeSeg');
+function syncType() {
+  typeBox.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === S.type ? 'true' : 'false'));
+  typeBox.querySelector('[data-t="B"]').hidden = S.mode === 'yol';
+}
+typeBox.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  S.type = b.dataset.t; if (S.mode === 'yol') { S.path = []; S.seen = []; } syncType(); render();
+}));
+document.querySelectorAll('#modeSeg button').forEach(b => b.addEventListener('click', () => { S.mode = b.dataset.m; if (S.mode === 'yol' && S.type === 'B') S.type = 'A'; render(); }));
+let lastMode = null;
+function render() {
+  if (lastMode !== S.mode && (S.mode === 'atl' && !S.sel)) zoomTo(FULL);
+  lastMode = S.mode;
+  document.querySelectorAll('#modeSeg button').forEach(b => b.setAttribute('aria-selected', b.dataset.m === S.mode ? 'true' : 'false'));
+  document.getElementById('typeWrap').hidden = !(S.mode === 'yol' || S.mode === 'atl');
+  if (S.mode === 'yol' && S.type === 'B') S.type = 'A';
+  syncType();
+  try { localStorage.setItem('damar-mode', S.mode); } catch (e) {}
+  ({ yol: renderYol, atl: renderAtlas, cik: renderCik, lm: renderLm })[S.mode]();
+}
+svg.addEventListener('click', () => { if (S.mode === 'atl' && S.sel) { S.sel = null; zoomTo(FULL); renderAtlas(); } });
+setVB(FULL);
+render();
+})();
+</script>
+</body>
+</html>
