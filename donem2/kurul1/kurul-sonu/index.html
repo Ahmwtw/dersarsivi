@@ -113,7 +113,9 @@ li::marker { color: var(--c); }
 .mn-h { display: block; font-weight: 600; color: var(--c); margin-bottom: 4px; }
 .mn p { margin: 0; }
 .foot { color: var(--muted); font-size: 0.85rem; padding-block: 48px 0; }
-@media (max-width: 480px) { body { font-size: 16px; } .tabs button { padding: 6px 12px; font-size: 0.9rem; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
+@media (max-width: 480px) { body { font-size: 16px; } .tabs button { padding: 6px 12px; font-size: 0.9rem; }
+.tabs a.tab-link { font: inherit; font-weight: 500; font-size: 0.9rem; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 6px 12px; border-radius: 999px; text-decoration: none; }
+.tabs a.tab-link:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 </head>
@@ -136,7 +138,7 @@ li::marker { color: var(--c); }
 
 <div class="wrap">
 <header class="top"><h1>Kurul 1 Sonu · Hazırlık Planı</h1><p>26 Ekim – 27 Kasım. Kan ve solunum dersleri ders programına göre, her dersin öncesinde akşam ön hazırlık; formatif konuları da sınava taşınıyor. Anatomi lab sınavı 24 Kasım, teorik sınav 27 Kasım. 🫁🩸</p></header>
-<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-takvim" aria-controls="panel-takvim" aria-selected="true" data-tab="takvim">📅 Gün gün plan</button><button type="button" role="tab" id="tab-oncelik" aria-controls="panel-oncelik" aria-selected="false" data-tab="oncelik">🎯 Öncelikler</button><button type="button" role="tab" id="tab-tekrar" aria-controls="panel-tekrar" aria-selected="false" data-tab="tekrar">🔁 Sürekli tekrar</button></div>
+<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-takvim" aria-controls="panel-takvim" aria-selected="true" data-tab="takvim">📅 Gün gün plan</button><button type="button" role="tab" id="tab-oncelik" aria-controls="panel-oncelik" aria-selected="false" data-tab="oncelik">🎯 Öncelikler</button><button type="button" role="tab" id="tab-tekrar" aria-controls="panel-tekrar" aria-selected="false" data-tab="tekrar">🔁 Sürekli tekrar</button><a class="tab-link" href="./cikmislar/">📝 Çıkmışlar</a><a class="tab-link" href="./cikmislar/#tekrar">🧠 Yanlış tekrarı</a></div>
 <div role="tabpanel" id="panel-takvim" aria-labelledby="tab-takvim"><nav class="toc"><a class="c-ink" href="#takvim-nasil-kullanilir">Nasıl kullanılır</a><a class="c-red" href="#takvim-1-hafta-26-30-ekim-kan-basliyor">1. hafta · 26–30 Ekim: kan başlıyor</a><a class="c-orange" href="#takvim-2-hafta-2-6-kasim-alt-solunum-anatomisi-">2. hafta · 2–6 Kasım: alt solunum anatomisi, solunum histolojisi, lökositler</a><a class="c-amber" href="#takvim-3-hafta-9-13-kasim-pihtilasma-biyokimyas">3. hafta · 9–13 Kasım: pıhtılaşma biyokimyası, solunum embriyolojisi, kök hücre</a><a class="c-green" href="#takvim-4-hafta-16-20-kasim-solunum-fizyolojisi-">4. hafta · 16–20 Kasım: solunum fizyolojisi (en yoğun hafta)</a><a class="c-purple" href="#takvim-5-hafta-23-27-kasim-kontrol-lab-sinavi-f">5. hafta · 23–27 Kasım: kontrol, lab sınavı, final</a></nav><section class="sec c-ink" id="takvim-nasil-kullanilir">
 <h2>Nasıl kullanılır</h2>
 <p>Kurul sonu teorik sınavı <strong>27 Kasım Cuma 10:30</strong>. <strong>Anatomi laboratuvar sınavı ayrı ve daha önce: 24 Kasım Salı.</strong> Sınav, formatifteki bütün konuları (dolaşım) ve bundan sonra işlenecek <strong>kan</strong> ve <strong>solunum</strong> konularını kapsıyor.</p>
@@ -375,7 +377,7 @@ li::marker { color: var(--c); }
 </div>
 <script>
 (function () {
-  var btns = document.querySelectorAll('.tabs button');
+  var btns = document.querySelectorAll('.tabs button[data-tab]');
   function show(id, scroll) {
     btns.forEach(function (b) { var on = b.dataset.tab === id; b.setAttribute('aria-selected', on ? 'true' : 'false'); document.getElementById('panel-' + b.dataset.tab).hidden = !on; });
     try { localStorage.setItem('plan-tab', id); } catch (e) {}
