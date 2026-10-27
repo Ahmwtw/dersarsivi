@@ -106,6 +106,7 @@ function load(k){ try { var s = JSON.parse(localStorage.getItem(k) || 'null'); i
 function save(){ try { localStorage.setItem(cur.key, JSON.stringify(st)); } catch (e) {} }
 var tabs = document.getElementById('tabs');
 SETS.forEach(function (S) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role','tab'); b.dataset.id = S.id; b.textContent = S.tab; b.addEventListener('click', function(){ show(S.id, true); }); tabs.appendChild(b); });
+[['📝 Çıkmışlar','./cikmislar/'],['🔁 Tekrar','./cikmislar/#tekrar']].forEach(function (x) { var a = document.createElement('button'); a.type = 'button'; a.textContent = x[0]; a.addEventListener('click', function(){ location.href = x[1]; }); tabs.appendChild(a); });
 function show(id, scroll) {
   cur = SETS.filter(function (S) { return S.id === id; })[0] || SETS[0]; DATA = cur.qs; st = load(cur.key);
   try { localStorage.setItem('nazli-tab', cur.id); } catch (e) {}
