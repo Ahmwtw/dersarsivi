@@ -51,6 +51,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--sel);flex:none;ma
 .q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:12px 0}
 .qh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
 .num{font-weight:600;color:var(--muted);font-size:.9rem}
+.tag.rep{background:var(--Y-soft);color:var(--Y)}
 .tag{border-radius:999px;padding:1px 10px;font-size:.75rem;font-weight:500;background:var(--soft);color:var(--muted)}
 .stem p{margin:0 0 6px;font-weight:400}
 .stem table{border-collapse:collapse;font-size:.92rem;margin:6px 0}.stem td,.stem th{border:1px solid var(--line);padding:3px 8px}
@@ -100,7 +101,7 @@ h3{font-size:1rem;font-weight:500;color:var(--muted);margin:16px 0 0}
   <div class="seg" id="modes"><button data-m="cikmis">Çıkmış modu</button><button data-m="deneme">Deneme</button><button data-m="songun">Son gün</button></div>
  </div>
  <div class="ctl">
-  <label>Göster <select id="show"><option value="all">Tümü</option><option value="un">Çözmediklerim</option><option value="wrong">Yanlış yaptıklarım</option></select></label>
+  <label>Göster <select id="show"><option value="all">Tümü</option><option value="un">Çözmediklerim</option><option value="wrong">Yanlış yaptıklarım</option><option value="multi">Birden fazla sorulanlar</option><option value="top">En çok sorulandan aza</option></select></label>
   <label id="nWrap" class="hide">Soru sayısı <select id="nSel"><option>20</option><option selected>40</option><option>60</option><option value="0">Tümü</option></select></label>
   <input type="search" id="q" placeholder="Soru içinde ara…">
  </div>
@@ -154,9 +155,12 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
 
 var D=[],BY={},$=function(i){return document.getElementById(i)};
-fetch('data.json').then(function(r){return r.json()}).then(function(d){d.forEach(function(q,i){q._i=i});d.sort(function(a,b){return (DERS.indexOf(a.d)-DERS.indexOf(b.d))||(a.k==='Diğer')-(b.k==='Diğer')||a.k.localeCompare(b.k,'tr')||a._i-b._i});D=d;d.forEach(function(q){BY[q.id]=q});init()})
+fetch('data.json').then(function(r){return r.json()}).then(function(d){d.forEach(function(q,i){q._i=i});d.sort(function(a,b){return (DERS.indexOf(a.d)-DERS.indexOf(b.d))||(a.k==='Diğer')-(b.k==='Diğer')||a.k.localeCompare(b.k,'tr')||a._i-b._i});D=d;d.forEach(function(q){BY[q.id]=q});remap();init()})
  .catch(function(){$('list').innerHTML='<p class="empty">Veri yüklenemedi. İnternet bağlantını kontrol et.</p>'});
 
+function remap(){var ch=false;D.forEach(function(q){(q.al||[]).forEach(function(o){
+  if(R[o]){var a=R[o],b=R[q.id];if(!b)R[q.id]=a;else{b.wrong+=a.wrong;b.due=Math.min(a.due,b.due)}delete R[o];ch=true}
+  if(S.ans[o]!=null){delete S.ans[o];ch=true}})});if(ch){saveS();saveR()}}
 function on(q){return !S.off[q.d]&&!S.offk[q.d+'|'+q.k]}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function ok(q,i){return q.a!==-1&&q.a.indexOf(i)>=0}
@@ -192,7 +196,7 @@ function dueBadge(){var n=0,now=Date.now();for(var k in R)if(R[k].due<=now&&BY[k
 
 /* ---------- render a question ---------- */
 function qHTML(q,n,opt){
- var h='<div class="qh"><span class="num">'+n+'.</span><span class="tag">'+esc(q.d)+'</span><span class="tag">'+esc(q.k)+'</span></div><div class="stem">'+q.q+'</div>';
+ var h='<div class="qh"><span class="num">'+n+'.</span><span class="tag">'+esc(q.d)+'</span><span class="tag">'+esc(q.k)+'</span>'+(q.n>1?'<span class="tag rep">'+q.n+' kez soruldu</span>':'')+'</div><div class="stem">'+q.q+'</div>';
  (q.ib||[]).forEach(function(s){h+='<img loading="lazy" src="'+s+'" alt="">'});
  if(opt.songun){
   (q.ia||[]).forEach(function(s){h+='<img loading="lazy" src="'+s+'" alt="">'});
@@ -211,7 +215,7 @@ function fbHTML(q,choice){
  h+='<div class="ans">'+ansText(q)+'</div>';
  if(q.e)h+='<p style="margin:8px 0 0">'+q.e+'</p>';
  if(q.own)h+='<div class="own">Resmî anahtar yok; cevap çözülerek verildi.</div>';
- h+='<div class="src">Kaynak: '+q.s.map(esc).join(' · ')+'</div>';
+ h+='<div class="src">'+(q.n>1?q.n+' kez soruldu · ':'')+'Kaynak: '+q.s.map(esc).join(' · ')+'</div>';
  return h;
 }
 function paint(el,q,choice){
@@ -252,6 +256,7 @@ function pool(){
   if(!on(q))return false;
   if(S.show==='un'&&S.ans[q.id]!=null)return false;
   if(S.show==='wrong'&&!R[q.id])return false;
+  if(S.show==='multi'&&!(q.n>1))return false;
   if(s&&(q.q+' '+q.o.join(' ')).replace(/<[^>]+>/g,' ').toLocaleLowerCase('tr').indexOf(s)<0)return false;
   return true;
  });
@@ -263,7 +268,7 @@ function refresh(){
  $('reset').classList.toggle('hide',S.mode!=='cikmis');
  $('finish').classList.add('hide');$('newD').classList.add('hide');$('denemeHead').innerHTML='';
  if(S.mode==='deneme')return startDeneme();
- shown=pool();page=0;$('list').innerHTML='';
+ shown=pool();if(S.show==='top')shown=shown.slice().sort(function(a,b){return (b.n||1)-(a.n||1)});page=0;$('list').innerHTML='';
  if(!shown.length){$('list').innerHTML='<p class="empty">Bu filtreyle soru yok.</p>';}
  more();count();
 }
@@ -273,8 +278,8 @@ function more(){
  var prev=shown[from-1];if(prev){lastD=prev.d;lastK=prev.k}
  for(var i=from;i<to;i++){
   var q=shown[i];
-  if(q.d!==lastD){var h2=document.createElement('h2');h2.textContent=q.d;frag.appendChild(h2);lastD=q.d;lastK=null}
-  if(q.k!==lastK){var h3=document.createElement('h3');h3.textContent=q.k;frag.appendChild(h3);lastK=q.k}
+  if(S.show!=='top'&&q.d!==lastD){var h2=document.createElement('h2');h2.textContent=q.d;frag.appendChild(h2);lastD=q.d;lastK=null}
+  if(S.show!=='top'&&q.k!==lastK){var h3=document.createElement('h3');h3.textContent=q.k;frag.appendChild(h3);lastK=q.k}
   frag.appendChild(card(q,i+1,S.mode==='songun'));
  }
  L0.appendChild(frag);page++;
