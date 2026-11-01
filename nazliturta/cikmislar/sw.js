@@ -1,4 +1,4 @@
-const C='cikmis-v4';
+const C='cikmis-v5';
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','index.html','data.json','manifest.webmanifest'])))});
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{
