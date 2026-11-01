@@ -149,7 +149,7 @@ h3{font-size:1rem;font-weight:500;color:var(--muted);margin:16px 0 0}
 'use strict';
 var DERS=['Biyokimya','Biyofizik','Tıbbi Biyoloji ve Genetik','Histoloji ve Embriyoloji','Anatomi','Tıp Tarihi ve Etik','Halk Sağlığı'];
 var L='ABCDEFGH';
-var EXAMS=[{k:'2025',t:'2025 Sınavı',pdf:'pdf/2025_Sinavi_TR.pdf'},{k:'2024',t:'2024 Sınavı',pdf:'pdf/2024_Sinavi_TR.pdf'},{k:'2023',t:'2023 Sınavı',pdf:'pdf/2023_Sinavi_TR.pdf'},{k:'2022',t:'2022 Sınavı',pdf:'pdf/2022_Sinavi_TR.pdf'}];
+var EXAMS=[{k:'ttq',t:'Tıp Tarihi Quiz',pdf:'pdf/Tip_Tarihi_Quiz.pdf'},{k:'2025',t:'2025 Sınavı',pdf:'pdf/2025_Sinavi_TR.pdf'},{k:'2024',t:'2024 Sınavı',pdf:'pdf/2024_Sinavi_TR.pdf'},{k:'2023',t:'2023 Sınavı',pdf:'pdf/2023_Sinavi_TR.pdf'},{k:'2022',t:'2022 Sınavı',pdf:'pdf/2022_Sinavi_TR.pdf'}];
 var EXT={};EXAMS.forEach(function(e){EXT[e.k]=e.t});
 function ld(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
