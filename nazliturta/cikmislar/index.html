@@ -86,6 +86,9 @@ h3{font-size:1rem;font-weight:500;color:var(--muted);margin:16px 0 0}
 .hint{font-size:.85rem;color:var(--muted)}
 .hide{display:none!important}
 .more{display:block;margin:16px auto}
+.tag.ex{background:var(--sel-soft);color:var(--sel)}
+.pdf{font-size:.8rem;font-weight:500;color:var(--sel);text-decoration:none;white-space:nowrap}
+#bySeg{margin:10px 0 4px}
 </style></head>
 <body>
 <nav class="ds-bar" aria-label="Konum"><span class="ds-home"><a href="../../">🏠 Ders Arşivi</a> › <a href="../">Nazlıturta</a></span>
@@ -94,7 +97,7 @@ h3{font-size:1rem;font-weight:500;color:var(--muted);margin:16px 0 0}
 
 <section id="vC">
 <h1>Çıkmışlar</h1>
-<p class="sub">Dönem 1 · 1. Komite (Moleküler ve Hücresel Tıp Bilimleri I) · <span id="tot"></span></p>
+<p class="sub">Dönem 1 · 1. Komite (Moleküler ve Hücresel Tıp Bilimleri I) · <span id="tot"></span> · derslere ya da sınavlara göre çalış</p>
 
 <div class="panel">
  <div class="ctl" style="margin-bottom:10px">
@@ -108,8 +111,9 @@ h3{font-size:1rem;font-weight:500;color:var(--muted);margin:16px 0 0}
 </div>
 
 <details class="panel f" id="fil">
- <summary><span>Dersler ve konular</span><span class="c" id="filSum"></span></summary>
- <div class="ctl" style="margin:10px 0 4px"><button class="btn sm" id="allOn">Tümünü aç</button><button class="btn sm" id="allOff">Tümünü kapat</button><span class="hint">Dersin yanındaki ▾ ile konuları tek tek aç/kapat.</span></div>
+ <summary><span id="filTitle">Dersler ve konular</span><span class="c" id="filSum"></span></summary>
+ <div class="seg" id="bySeg"><button type="button" data-b="ders">Dersler</button><button type="button" data-b="sinav">Sınavlar</button></div>
+ <div class="ctl" style="margin:10px 0 4px"><button class="btn sm" id="allOn">Tümünü aç</button><button class="btn sm" id="allOff">Tümünü kapat</button><span class="hint" id="filHint">Dersin yanındaki ▾ ile konuları tek tek aç/kapat.</span></div>
  <div id="dl"></div>
 </details>
 
@@ -145,10 +149,12 @@ h3{font-size:1rem;font-weight:500;color:var(--muted);margin:16px 0 0}
 'use strict';
 var DERS=['Biyokimya','Biyofizik','Tıbbi Biyoloji ve Genetik','Histoloji ve Embriyoloji','Anatomi','Tıp Tarihi ve Etik','Halk Sağlığı'];
 var L='ABCDEFGH';
+var EXAMS=[{k:'2025',t:'2025 Sınavı',pdf:'pdf/2025_Sinavi_TR.pdf'},{k:'2024',t:'2024 Sınavı',pdf:'pdf/2024_Sinavi_TR.pdf'},{k:'2023',t:'2023 Sınavı',pdf:'pdf/2023_Sinavi_TR.pdf'}];
+var EXT={};EXAMS.forEach(function(e){EXT[e.k]=e.t});
 function ld(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var S=ld('cikmis-v1',{mode:'cikmis',off:{},offk:{},show:'all',n:'40',ans:{}});
-S.ans=S.ans||{};S.off=S.off||{};S.offk=S.offk||{};
+S.ans=S.ans||{};S.off=S.off||{};S.offk=S.offk||{};S.by=S.by||'ders';S.offx=S.offx||{};S.offxd=S.offxd||{};
 var R=ld('cikmis-srs',{}); // id -> {due,iv,ef,reps,lapses,wrong,added}
 function saveS(){sv('cikmis-v1',S)} function saveR(){sv('cikmis-srs',R);dueBadge()}
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
@@ -161,7 +167,13 @@ fetch('data.json').then(function(r){return r.json()}).then(function(d){d.forEach
 function remap(){var ch=false;D.forEach(function(q){(q.al||[]).forEach(function(o){
   if(R[o]){var a=R[o],b=R[q.id];if(!b)R[q.id]=a;else{b.wrong+=a.wrong;b.due=Math.min(a.due,b.due)}delete R[o];ch=true}
   if(S.ans[o]!=null){delete S.ans[o];ch=true}})});if(ch){saveS();saveR()}}
-function on(q){return !S.off[q.d]&&!S.offk[q.d+'|'+q.k]}
+function onX(q,e){return !!(q.x&&q.x[e])&&!S.offx[e]&&!S.offxd[e+'|'+q.d]}
+function on(q){if(S.by==='sinav')return EXAMS.some(function(e){return onX(q,e.k)});return !S.off[q.d]&&!S.offk[q.d+'|'+q.k]}
+/* sınav görünümünde her sınav için soru kopyası (aynı soru iki sınavda çıktıysa iki yerde görünür) */
+function exItems(list){var out=[];EXAMS.forEach(function(e){
+  list.filter(function(q){return onX(q,e.k)}).sort(function(a,b){return a.x[e.k]-b.x[e.k]})
+   .forEach(function(q){var w=Object.create(q);w._e=e.k;w._xn=q.x[e.k];out.push(w)})});return out}
+function uniq(list){var seen={};return list.filter(function(q){if(seen[q.id])return false;seen[q.id]=1;return true})}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function ok(q,i){return q.a!==-1&&q.a.indexOf(i)>=0}
 function ansText(q){
@@ -196,7 +208,7 @@ function dueBadge(){var n=0,now=Date.now();for(var k in R)if(R[k].due<=now&&BY[k
 
 /* ---------- render a question ---------- */
 function qHTML(q,n,opt){
- var h='<div class="qh"><span class="num">'+n+'.</span><span class="tag">'+esc(q.d)+'</span><span class="tag">'+esc(q.k)+'</span>'+(q.n>1?'<span class="tag rep">'+q.n+' kez soruldu</span>':'')+'</div><div class="stem">'+q.q+'</div>';
+ var h='<div class="qh"><span class="num">'+n+'.</span><span class="tag">'+esc(q.d)+'</span><span class="tag">'+esc(q.k)+'</span>'+(q.n>1?'<span class="tag rep">'+q.n+' kez soruldu</span>':'')+EXAMS.filter(function(e){return q.x&&q.x[e.k]&&e.k!==q._e}).map(function(e){return '<span class="tag ex">'+e.t+' · '+q.x[e.k]+'. soru</span>'}).join('')+'</div><div class="stem">'+q.q+'</div>';
  (q.ib||[]).forEach(function(s){h+='<img loading="lazy" src="'+s+'" alt="">'});
  if(opt.songun){
   (q.ia||[]).forEach(function(s){h+='<img loading="lazy" src="'+s+'" alt="">'});
@@ -226,6 +238,10 @@ function paint(el,q,choice){
 
 /* ---------- filter panel ---------- */
 function buildFilter(){
+ [].forEach.call($('bySeg').children,function(b){b.setAttribute('aria-pressed',b.dataset.b===S.by)});
+ $('filTitle').textContent=S.by==='sinav'?'Sınavlar ve dersleri':'Dersler ve konular';
+ $('filHint').textContent=S.by==='sinav'?'Sınavın yanındaki ▾ ile içindeki dersleri tek tek aç/kapat. Sorular sınavdaki sırasıyla gelir.':'Dersin yanındaki ▾ ile konuları tek tek aç/kapat.';
+ if(S.by==='sinav')return buildExFilter();
  var cnt={},kc={};
  D.forEach(function(q){cnt[q.d]=(cnt[q.d]||0)+1;kc[q.d]=kc[q.d]||{};kc[q.d][q.k]=(kc[q.d][q.k]||0)+1});
  var h='';
@@ -245,14 +261,35 @@ function buildFilter(){
   [].forEach.call(r.querySelectorAll('.kc'),function(c){c.onchange=function(){var key=d+'|'+c.dataset.k;if(c.checked)delete S.offk[key];else S.offk[key]=1;saveS();refresh()}});
  });
 }
-$('allOn').onclick=function(){S.off={};S.offk={};saveS();buildFilter();refresh()};
-$('allOff').onclick=function(){DERS.forEach(function(d){S.off[d]=1});saveS();buildFilter();refresh()};
+function buildExFilter(){
+ var h='';
+ EXAMS.forEach(function(e){
+  var qs=D.filter(function(q){return q.x&&q.x[e.k]});if(!qs.length)return;
+  var dc={};qs.forEach(function(q){dc[q.d]=(dc[q.d]||0)+1});
+  h+='<div class="drow" data-e="'+e.k+'"><div class="dh"><label><input type="checkbox" class="dc"'+(S.offx[e.k]?'':' checked')+'> '+esc(e.t)+' <span class="c">'+qs.length+'</span></label><a class="pdf" href="'+e.pdf+'" target="_blank" rel="noopener">PDF</a><button class="x" type="button">▾ dersler</button></div><div class="kl">';
+  DERS.filter(function(d){return dc[d]}).forEach(function(d){
+   h+='<label><input type="checkbox" class="kc" data-k="'+esc(d)+'"'+(S.offxd[e.k+'|'+d]?'':' checked')+(S.offx[e.k]?' disabled':'')+'> <span>'+esc(d)+' <span class="c">'+dc[d]+'</span></span></label>';
+  });
+  h+='</div></div>';
+ });
+ $('dl').innerHTML=h;
+ [].forEach.call(document.querySelectorAll('.drow'),function(r){
+  var e=r.dataset.e;
+  r.querySelector('.x').onclick=function(){r.classList.toggle('open')};
+  r.querySelector('.dc').onchange=function(){if(this.checked)delete S.offx[e];else S.offx[e]=1;
+   [].forEach.call(r.querySelectorAll('.kc'),function(c){c.disabled=!!S.offx[e]});saveS();refresh()};
+  [].forEach.call(r.querySelectorAll('.kc'),function(c){c.onchange=function(){var key=e+'|'+c.dataset.k;if(c.checked)delete S.offxd[key];else S.offxd[key]=1;saveS();refresh()}});
+ });
+}
+[].forEach.call($('bySeg').children,function(b){b.onclick=function(){S.by=b.dataset.b;saveS();buildFilter();refresh()}});
+$('allOn').onclick=function(){if(S.by==='sinav'){S.offx={};S.offxd={}}else{S.off={};S.offk={}}saveS();buildFilter();refresh()};
+$('allOff').onclick=function(){if(S.by==='sinav')EXAMS.forEach(function(e){S.offx[e.k]=1});else DERS.forEach(function(d){S.off[d]=1});saveS();buildFilter();refresh()};
 
 /* ---------- list views ---------- */
 var shown=[],page=0,PG=60,deneme=null;
 function pool(){
  var s=$('q').value.trim().toLocaleLowerCase('tr');
- return D.filter(function(q){
+ var r=D.filter(function(q){
   if(!on(q))return false;
   if(S.show==='un'&&S.ans[q.id]!=null)return false;
   if(S.show==='wrong'&&!R[q.id])return false;
@@ -260,6 +297,7 @@ function pool(){
   if(s&&(q.q+' '+q.o.join(' ')).replace(/<[^>]+>/g,' ').toLocaleLowerCase('tr').indexOf(s)<0)return false;
   return true;
  });
+ return S.by==='sinav'?exItems(r):r;
 }
 function refresh(){
  var nOn=D.filter(on).length;$('filSum').textContent=nOn+' / '+D.length+' soru açık';
@@ -275,12 +313,13 @@ function refresh(){
 function more(){
  var L0=$('list'),old=L0.querySelector('.more');if(old)old.remove();
  var from=page*PG,to=Math.min(shown.length,from+PG),frag=document.createDocumentFragment(),lastD=null,lastK=null;
- var prev=shown[from-1];if(prev){lastD=prev.d;lastK=prev.k}
+ var prev=shown[from-1];if(prev){lastD=prev._e?EXT[prev._e]:prev.d;lastK=prev._e?prev.d:prev.k}
  for(var i=from;i<to;i++){
   var q=shown[i];
-  if(S.show!=='top'&&q.d!==lastD){var h2=document.createElement('h2');h2.textContent=q.d;frag.appendChild(h2);lastD=q.d;lastK=null}
-  if(S.show!=='top'&&q.k!==lastK){var h3=document.createElement('h3');h3.textContent=q.k;frag.appendChild(h3);lastK=q.k}
-  frag.appendChild(card(q,i+1,S.mode==='songun'));
+  var G=q._e?EXT[q._e]:q.d,K=q._e?q.d:q.k;
+  if(S.show!=='top'&&G!==lastD){var h2=document.createElement('h2');h2.textContent=G;frag.appendChild(h2);lastD=G;lastK=null}
+  if(S.show!=='top'&&K!==lastK){var h3=document.createElement('h3');h3.textContent=K;frag.appendChild(h3);lastK=K}
+  frag.appendChild(card(q,q._xn||i+1,S.mode==='songun'));
  }
  L0.appendChild(frag);page++;
  if(to<shown.length){var b=document.createElement('button');b.className='btn more';b.textContent='Daha fazla göster ('+(shown.length-to)+' kaldı)';b.onclick=more;L0.appendChild(b)}
@@ -295,16 +334,16 @@ function card(q,n,songun){
  return el;
 }
 function count(){
- if(S.mode==='songun'){$('cnt').textContent=shown.length+' soru';return}
- var a=0,c=0;shown.forEach(function(q){var x=S.ans[q.id];if(x!=null&&x!==-9){a++;if(ok(q,x))c++}});
- $('cnt').textContent=shown.length+' soru · '+a+' çözüldü · '+c+' doğru';
+ if(S.mode==='songun'){$('cnt').textContent=uniq(shown).length+' soru';return}
+ var a=0,c=0,u=uniq(shown);u.forEach(function(q){var x=S.ans[q.id];if(x!=null&&x!==-9){a++;if(ok(q,x))c++}});
+ $('cnt').textContent=u.length+' soru · '+a+' çözüldü · '+c+' doğru';
 }
 $('reset').onclick=function(){if(!confirm('Görünen soruların cevapları silinsin mi? (Tekrar kartları kalır)'))return;shown.forEach(function(q){delete S.ans[q.id]});saveS();refresh()};
 
 /* ---------- deneme ---------- */
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
 function startDeneme(){
- var p=pool().filter(function(q){return q.a!==-1&&q.o.length});var n=+S.n;
+ var p=uniq(pool()).filter(function(q){return q.a!==-1&&q.o.length}).map(function(q){return BY[q.id]});var n=+S.n;
  p=shuffle(p);if(n)p=p.slice(0,n);
  deneme={qs:p,ch:{},done:false};shown=p;
  $('denemeHead').innerHTML='';var L0=$('list');L0.innerHTML='';
