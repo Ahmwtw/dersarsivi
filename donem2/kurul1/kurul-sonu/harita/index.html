@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kurul Haritası</title>
+<title>&#8203;</title>
 <meta name="theme-color" content="#f5f3ee">
 <style>
 :root{--bg:#f5f3ee;--card:#fff;--fg:#1a1d24;--mut:#69707d;--line:#e2ded4;--soft:#ece8df;--acc:#2f5bd3;
@@ -95,7 +95,7 @@ mark{background:color-mix(in srgb,var(--y) 35%,transparent);color:inherit;border
 .empty{color:var(--mut);padding:30px 0;text-align:center}
 .foot{font-size:.8rem;color:var(--mut);margin-top:26px}
 .gpf{outline:3px solid var(--acc)!important;outline-offset:2px;border-radius:12px}
-.lock{max-width:360px;margin:12vh auto 0;text-align:center}
+.lock{max-width:260px;margin:30vh auto 0;display:flex;flex-direction:column;align-items:center}
 .lock input{width:100%;font:inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);margin:14px 0 8px;text-align:center}
 .lock .err{color:var(--r);font-size:.9rem;min-height:1.4em}
 .lock label{font-size:.85rem;color:var(--mut);display:flex;gap:6px;justify-content:center;align-items:center;margin-bottom:12px}
@@ -104,8 +104,8 @@ mark{background:color-mix(in srgb,var(--y) 35%,transparent);color:inherit;border
 </head>
 <body>
 <div class="wrap">
-<div class="crumb"><a href="../../../../">🏠 Ders Arşivi</a> › <a href="../../../">Dönem 2</a> › <a href="../../">Kurul 1</a> › <a href="../">Kurul Sonu</a></div>
-<main id="app" aria-live="polite"><p class="sub">Yükleniyor…</p></main>
+<div class="crumb" style="display:none"><a href="../../../../">🏠 Ders Arşivi</a> › <a href="../../../">Dönem 2</a> › <a href="../../">Kurul 1</a> › <a href="../">Kurul Sonu</a></div>
+<main id="app" aria-live="polite"></main>
 </div>
 <script>
 (function(){
@@ -344,23 +344,22 @@ var KK='d2k1-harita-key',ENC=null;
 function b64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0);});}
 function decryptWith(key){return crypto.subtle.decrypt({name:'AES-GCM',iv:b64(ENC.iv)},key,b64(ENC.ct)).then(function(buf){return JSON.parse(new TextDecoder().decode(buf));});}
 function deriveKey(pw){return crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']).then(function(base){return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(ENC.salt),iterations:ENC.it,hash:'SHA-256'},base,{name:'AES-GCM',length:256},true,['decrypt']);});}
-function lockScreen(msg){
-  VIEW={v:'lock'};
-  app.innerHTML='<div class="lock"><h1>🔒 Kurul Haritası</h1><p class="sub">Şifreyi gir.</p><form id="lf"><input id="pw" type="password" autocomplete="current-password" aria-label="Şifre" placeholder="Şifre"><div class="err" role="alert">'+(msg||'')+'</div><label><input id="rem" type="checkbox" checked style="width:auto;margin:0"> Bu cihazda hatırla</label><button class="btn pri" type="submit" style="width:100%;justify-content:center">Aç</button></form></div>';
+function lockScreen(){
+  VIEW={v:'lock'};document.title='\u200b';var cr=document.querySelector('.crumb');if(cr)cr.style.display='none';
+  app.innerHTML='<form id="lf" class="lock" autocomplete="off"><input id="pw" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Kod"><input id="rem" type="checkbox" checked aria-label="Hatırla" style="width:auto;margin:6px 0 0"></form>';
   var pw=document.getElementById('pw');pw.focus();
-  document.getElementById('lf').addEventListener('submit',function(e){e.preventDefault();var v=pw.value;if(!v)return;
-    app.querySelector('.err').textContent='Açılıyor…';
+  document.getElementById('lf').addEventListener('submit',function(e){e.preventDefault();var v=pw.value.trim();if(!v)return;
     deriveKey(v).then(function(key){return decryptWith(key).then(function(d){
       if(document.getElementById('rem').checked){crypto.subtle.exportKey('raw',key).then(function(r){try{localStorage.setItem(KK,btoa(String.fromCharCode.apply(null,new Uint8Array(r))));}catch(x){}});}
-      D=d;home();});}).catch(function(){lockScreen('Şifre yanlış.');});
+      document.title='Kurul Haritası';if(cr)cr.style.display='';D=d;home();});}).catch(function(){pw.value='';pw.focus();});
   });
 }
 function start(){
   var saved=null;try{saved=localStorage.getItem(KK);}catch(e){}
   if(!saved){lockScreen();return;}
-  crypto.subtle.importKey('raw',b64(saved),{name:'AES-GCM'},false,['decrypt']).then(decryptWith).then(function(d){D=d;home();}).catch(function(){try{localStorage.removeItem(KK);}catch(e){}lockScreen();});
+  crypto.subtle.importKey('raw',b64(saved),{name:'AES-GCM'},false,['decrypt']).then(decryptWith).then(function(d){document.title='Kurul Haritası';document.querySelector('.crumb').style.display='';D=d;home();}).catch(function(){try{localStorage.removeItem(KK);}catch(e){}lockScreen();});
 }
-fetch('harita.enc.json?v='+Math.floor(Date.now()/36e5)).then(function(r){return r.json();}).then(function(e){ENC=e;start();}).catch(function(){app.innerHTML='<p>Veri yüklenemedi. Sayfayı yenile.</p>';});
+fetch('harita.enc.json?v='+Math.floor(Date.now()/36e5)).then(function(r){return r.json();}).then(function(e){ENC=e;start();}).catch(function(){app.innerHTML='';});
 })();
 </script>
 </body>
