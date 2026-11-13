@@ -94,6 +94,12 @@ mark{background:color-mix(in srgb,var(--y) 35%,transparent);color:inherit;border
 .pad.on{color:var(--g)}
 .empty{color:var(--mut);padding:30px 0;text-align:center}
 .foot{font-size:.8rem;color:var(--mut);margin-top:26px}
+.gpf{outline:3px solid var(--acc)!important;outline-offset:2px;border-radius:12px}
+.lock{max-width:360px;margin:12vh auto 0;text-align:center}
+.lock input{width:100%;font:inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);margin:14px 0 8px;text-align:center}
+.lock .err{color:var(--r);font-size:.9rem;min-height:1.4em}
+.lock label{font-size:.85rem;color:var(--mut);display:flex;gap:6px;justify-content:center;align-items:center;margin-bottom:12px}
+.gphelp{font-size:.76rem;color:var(--mut);margin-top:6px}
 </style>
 </head>
 <body>
@@ -135,7 +141,7 @@ function home(){
     var st=ready?(Math.round(e.pts)+' / '+d.soru+' tahmini · '+(e.n-e.c.u)+'/'+e.n+' konu işaretli'):(d.durum==='anki'?'Çıkmıştan geliyor: Anki destesiyle çalış':'Slaytlar gelince eklenecek');
     h+='<button class="dcard'+(ready?'':' off')+'" '+(ready?'data-ders="'+d.id+'"':'disabled')+'><div class="t">'+esc(d.ad)+dots+'</div><div class="q">≈ '+d.soru+' <small>soru</small></div><div class="m">'+st+'</div>'+(ready?estBar(e.c,e.n):'')+'</button>';
   });
-  h+='</div><p class="foot">İşaretlerin yalnızca bu cihazda saklanır. Gamepad bağlıysa tur ekranında kullanılabilir.</p></div>';
+  h+='</div><p class="foot">İşaretlerin yalnızca bu cihazda saklanır.</p><p class="gphelp">🎮 D-pad: gez · A: seç · B: geri · X: tur başlat · Y: ara / hepsini aç · LB/RB: kaydır · Start: ana sayfa</p><p><button class="btn sm" data-act="lock">🔒 Kilitle</button></p></div>';
   app.innerHTML=h;window.scrollTo(0,0);
   var q=document.getElementById('q');q.addEventListener('input',function(){search(q.value);});
 }
@@ -259,36 +265,102 @@ app.addEventListener('click',function(e){
   if(d.tc){turAct(d.tc==='r'?'r':d.tc);return;}
   switch(d.act){
     case'home':home();break;
+    case'lock':try{localStorage.removeItem(KK);}catch(x){}D=null;lockScreen();break;
     case'openall':[].forEach.call(document.querySelectorAll('.ln'),function(x){x.classList.add('open');});break;
     case'turq':var bk=T&&T.back;T=null;if(bk&&ders(bk))showDers(bk);else if(bk)showKonu(bk);else home();break;
   }
 });
 document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&VIEW.v!=='tur'&&e.target.tagName!=='INPUT'){goBack();return;}
   if(VIEW.v!=='tur'||e.target.tagName==='INPUT')return;
   var k=e.key,a=null;
   if(k===' '||k==='Enter'||k==='ArrowRight')a='ok';else if(k==='ArrowLeft'||k==='Backspace')a='no';
   else if(T&&T.end&&(k==='1'))a='r';else if(T&&T.end&&k==='2')a='y';else if(T&&T.end&&k==='3')a='g';
   if(a){e.preventDefault();turAct(a);}
 });
-/* gamepad: A=0 B=1 X=2 Y=3 */
-var prev={};
+/* ---------- geri ---------- */
+function goBack(){
+  if(VIEW.v==='konu'){showDers(VIEW.back);return;}
+  if(VIEW.v==='ders'){home();return;}
+  if(VIEW.v==='tur'){var bk=T&&T.back;T=null;if(bk&&ders(bk))showDers(bk);else if(bk)showKonu(bk);else home();}
+}
+/* ---------- gamepad: tüm arayüz ----------
+   D-pad / sol çubuk: odak gezdir · A: seç · B: geri · X: tur başlat · Y: hepsini aç / aramaya git
+   LB/RB: sayfayı kaydır · Start: ana sayfa. Tur ekranında A bildim/göster, B bilemedim, konu sonunda X yeşil, Y sarı, B kırmızı. */
+var prev={},axHeld={},axT={};
+function focusables(){return [].filter.call(document.querySelectorAll('button:not([disabled]),input,summary,a[href]'),function(el){var r=el.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=='hidden';});}
+function cur(){var el=document.activeElement;return el&&el!==document.body&&focusables().indexOf(el)>=0?el:null;}
+function setFocus(el){if(!el)return;[].forEach.call(document.querySelectorAll('.gpf'),function(x){x.classList.remove('gpf');});el.classList.add('gpf');el.focus({preventScroll:true});el.scrollIntoView({block:'nearest',behavior:'smooth'});}
+function firstFocus(){var f=focusables();var main=f.filter(function(el){return !el.closest('.crumb');});var vh=window.innerHeight;var inView=main.filter(function(el){var r=el.getBoundingClientRect();return r.top>=0&&r.top<vh;});var t=inView[0]||main[0];if(t)setFocus(t);}
+function move(dir){
+  var c=cur();if(!c){firstFocus();return;}
+  var r=c.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,best=null,bs=1e9;
+  focusables().forEach(function(el){if(el===c)return;var q=el.getBoundingClientRect(),x=q.left+q.width/2,y=q.top+q.height/2,dx=x-cx,dy=y-cy,p,o;
+    if(dir==='u'){if(q.bottom>r.top+2)return;p=-dy;o=Math.abs(dx);}
+    else if(dir==='d'){if(q.top<r.bottom-2)return;p=dy;o=Math.abs(dx);}
+    else if(dir==='l'){if(q.right>r.left+2||Math.abs(dy)>Math.max(r.height,q.height))return;p=-dx;o=Math.abs(dy);}
+    else{if(q.left<r.right-2||Math.abs(dy)>Math.max(r.height,q.height))return;p=dx;o=Math.abs(dy);}
+    var sc=p+o*2.5;if(sc<bs){bs=sc;best=el;}});
+  if(best)setFocus(best);else if(dir==='u'||dir==='d')window.scrollBy({top:(dir==='d'?1:-1)*window.innerHeight*0.5,behavior:'smooth'});
+}
+function press(){var c=cur();if(!c){firstFocus();return;}if(c.tagName==='INPUT'){c.focus();return;}c.click();}
+function onPad(i){
+  if(VIEW.v==='lock'){if(i===0)press();else if(i>=12&&i<=15)move({12:'u',13:'d',14:'l',15:'r'}[i]);return;}
+  if(VIEW.v==='tur'&&T){
+    if(i===9){goBack();return;}
+    if(!T.end){ if(i===0||i===15)turAct('ok'); else if(i===1||i===14)turAct('no'); return; }
+    if(i===0)turAct('ok');else if(i===1)turAct('r');else if(i===3)turAct('y');else if(i===2)turAct('g');return;
+  }
+  switch(i){
+    case 0:press();break;
+    case 1:goBack();break;
+    case 2:var t=document.querySelector('[data-tur][data-mode="weak"],[data-tur1]');if(t)t.click();break;
+    case 3:if(VIEW.v==='konu'){var oa=document.querySelector('[data-act="openall"]');if(oa)oa.click();}else if(VIEW.v==='home'){var q=document.getElementById('q');if(q){setFocus(q);}}break;
+    case 4:window.scrollBy({top:-window.innerHeight*0.7,behavior:'smooth'});break;
+    case 5:window.scrollBy({top:window.innerHeight*0.7,behavior:'smooth'});break;
+    case 9:home();break;
+    case 12:move('u');break;case 13:move('d');break;case 14:move('l');break;case 15:move('r');break;
+  }
+}
 function poll(){
-  var pads=navigator.getGamepads?navigator.getGamepads():[],any=false;
+  var pads=navigator.getGamepads?navigator.getGamepads():[],any=false,now=performance.now();
   for(var p=0;p<pads.length;p++){var g=pads[p];if(!g)continue;any=true;
-    for(var i=0;i<g.buttons.length&&i<16;i++){var pr=g.buttons[i].pressed,key=p+'-'+i;
-      if(pr&&!prev[key])onPad(i);prev[key]=pr;}}
-  if(any!==padOn){padOn=any;var el=document.querySelector('.pad');if(el){el.classList.toggle('on',any);el.textContent=any?'🎮 Gamepad bağlı':'Gamepad bağlıysa bir tuşa bas';}}
+    for(var i=0;i<g.buttons.length&&i<16;i++){var pr=g.buttons[i].pressed,key=p+'-'+i;if(pr&&!prev[key])onPad(i);prev[key]=pr;}
+    var ax=g.axes||[],dirs=[[1,-0.6,12],[1,0.6,13],[0,-0.6,14],[0,0.6,15]];
+    dirs.forEach(function(dd){var v=ax[dd[0]]||0,on=dd[1]<0?v<dd[1]:v>dd[1],k=p+'a'+dd[2];
+      if(on&&(!axHeld[k]||now-axT[k]>260)){if(VIEW.v!=='tur')onPad(dd[2]);axT[k]=now;}axHeld[k]=on;});}
+  if(any!==padOn){padOn=any;var el=document.querySelector('.pad');if(el){el.classList.toggle('on',any);el.textContent=any?'🎮 Gamepad bağlı':'Gamepad bağlıysa bir tuşa bas';}if(any&&VIEW.v!=='tur')firstFocus();}
   requestAnimationFrame(poll);
 }
-function onPad(i){
-  if(VIEW.v!=='tur'){ if(i===0){var f=document.querySelector('[data-tur][data-mode="weak"],[data-tur1]');if(f)f.click();} return; }
-  if(!T)return;
-  if(!T.end){ if(i===0||i===15)turAct('ok'); else if(i===1||i===14)turAct('no'); return; }
-  if(i===0)turAct('ok');else if(i===1)turAct('r');else if(i===3)turAct('y');else if(i===2)turAct('g');
-}
 window.addEventListener('gamepadconnected',function(){padOn=true;});
+/* ekran değişince odağı geri koy */
+var lastSel=null;
+document.addEventListener('focusin',function(e){var el=e.target,d=el.dataset||{},ks=Object.keys(d);lastSel=ks.length?el.tagName.toLowerCase()+ks.map(function(k){return'[data-'+k.replace(/[A-Z]/g,function(m){return'-'+m.toLowerCase();})+'="'+d[k]+'"]';}).join(''):(el.id?'#'+el.id:null);});
+new MutationObserver(function(){if(!padOn||VIEW.v==='tur')return;setTimeout(function(){var c=cur();if(c&&!c.closest('.crumb'))return;var el=lastSel&&document.querySelector(lastSel);if(el)setFocus(el);else firstFocus();},30);}).observe(app,{childList:true});
 requestAnimationFrame(poll);
-fetch('harita.json?v='+Math.floor(Date.now()/36e5)).then(function(r){return r.json();}).then(function(d){D=d;home();}).catch(function(){app.innerHTML='<p>Veri yüklenemedi. Sayfayı yenile.</p>';});
+
+/* ---------- şifre ---------- */
+var KK='d2k1-harita-key',ENC=null;
+function b64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0);});}
+function decryptWith(key){return crypto.subtle.decrypt({name:'AES-GCM',iv:b64(ENC.iv)},key,b64(ENC.ct)).then(function(buf){return JSON.parse(new TextDecoder().decode(buf));});}
+function deriveKey(pw){return crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']).then(function(base){return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(ENC.salt),iterations:ENC.it,hash:'SHA-256'},base,{name:'AES-GCM',length:256},true,['decrypt']);});}
+function lockScreen(msg){
+  VIEW={v:'lock'};
+  app.innerHTML='<div class="lock"><h1>🔒 Kurul Haritası</h1><p class="sub">Şifreyi gir.</p><form id="lf"><input id="pw" type="password" autocomplete="current-password" aria-label="Şifre" placeholder="Şifre"><div class="err" role="alert">'+(msg||'')+'</div><label><input id="rem" type="checkbox" checked style="width:auto;margin:0"> Bu cihazda hatırla</label><button class="btn pri" type="submit" style="width:100%;justify-content:center">Aç</button></form></div>';
+  var pw=document.getElementById('pw');pw.focus();
+  document.getElementById('lf').addEventListener('submit',function(e){e.preventDefault();var v=pw.value;if(!v)return;
+    app.querySelector('.err').textContent='Açılıyor…';
+    deriveKey(v).then(function(key){return decryptWith(key).then(function(d){
+      if(document.getElementById('rem').checked){crypto.subtle.exportKey('raw',key).then(function(r){try{localStorage.setItem(KK,btoa(String.fromCharCode.apply(null,new Uint8Array(r))));}catch(x){}});}
+      D=d;home();});}).catch(function(){lockScreen('Şifre yanlış.');});
+  });
+}
+function start(){
+  var saved=null;try{saved=localStorage.getItem(KK);}catch(e){}
+  if(!saved){lockScreen();return;}
+  crypto.subtle.importKey('raw',b64(saved),{name:'AES-GCM'},false,['decrypt']).then(decryptWith).then(function(d){D=d;home();}).catch(function(){try{localStorage.removeItem(KK);}catch(e){}lockScreen();});
+}
+fetch('harita.enc.json?v='+Math.floor(Date.now()/36e5)).then(function(r){return r.json();}).then(function(e){ENC=e;start();}).catch(function(){app.innerHTML='<p>Veri yüklenemedi. Sayfayı yenile.</p>';});
 })();
 </script>
 </body>
