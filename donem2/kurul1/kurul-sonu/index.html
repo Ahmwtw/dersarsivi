@@ -118,6 +118,35 @@ li::marker { color: var(--c); }
 .tabs a.tab-link:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; } .sec h2 { font-size: 1.35rem; } .qa, .tip { padding: 14px 16px; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
+<style>
+.dz-ozet{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0 8px}
+.dz-big{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;line-height:1.3}
+.dz-big b{display:block;font-size:1.6rem;font-weight:600}.dz-big span{font-size:.78rem;color:var(--muted)}
+.dz-ders{margin:28px 0 0;border-top:3px solid var(--c);padding-top:10px}
+.dz-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dz-dn{font-size:1.25rem;font-weight:600;color:var(--c)}
+.dz-dq{font-weight:600;color:var(--c);background:var(--soft);padding:1px 12px;border-radius:999px;font-size:.9rem;white-space:nowrap}
+.dz-bar{display:flex;height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 2px}
+.dz-bar i{display:block;height:100%}.dz-gb{background:var(--green)}.dz-yb{background:var(--amber)}.dz-rb{background:var(--red)}
+.dz-dsum{font-size:.82rem}
+.dz-gh{font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
+.dz-row{display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px -10px;border-radius:12px;border-left:4px solid transparent}
+.dz-row.dz-r{background:var(--red-soft);border-left-color:var(--red)}
+.dz-row.dz-y{background:var(--amber-soft);border-left-color:var(--amber)}
+.dz-row.dz-g{background:var(--green-soft);border-left-color:var(--green)}
+.dz-t{flex:1;min-width:0;line-height:1.45}
+.dz-tn{display:block;font-weight:400}
+.dz-meta{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:2px;font-size:.76rem;color:var(--muted)}
+.dz-q{font-weight:600;color:var(--c)}
+.dz-tag{border:1px solid var(--line);border-radius:999px;padding:0 7px;background:var(--card)}
+.dz-s{border-color:var(--c);color:var(--c)}
+.dz-b{display:flex;gap:4px;flex:none}
+.dz-b button{font-size:1rem;line-height:1;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;opacity:.4;filter:grayscale(.7);padding:0}
+.dz-b button[aria-pressed="true"]{opacity:1;filter:none;border-color:var(--fg);box-shadow:0 0 0 2px var(--fg) inset}
+.dz-b button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.dz-reset{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:4px 14px;cursor:pointer}
+@media (max-width:480px){.dz-b button{width:32px;height:32px;font-size:.9rem}.dz-ozet{gap:6px}.dz-big b{font-size:1.3rem}}
+</style>
 </head>
 <body>
 <style>
@@ -138,7 +167,19 @@ li::marker { color: var(--c); }
 
 <div class="wrap">
 <header class="top"><h1>Kurul 1 Sonu · Hazırlık Planı</h1><p>26 Ekim – 27 Kasım. Kan ve solunum dersleri ders programına göre, her dersin öncesinde akşam ön hazırlık; formatif konuları da sınava taşınıyor. Anatomi lab sınavı 24 Kasım, teorik sınav 27 Kasım. 🫁🩸</p></header>
-<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-takvim" aria-controls="panel-takvim" aria-selected="true" data-tab="takvim">📅 Gün gün plan</button><button type="button" role="tab" id="tab-oncelik" aria-controls="panel-oncelik" aria-selected="false" data-tab="oncelik">🎯 Öncelikler</button><button type="button" role="tab" id="tab-tekrar" aria-controls="panel-tekrar" aria-selected="false" data-tab="tekrar">🔁 Sürekli tekrar</button><a class="tab-link" href="./harita/" style="background:var(--blue);color:var(--card);border-color:var(--blue);font-weight:700">🗺️ Kurul Haritası</a><a class="tab-link" href="./yol/">🎯 100 Yolu</a><a class="tab-link" href="./cikmislar/">📝 Çıkmışlar</a><a class="tab-link" href="./cikmislar/#tekrar">🧠 Yanlış tekrarı</a></div>
+<div class="tabs" role="tablist"><button type="button" role="tab" id="tab-durum" aria-controls="panel-durum" aria-selected="false" data-tab="durum">✅ Konu durumu</button><button type="button" role="tab" id="tab-takvim" aria-controls="panel-takvim" aria-selected="true" data-tab="takvim">📅 Gün gün plan</button><button type="button" role="tab" id="tab-oncelik" aria-controls="panel-oncelik" aria-selected="false" data-tab="oncelik">🎯 Öncelikler</button><button type="button" role="tab" id="tab-tekrar" aria-controls="panel-tekrar" aria-selected="false" data-tab="tekrar">🔁 Sürekli tekrar</button><a class="tab-link" href="./harita/" style="background:var(--blue);color:var(--card);border-color:var(--blue);font-weight:700">🗺️ Kurul Haritası</a><a class="tab-link" href="./yol/">🎯 100 Yolu</a><a class="tab-link" href="./cikmislar/">📝 Çıkmışlar</a><a class="tab-link" href="./cikmislar/#tekrar">🧠 Yanlış tekrarı</a></div>
+<div role="tabpanel" id="panel-durum" aria-labelledby="tab-durum" hidden>
+<section class="sec c-ink" style="padding-top:28px">
+<h2>Konu durumu</h2><span class="pill">27 Kasım · 100 soru</span>
+<p style="margin-top:14px" class="w">Ders programındaki bütün teorik dersler, resmî soru dağılımına göre. Ders içindeki soru sayıları tahmini: ders saatine ve çıkmışlarda konunun ne sık sorulduğuna göre dağıttım. Her konuya kendi durumunu işaretle (🔴 bilmiyorum · 🟡 yarım · 🟢 hazır). İşaretler bu cihazda saklanır.</p>
+<div id="dz-ozet" class="dz-ozet"></div>
+<div id="dz-list"></div>
+<h3 style="margin-top:48px">Laboratuvarlar <span class="w" style="font-weight:300">(teorik sınavdan ayrı notlanır)</span></h3>
+<div id="dz-lab"></div>
+<p class="w" style="margin-top:18px">Notun %86'sı kurul sonu teorik sınavı. Kalan %14 lablardan: anatomi %5, fizyoloji %5, histoloji–embriyoloji %4. Anatomi lab sınavı 24 Kasım.</p>
+<p style="margin-top:8px"><button type="button" class="dz-reset" id="dz-reset">İşaretleri sıfırla</button></p>
+</section>
+</div>
 <div role="tabpanel" id="panel-takvim" aria-labelledby="tab-takvim"><nav class="toc"><a class="c-ink" href="#takvim-nasil-kullanilir">Nasıl kullanılır</a><a class="c-red" href="#takvim-1-hafta-26-30-ekim-kan-basliyor">1. hafta · 26–30 Ekim: kan başlıyor</a><a class="c-orange" href="#takvim-2-hafta-2-6-kasim-alt-solunum-anatomisi-">2. hafta · 2–6 Kasım: alt solunum anatomisi, solunum histolojisi, lökositler</a><a class="c-amber" href="#takvim-3-hafta-9-13-kasim-pihtilasma-biyokimyas">3. hafta · 9–13 Kasım: pıhtılaşma biyokimyası, solunum embriyolojisi, kök hücre</a><a class="c-green" href="#takvim-4-hafta-16-20-kasim-solunum-fizyolojisi-">4. hafta · 16–20 Kasım: solunum fizyolojisi (en yoğun hafta)</a><a class="c-purple" href="#takvim-5-hafta-23-27-kasim-kontrol-lab-sinavi-f">5. hafta · 23–27 Kasım: kontrol, lab sınavı, final</a></nav><section class="sec c-ink" id="takvim-nasil-kullanilir">
 <h2>Nasıl kullanılır</h2>
 <p>Kurul sonu teorik sınavı <strong>27 Kasım Cuma 10:30</strong>. <strong>Anatomi laboratuvar sınavı ayrı ve daha önce: 24 Kasım Salı.</strong> Sınav, formatifteki bütün konuları (dolaşım) ve bundan sonra işlenecek <strong>kan</strong> ve <strong>solunum</strong> konularını kapsıyor.</p>
@@ -389,5 +430,128 @@ li::marker { color: var(--c); }
 })();
 </script>
 
+<script>
+(function(){
+var D=[
+ {d:'Fizyoloji',n:47,c:'red',g:[
+  ['Dolaşım',[
+   ['Kalp hücrelerinde iyon akımları ve aksiyon potansiyelleri',2,'o'],
+   ['Kalpte uyarının yayılması ve EKG',3,'o','Klinik Yaklaşım EKG ile örtüşür'],
+   ['Kalp döngüsü – giriş',2,'o'],
+   ['Bir kalp döngüsü ve kalp sesleri',2,'o'],
+   ['Dolaşım mekaniği: basınç–akım–direnç',2,'o'],
+   ['Kan akım hızı, kan akımı ve düzenlenmesi',2,'o'],
+   ['Kapiller dolaşım, filtrasyon ve ödem',2,'o'],
+   ['Kan basıncı regülasyonu',3,'o','Fizyoloji Lab 1–2: arteriyel kan basıncı ölçme'],
+   ['Kalp debisi ve etkileyen faktörler',2,'o']]],
+  ['Kan',[
+   ['Kan volümü, kan plazması',1,'o','Fizyoloji Lab 3–4: serum/plazma, hematokrit'],
+   ['Kan hücrelerinin yapımı (hematopoez)',2,'o'],
+   ['Eritrositler',2,'s','Fizyoloji Lab 5–6: periferik yayma'],
+   ['Kan grupları',1,'s','Fizyoloji Lab 3–4: kan grubu tayini'],
+   ['Hemoglobin ve demir metabolizması',2,'s'],
+   ['Trombositler ve hemostaz',3,'s'],
+   ['Lökositler',2,'s','Fizyoloji Lab 5–6: periferik yayma']]],
+  ['Solunum',[
+   ['Solunum fizyolojisine giriş',2,'s'],
+   ['Fizyolojik solunum mekaniği',3,'s'],
+   ['Pulmoner dolaşım, ventilasyon ve perfüzyon',2,'s'],
+   ['Akciğerlerde gaz değişimi',2,'s'],
+   ['Gazların taşınımı',2,'s'],
+   ['Solunumun düzenlenmesi ve akciğerlerin solunum dışı fonksiyonları',3,'s']]]]},
+ {d:'Anatomi',n:12,c:'blue',g:[['',[
+   ['Dolaşım sistemi (giriş)',1,'o'],
+   ['Kalbin anatomisi',3,'o','Anatomi Lab 1'],
+   ['Baş–boyun damarları',1,'o','Anatomi Lab 2'],
+   ['Üst ekstremite damarları',1,'o','Anatomi Lab 3'],
+   ['Alt ekstremite damarları',1,'o','Anatomi Lab 4'],
+   ['Toraks ve abdomen duvarındaki damarlar',1,'o'],
+   ['Üst solunum yapılarının anatomisi',2,'s','Anatomi Lab 5'],
+   ['Alt solunum yapılarının anatomisi',2,'s','Anatomi Lab 6']]]]},
+ {d:'Histoloji ve Embriyoloji',n:11,c:'purple',g:[['',[
+   ['Kan damarlarının ince yapısı',1,'o','Histoloji Lab 1–2'],
+   ['Kan doku ve plazma',1,'o'],
+   ['Kalp ve damar sisteminin histolojik yapısı',2,'o','Histoloji Lab 1–2'],
+   ['Kalp ve damarların embriyolojisi ve konjenital anomaliler',3,'o'],
+   ['Üst ve alt solunum yollarının histolojisi',2,'s','Histoloji Lab 3–4'],
+   ['Solunum sisteminin embriyolojisi ve konjenital anomaliler',2,'s']]]]},
+ {d:'Tıbbi Biyokimya',n:8,c:'amber',g:[['',[
+   ['Serbest radikaller ve antioksidan savunma',2,'o'],
+   ['Hemoglobin yapısı',2,'o'],
+   ['Hemoglobinin O₂ bağlanmasını etkileyen faktörler',1,'o'],
+   ['Hem sentezi ve fonksiyonu',1,'o'],
+   ['Ksenobiyotikler',1,'o'],
+   ['Pıhtılaşmanın biyokimyasal temelleri',1,'s']]]]},
+ {d:'Tıbbi Biyoloji',n:7,c:'teal',g:[['',[
+   ['Kök hücre biyolojisi',3,'o'],
+   ['Hücre yenilenmesi ve rejenerasyon',2,'s'],
+   ['Olgu tartışması: kök hücre bozuklukları',2,'s']]]]},
+ {d:'Biyofizik',n:4,c:'cyan',g:[['',[
+   ['Ergonomik açıdan insan sağlığı',1,'o'],
+   ['Dolaşım sistemi biyomekaniği',3,'o']]]]},
+ {d:'Klinik Yaklaşım',n:8,c:'rose',g:[['',[
+   ['EKG ve değerlendirmesi',2,'s','Fizyoloji EKG ile birlikte çalış'],
+   ['Anemilerin sınıflandırılması, anemik hastaya yaklaşım',2,'s','Kan fizyolojisi ile birlikte'],
+   ['Solunum muayenesi ve normal solunum sesleri',2,'s'],
+   ['Akciğer volüm ve kapasitelerinin ölçümü',2,'s','Solunum mekaniği ile birlikte']]]]},
+ {d:'Multidisipliner Panel',n:3,c:'indigo',g:[['',[
+   ['Toplum kökenli pnömoniler',3,'s']]]]}
+];
+var L=[
+ {d:'Anatomi Lab',p:'%5',c:'blue',x:'Sınav 24 Kasım',r:[
+  ['Lab 1 · Kalbin anatomisi'],['Lab 2 · Baş–boyun damarları'],['Lab 3 · Üst ekstremitenin damarları'],
+  ['Lab 4 · Alt ekstremitenin damarları'],['Lab 5 · Üst solunum yollarının anatomisi'],['Lab 6 · Alt solunum yollarının anatomisi']]},
+ {d:'Fizyoloji Lab',p:'%5',c:'red',r:[
+  ['Lab 1–2 · Arteriyel kan basıncı ölçme'],['Lab 3–4 · Serum–plazma farkı, hematokrit, sedimentasyon, kan grubu tayini'],['Lab 5–6 · Periferik yayma']]},
+ {d:'Histoloji Lab',p:'%4',c:'purple',r:[
+  ['Lab 1–2 · Kalp, arter, ven ve lenfatiklerin mikroskobik yapısı'],['Lab 3–4 · Üst ve alt solunum yollarının mikroskobik yapısı']]}
+];
+var K='d2k1-durum-v1',S={};
+try{S=JSON.parse(localStorage.getItem(K)||'{}')||{}}catch(e){S={}}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+function slug(s){return s.toLocaleLowerCase('tr').replace(/[^a-z0-9çğıöşü]+/g,'-').slice(0,60)}
+var LV=[['r','🔴','Bilmiyorum'],['y','🟡','Yarım'],['g','🟢','Hazır']];
+function btns(id){return '<span class="dz-b" role="group" aria-label="Durum">'+LV.map(function(v){return '<button type="button" data-id="'+id+'" data-v="'+v[0]+'" aria-pressed="'+(S[id]===v[0])+'" title="'+v[2]+'">'+v[1]+'</button>'}).join('')+'</span>'}
+var h='';
+D.forEach(function(x){
+ h+='<div class="dz-ders c-'+x.c+'" data-ders="'+slug(x.d)+'"><div class="dz-dh"><span class="dz-dn">'+x.d+'</span><span class="dz-dq">'+x.n+' soru</span></div><div class="dz-bar" aria-hidden="true"></div><div class="dz-dsum w"></div>';
+ x.g.forEach(function(g){
+  if(g[0])h+='<div class="dz-gh">'+g[0]+'</div>';
+  g[1].forEach(function(t){var id=slug(x.d)+'/'+slug(t[0]);
+   h+='<div class="dz-row" data-row="'+id+'" data-n="'+t[1]+'"><div class="dz-t"><span class="dz-tn">'+t[0]+'</span><span class="dz-meta"><span class="dz-q">~'+t[1]+' soru</span><span class="dz-tag '+(t[2]==='o'?'dz-o':'dz-s')+'">'+(t[2]==='o'?'formatif öncesi':'formatif sonrası')+'</span>'+(t[3]?'<span class="dz-lab">'+(/Lab/.test(t[3])?'🔬 ':'🔗 ')+t[3]+'</span>':'')+'</span></div>'+btns(id)+'</div>'});
+ });
+ h+='</div>';
+});
+document.getElementById('dz-list').innerHTML=h;
+var hl='';
+L.forEach(function(x){
+ hl+='<div class="dz-ders c-'+x.c+'"><div class="dz-dh"><span class="dz-dn">'+x.d+'</span><span class="dz-dq">'+x.p+(x.x?' · '+x.x:'')+'</span></div>';
+ x.r.forEach(function(t){var id='lab/'+slug(x.d)+'/'+slug(t[0]);hl+='<div class="dz-row"><div class="dz-t"><span class="dz-tn">'+t[0]+'</span></div>'+btns(id)+'</div>'});
+ hl+='</div>';
+});
+document.getElementById('dz-lab').innerHTML=hl;
+function upd(){
+ var T={g:0,y:0,r:0,u:0};
+ document.querySelectorAll('#dz-list .dz-ders').forEach(function(dv){
+  var c={g:0,y:0,r:0,u:0},tot=0;
+  dv.querySelectorAll('.dz-row').forEach(function(r){var n=+r.dataset.n,v=S[r.dataset.row]||'u';c[v]+=n;tot+=n;r.className='dz-row'+(v!=='u'?' dz-'+v:'')});
+  ['g','y','r','u'].forEach(function(k){T[k]+=c[k]});
+  dv.querySelector('.dz-bar').innerHTML=['g','y','r'].map(function(k){return c[k]?'<i class="dz-'+k+'b" style="width:'+(100*c[k]/tot)+'%"></i>':''}).join('');
+  dv.querySelector('.dz-dsum').textContent='🟢 '+c.g+' · 🟡 '+c.y+' · 🔴 '+c.r+(c.u?' · işaretsiz '+c.u:'')+' soru';
+ });
+ document.querySelectorAll('#dz-lab .dz-row').forEach(function(r){var b=r.querySelector('button');var v=S[b.dataset.id]||'u';r.className='dz-row'+(v!=='u'?' dz-'+v:'')});
+ document.getElementById('dz-ozet').innerHTML='<div class="dz-big"><b>'+T.g+'</b><span>🟢 hazır</span></div><div class="dz-big"><b>'+T.y+'</b><span>🟡 yarım</span></div><div class="dz-big"><b>'+T.r+'</b><span>🔴 bilmiyorum</span></div><div class="dz-big"><b>'+T.u+'</b><span>işaretsiz</span></div><p class="w" style="grid-column:1/-1;margin:4px 0 0">100 sorunun kaçı hangi durumda (tahmini).</p>';
+}
+document.getElementById('panel-durum').addEventListener('click',function(e){
+ var b=e.target.closest('button[data-id]');if(!b)return;
+ var id=b.dataset.id,v=b.dataset.v;
+ if(S[id]===v)delete S[id];else S[id]=v;save();
+ b.parentNode.querySelectorAll('button').forEach(function(o){o.setAttribute('aria-pressed',S[id]===o.dataset.v)});
+ upd();
+});
+document.getElementById('dz-reset').addEventListener('click',function(){if(confirm('Tüm işaretler silinsin mi?')){S={};save();document.querySelectorAll('#panel-durum button[aria-pressed]').forEach(function(o){o.setAttribute('aria-pressed','false')});upd()}});
+upd();
+})();
+</script>
 </body>
 </html>
